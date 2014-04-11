@@ -88,8 +88,10 @@ EXPORT_SYMBOL(pm_power_off);
 void show_regs(struct pt_regs * regs)
 {
 	printk("\n");
+#ifndef CONFIG_M68000
 	printk("Format %02x  Vector: %04x  PC: %08lx  Status: %04x    %s\n",
 	       regs->format, regs->vector, regs->pc, regs->sr, print_tainted());
+#endif
 	printk("ORIG_D0: %08lx  D0: %08lx  A2: %08lx  A1: %08lx\n",
 	       regs->orig_d0, regs->d0, regs->a2, regs->a1);
 	printk("A0: %08lx  D5: %08lx  D4: %08lx\n",

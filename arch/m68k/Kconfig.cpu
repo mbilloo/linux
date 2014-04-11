@@ -93,26 +93,36 @@ config M68060
 	  If you anticipate running this kernel on a computer with a MC68060
 	  processor, say Y. Otherwise, say N.
 
+config DRAGONBALL
+	bool "Motorola/Freescale DragonBall SoC support"
+	depends on M68000
+	select ARCH_REQUIRE_GPIOLIB
+	help
+	 If you anticipate running this kernel on a computer with a DragonBall
+	 series SoC, say Y. Otherwise, say N.
+
+choice
+	prompt "DragonBall SoC family member"
+	depends on DRAGONBALL
+	help
+	  Select which member of the DragonBall SoC family to support.
+
 config M68328
 	bool "MC68328"
-	depends on !MMU
-	select M68000
 	help
 	  Motorola 68328 processor support.
 
 config M68EZ328
 	bool "MC68EZ328"
-	depends on !MMU
-	select M68000
 	help
-	  Motorola 68EX328 processor support.
+	  Motorola 68EZ328 processor support.
 
 config M68VZ328
 	bool "MC68VZ328"
-	depends on !MMU
-	select M68000
 	help
 	  Motorola 68VZ328 processor support.
+
+endchoice
 
 config M68360
 	bool "MC68360"

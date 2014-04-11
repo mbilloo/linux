@@ -169,6 +169,12 @@ config SPI_DAVINCI
 	help
 	  SPI master controller for DaVinci/DA8x/OMAP-L/AM1x SPI modules.
 
+config SPI_DRAGONBALL
+	boolean "Motorola/Freescale DragonBall SoC SPI controller"
+	depends on DRAGONBALL
+	help
+	  SPI master controller for DragonBall family SoCs.
+
 config SPI_EFM32
 	tristate "EFM32 SPI controller"
 	depends on OF && ARM && (ARCH_EFM32 || COMPILE_TEST)

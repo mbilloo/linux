@@ -94,9 +94,9 @@ _start:
 #ifdef CONFIG_PILOT
 	movew	#0x2410, 0xfffff200		/* PLLCR */
 #else
-	movew	#0x2400, 0xfffff200		/* PLLCR */
+	movew	#0x2493, 0xfffff200		/* PLLCR */
 #endif
-	movew	#0x0123, 0xfffff202		/* PLLFSR */
+	movew	#0x0347, 0xfffff202		/* PLLFSR */
 	moveq	#0, %d0
 	movew	#16384, %d0			/* PLL settle wait loop */
 _pll_settle:
@@ -230,6 +230,16 @@ _clear_bss:
 	cmpl	%a0, %a1			/* check if at end */
 	bne	_clear_bss
 
+
+#ifdef CONFIG_VZADS
+	movew	#0x8800,0xfffffc02
+	movew	#0x403F,0xfffffc00
+
+	movew	#0x0138, 0xFFFFF902
+	moveb	#0x03, 0xFFFFF418
+	moveb	#0,	0xFFFFF419
+#endif
+
 /*****************************************************************************
  * Load the current task pointer and stack.
  *****************************************************************************/
@@ -238,3 +248,41 @@ _clear_bss:
 	jsr	start_kernel			/* start Linux kernel */
 _exit:
 	jmp	_exit				/* should never get here */
+
+#ifdef CONFIG_VZADS
+/*
+ *	mac_early_print
+ *
+ *	This routine takes its parameters on the stack.  It then
+ *	turns around and calls the internal routines.  This routine
+ *	is used by the boot console.
+ *
+ *	The calling parameters are:
+ *		void mac_early_print(const char *str, unsigned length);
+ *
+ *	This routine does NOT understand variable arguments only
+ *	simple strings!
+ */
+ENTRY(vzads_early_print)
+	moveml	%d0/%d1/%a0,%sp@-
+	movew	%sr,%sp@-
+	ori	#0x0700,%sr
+	movel	%sp@(18),%a0		/* fetch parameter */
+	movel	%sp@(22),%d1		/* fetch parameter */
+	jra	3f
+1:
+
+	moveb	%d0, 0xfffff907
+2:
+	btst.b	#2, 0xfffff906
+	jne		2b
+
+	subq	#1,%d1
+3:	jeq	4f
+	moveb	%a0@+,%d0
+	jne	1b
+4:
+	movew	%sp@+,%sr
+	moveml	%sp@+,%d0/%d1/%a0
+	rts
+#endif /* CONFIG_VZADS */

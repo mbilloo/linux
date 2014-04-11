@@ -580,6 +580,7 @@ static void spi_set_cs(struct spi_device *spi, bool enable)
 		spi->master->set_cs(spi, !enable);
 }
 
+#ifdef HAVE_DMA
 static int spi_map_buf(struct spi_master *master, struct device *dev,
 		       struct sg_table *sgt, void *buf, size_t len,
 		       enum dma_data_direction dir)
@@ -636,6 +637,7 @@ static void spi_unmap_buf(struct spi_master *master, struct device *dev,
 		sg_free_table(sgt);
 	}
 }
+#endif
 
 static int spi_map_msg(struct spi_master *master, struct spi_message *msg)
 {
@@ -686,6 +688,9 @@ static int spi_map_msg(struct spi_master *master, struct spi_message *msg)
 		}
 	}
 
+#ifndef HAVE_DMA
+	return 0;
+#else
 	if (!master->can_dma)
 		return 0;
 
@@ -719,6 +724,7 @@ static int spi_map_msg(struct spi_master *master, struct spi_message *msg)
 	master->cur_msg_mapped = true;
 
 	return 0;
+#endif
 }
 
 static int spi_unmap_msg(struct spi_master *master, struct spi_message *msg)
@@ -726,6 +732,9 @@ static int spi_unmap_msg(struct spi_master *master, struct spi_message *msg)
 	struct spi_transfer *xfer;
 	struct device *tx_dev, *rx_dev;
 
+#ifndef HAVE_DMA
+	return 0;
+#else
 	if (!master->cur_msg_mapped || !master->can_dma)
 		return 0;
 
@@ -741,6 +750,7 @@ static int spi_unmap_msg(struct spi_master *master, struct spi_message *msg)
 	}
 
 	return 0;
+#endif
 }
 
 /*

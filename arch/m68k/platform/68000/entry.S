@@ -41,6 +41,7 @@ badsys:
 	jra	ret_from_exception
 
 do_trace:
+
 	movel	#-ENOSYS,%sp@(PT_OFF_D0) /* needed for strace*/
 	subql	#4,%sp
 	SAVE_SWITCH_STACK
@@ -123,6 +124,70 @@ Lsignal_return:
 	RESTORE_SWITCH_STACK
 	addql	#4,%sp
 	jra	1b
+
+ENTRY(addrerr)
+	SAVE_ALL_INT
+	GET_CURRENT(%d0)
+	movel	%sp,%sp@-		| stack frame pointer argument
+	jbsr	addrerr_c
+	addql	#4,%sp
+	jra	ret_from_exception
+
+//ENTRY(buserr)
+//	SAVE_ALL_INT
+//	GET_CURRENT(%d0)
+//	movel	%sp,%sp@-		| stack frame pointer argument
+//	jbsr	buserr_c
+//	addql	#4,%sp
+//	jra	ret_from_exception
+
+ENTRY(illegalinstruction)
+	SAVE_ALL_INT
+	GET_CURRENT(%d0)
+	movel	%sp,%sp@-		| stack frame pointer argument
+	jbsr	illegalinstruction_c
+	addql	#4,%sp
+	jra	ret_from_exception
+
+ENTRY(zerodivide)
+	SAVE_ALL_INT
+	GET_CURRENT(%d0)
+	movel	%sp,%sp@-		| stack frame pointer argument
+	jbsr	zerodivide_c
+	addql	#4,%sp
+	jra	ret_from_exception
+
+ENTRY(trapvinstruction)
+	SAVE_ALL_INT
+	GET_CURRENT(%d0)
+	movel	%sp,%sp@-		| stack frame pointer argument
+	jbsr	trapvinstruction_c
+	addql	#4,%sp
+	jra	ret_from_exception
+
+ENTRY(chkinstruction)
+	SAVE_ALL_INT
+	GET_CURRENT(%d0)
+	movel	%sp,%sp@-		| stack frame pointer argument
+	jbsr	chkinstruction_c
+	addql	#4,%sp
+	jra	ret_from_exception
+
+ENTRY(privilegeviolation)
+	SAVE_ALL_INT
+	GET_CURRENT(%d0)
+	movel	%sp,%sp@-		| stack frame pointer argument
+	jbsr	privilegeviolation_c
+	addql	#4,%sp
+	jra	ret_from_exception
+
+ENTRY(spuriousinterrupt)
+	SAVE_ALL_INT
+	GET_CURRENT(%d0)
+	movel	%sp,%sp@-		| stack frame pointer argument
+	jbsr	spuriousinterrupt_c
+	addql	#4,%sp
+	jra	ret_from_exception
 
 /*
  * This is the main interrupt handler, responsible for calling process_int()

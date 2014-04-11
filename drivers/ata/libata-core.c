@@ -4626,6 +4626,7 @@ static unsigned int ata_dev_init_params(struct ata_device *dev,
  *	LOCKING:
  *	spin_lock_irqsave(host lock)
  */
+#ifdef CONFIG_HAVE_DMA
 void ata_sg_clean(struct ata_queued_cmd *qc)
 {
 	struct ata_port *ap = qc->ap;
@@ -4642,6 +4643,7 @@ void ata_sg_clean(struct ata_queued_cmd *qc)
 	qc->flags &= ~ATA_QCFLAG_DMAMAP;
 	qc->sg = NULL;
 }
+#endif
 
 /**
  *	atapi_check_dma - Check whether ATAPI DMA can be supported
@@ -4740,6 +4742,7 @@ void ata_sg_init(struct ata_queued_cmd *qc, struct scatterlist *sg,
  *	Zero on success, negative on error.
  *
  */
+#ifdef CONFIG_HAVE_DMA
 static int ata_sg_setup(struct ata_queued_cmd *qc)
 {
 	struct ata_port *ap = qc->ap;
@@ -4758,6 +4761,7 @@ static int ata_sg_setup(struct ata_queued_cmd *qc)
 
 	return 0;
 }
+#endif
 
 /**
  *	swap_buf_le16 - swap halves of 16-bit words in place
@@ -4872,8 +4876,10 @@ void __ata_qc_complete(struct ata_queued_cmd *qc)
 	ap = qc->ap;
 	link = qc->dev->link;
 
+#ifdef CONFIG_HAVE_DMA
 	if (likely(qc->flags & ATA_QCFLAG_DMAMAP))
 		ata_sg_clean(qc);
+#endif
 
 	/* command should be marked inactive atomically with qc completion */
 	if (qc->tf.protocol == ATA_PROT_NCQ) {
@@ -5120,10 +5126,12 @@ void ata_qc_issue(struct ata_queued_cmd *qc)
 			 (!qc->sg || !qc->n_elem || !qc->nbytes)))
 		goto sys_err;
 
+#ifdef CONFIG_HAVE_DMA
 	if (ata_is_dma(prot) || (ata_is_pio(prot) &&
 				 (ap->flags & ATA_FLAG_PIO_DMA)))
 		if (ata_sg_setup(qc))
 			goto sys_err;
+#endif
 
 	/* if device is sleeping, schedule reset and abort the link */
 	if (unlikely(qc->dev->flags & ATA_DFLAG_SLEEPING)) {

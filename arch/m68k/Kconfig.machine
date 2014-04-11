@@ -168,6 +168,12 @@ config DRAGEN2
 	help
 	  Support for the DragenEngine II board.
 
+config VZADS
+	bool "VZ ADS board support"
+	depends on M68VZ328
+	help
+	  Support for the VZ ADS board.
+
 config DIRECT_IO_ACCESS
 	bool "Allow user to access IO directly"
 	depends on (UCSIMM || UCDIMM || DRAGEN2)

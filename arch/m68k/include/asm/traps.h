@@ -205,6 +205,7 @@ asmlinkage void bad_inthandler(void);
 
 struct frame {
     struct pt_regs ptregs;
+#ifndef CONFIG_M68000
     union {
 	    struct {
 		    unsigned long  iaddr;    /* instruction address */
@@ -265,6 +266,7 @@ struct frame {
 		    unsigned short int7[18];
 	    } fmtb;
     } un;
+#endif
 };
 
 #endif /* __ASSEMBLY__ */

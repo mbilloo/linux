@@ -29,6 +29,13 @@
 /* assembler routines */
 asmlinkage void system_call(void);
 asmlinkage void buserr(void);
+asmlinkage void addrerr(void);
+asmlinkage void illegalinstruction(void);
+asmlinkage void zerodivide(void);
+asmlinkage void chkinstruction(void);
+asmlinkage void trapvinstruction(void);
+asmlinkage void privilegeviolation(void);
+asmlinkage void spuriousinterrupt(void);
 asmlinkage void trap(void);
 asmlinkage void trap3(void);
 asmlinkage void trap4(void);
@@ -154,10 +161,21 @@ void __init trap_init(void)
 {
 	int i;
 
+	for(i = 0; i < 256; i++)
+		_ramvec[i] = 0x4AFC4AFC;
+
 	/* set up the vectors */
 	for (i = 72; i < 256; ++i)
 		_ramvec[i] = (e_vector) bad_interrupt;
 
+	_ramvec[2] = buserr;
+	_ramvec[3] = addrerr;
+	_ramvec[4] = illegalinstruction;
+	_ramvec[5] = zerodivide;
+	_ramvec[6] = chkinstruction;
+	_ramvec[7] = trapvinstruction;
+	_ramvec[8] = privilegeviolation;
+	_ramvec[24] = spuriousinterrupt;
 	_ramvec[32] = system_call;
 
 	_ramvec[65] = (e_vector) inthandler1;

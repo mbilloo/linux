@@ -28,6 +28,8 @@
 #include <asm/MC68VZ328.h>
 #include <asm/bootstd.h>
 
+#include <linux/console.h>
+
 #ifdef CONFIG_INIT_LCD
 #include "bootlogo-vz.h"
 #endif
@@ -166,7 +168,34 @@ static void __init init_hardware(char *command, int size)
 
 static void m68vz328_reset(void)
 {
+
 }
+
+#ifdef CONFIG_EARLY_PRINTK
+asmlinkage void __init vzads_early_print(const char *s, unsigned n);
+
+static void __init vzads_early_cons_write(struct console *con,
+                                 const char *s, unsigned n)
+{
+        vzads_early_print(s, n);
+}
+
+static struct console __initdata vzads_early_cons = {
+        .name  = "early",
+        .write = vzads_early_cons_write,
+        .flags = CON_PRINTBUFFER | CON_BOOT,
+        .index = -1
+};
+
+int __init vzads_unregister_early_cons(void)
+{
+        /* mac_early_print can't be used after init sections are discarded */
+        return unregister_console(&vzads_early_cons);
+}
+
+late_initcall(vzads_unregister_early_cons);
+#endif
+
 
 static void __init init_hardware(char *command, int size)
 {
@@ -176,12 +205,22 @@ static void __init init_hardware(char *command, int size)
 #endif
 /***************************************************************************/
 
+
 void __init config_BSP(char *command, int size)
 {
+
+
+#ifdef CONFIG_VZADS
+#ifdef CONFIG_EARLY_PRINTK
+	register_console(&vzads_early_cons);
+#endif
+#endif
+
 	printk(KERN_INFO "68VZ328 DragonBallVZ support (c) 2001 Lineo, Inc.\n");
 
 	init_hardware(command, size);
 
+	mach_sched_init = hw_timer_init;
 	mach_hwclk = m68328_hwclk;
 	mach_reset = m68vz328_reset;
 }

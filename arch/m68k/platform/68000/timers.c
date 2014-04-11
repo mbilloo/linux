@@ -28,7 +28,7 @@
 
 /***************************************************************************/
 
-#if defined(CONFIG_DRAGEN2)
+#if defined(CONFIG_DRAGEN2) || defined(CONFIG_VZADS)
 /* with a 33.16 MHz clock, this will give usec resolution to the time functions */
 #define CLOCK_SOURCE	TCTL_CLKSOURCE_SYSCLK
 #define CLOCK_PRE	7
@@ -105,18 +105,19 @@ void hw_timer_init(irq_handler_t handler)
 	/* disable timer 1 */
 	TCTL = 0;
 
-	/* set ISR */
-	setup_irq(TMR_IRQ_NUM, &m68328_timer_irq);
-
 	/* Restart mode, Enable int, Set clock source */
 	TCTL = TCTL_OM | TCTL_IRQEN | CLOCK_SOURCE;
 	TPRER = CLOCK_PRE;
 	TCMP = TICKS_PER_JIFFY;
 
-	/* Enable timer 1 */
-	TCTL |= TCTL_TEN;
 	clocksource_register_hz(&m68328_clk, TICKS_PER_JIFFY*HZ);
 	timer_interrupt = handler;
+
+	/* set ISR */
+	setup_irq(TMR_IRQ_NUM, &m68328_timer_irq);
+
+	/* Enable timer 1 */
+	TCTL |= TCTL_TEN;
 }
 
 /***************************************************************************/

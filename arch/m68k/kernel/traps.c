@@ -38,6 +38,11 @@
 #include <asm/machdep.h>
 #include <asm/siginfo.h>
 
+#ifdef CONFIG_M68VZ328
+#include <asm/MC68VZ328.h>
+#endif
+
+void show_registers(struct pt_regs *regs);
 
 static const char *vec_names[] = {
 	[VEC_RESETSP]	= "RESET SP",
@@ -753,13 +758,114 @@ static inline void access_errorcf(unsigned int fs, struct frame *fp)
 }
 #endif /* CONFIG_COLDFIRE CONFIG_MMU */
 
+struct mc68000busexception {
+	unsigned short info;
+	unsigned long  accessaddress;
+	unsigned short ir;
+	unsigned short sr;
+	unsigned long  pc;
+};
+
+asmlinkage void addrerr_c(struct frame *fp){
+		printk("*** address error ***\n");
+		struct mc68000busexception *context = (struct mc68000busexception*) &(fp->ptregs.sr);
+
+		printk("address PC %x, access address %x!\n", context->pc, context->accessaddress);
+		//show_registers(&fp->ptregs);
+
+
+
+		siginfo_t info;
+
+		/* send the appropriate signal to the user program */
+		info.si_code = BUS_ADRALN;
+		info.si_signo = SIGBUS;
+		info.si_errno = 0;
+
+#ifndef CONFIG_M68000
+		switch (fp->ptregs.format) {
+		    default:
+			info.si_addr = (void *) fp->ptregs.pc;
+			break;
+		    case 2:
+			info.si_addr = (void *) fp->un.fmt2.iaddr;
+			break;
+		    case 7:
+			info.si_addr = (void *) fp->un.fmt7.effaddr;
+			break;
+		    case 9:
+			info.si_addr = (void *) fp->un.fmt9.iaddr;
+			break;
+		    case 10:
+			info.si_addr = (void *) fp->un.fmta.daddr;
+			break;
+		    case 11:
+			info.si_addr = (void *) fp->un.fmtb.daddr;
+			break;
+		}
+#endif
+		panic("we shit our pants\n");
+		//force_sig_info (SIGBUS, &info, current);
+}
+
+asmlinkage void illegalinstruction_c(struct frame *fp) {
+	printk("*** illegal instruction ***\n");
+	pr_info("PC: [<%08lx>] %pS\n", fp->ptregs.pc, (void *) fp->ptregs.pc);
+	pr_info("SR: %04x  SP: %p  a2: %08lx\n", fp->ptregs.sr, fp, fp->ptregs.a2);
+	pr_info("d0: %08lx    d1: %08lx    d2: %08lx    d3: %08lx\n", fp->ptregs.d0,
+			fp->ptregs.d1, fp->ptregs.d2, fp->ptregs.d3);
+	pr_info("d4: %08lx    d5: %08lx    a0: %08lx    a1: %08lx\n", fp->ptregs.d4,
+			fp->ptregs.d5, fp->ptregs.a0, fp->ptregs.a1);
+
+	pr_info("Process %s (pid: %d, task=%p)\n", current->comm,
+			task_pid_nr(current), current);
+	panic("we shit our pants\n");
+}
+
+asmlinkage void zerodivide_c(struct frame *fp){
+		printk("zerodivide!\n");
+		panic("we shit our pants\n");
+}
+
+asmlinkage void chkinstruction_c(struct frame *fp){
+		printk("checkinstruction!\n");
+		panic("we shit our pants\n");
+}
+
+asmlinkage void trapvinstruction_c(struct frame *fp){
+		printk("trapv instruction!\n");
+		panic("we shit our pants\n");
+}
+
+asmlinkage void privilegeviolation_c(struct frame *fp){
+		printk("*** privilege violation ***\n");
+		printk("PC - %x\nSR - %x\n", fp->ptregs.pc, fp->ptregs.sr);
+		panic("we shit our pants\n");
+		//force_sig(SIGILL, current);
+}
+
+asmlinkage void spuriousinterrupt_c(struct frame *fp){
+		//printk("*** spurious interrupt ***\n");
+		//printk("PC - %x\nSR - %x\n", fp->ptregs.pc, fp->ptregs.sr);
+		//panic("we shit our pants\n");
+}
+
 asmlinkage void buserr_c(struct frame *fp)
 {
 	/* Only set esp0 if coming from user mode */
 	if (user_mode(&fp->ptregs))
 		current->thread.esp0 = (unsigned long) fp;
 
+#ifdef CONFIG_M68000
+	struct mc68000busexception *context = (struct mc68000busexception*) &(fp->ptregs.sr);
+	printk("*** Bus Error ***\n");
+	printk("PC - %x\nSR - %x\nIR - %x\nAccess Address %x\nInfo %x\n", context->pc, context->sr, context->ir, context->accessaddress, context->info);
+#ifdef CONFIG_M68VZ328
+	//printk("SCR - %x\n", SCR);
+#endif
+#else
 	pr_debug("*** Bus Error *** Format is %x\n", fp->ptregs.format);
+#endif
 
 #if defined(CONFIG_COLDFIRE) && defined(CONFIG_MMU)
 	if (CPU_IS_COLDFIRE) {
@@ -783,6 +889,9 @@ asmlinkage void buserr_c(struct frame *fp)
 	}
 #endif /* CONFIG_COLDFIRE && CONFIG_MMU */
 
+#ifdef CONFIG_M68000
+	panic("we shit our pants, bus error\n");
+#else
 	switch (fp->ptregs.format) {
 #if defined (CONFIG_M68060)
 	case 4:				/* 68060 access error */
@@ -805,7 +914,9 @@ asmlinkage void buserr_c(struct frame *fp)
 	  pr_debug("Unknown SIGSEGV - 4\n");
 	  force_sig(SIGSEGV, current);
 	}
+#endif
 }
+
 
 
 static int kstack_depth_to_print = 48;
@@ -860,6 +971,7 @@ void show_registers(struct pt_regs *regs)
 
 	pr_info("Process %s (pid: %d, task=%p)\n",
 		current->comm, task_pid_nr(current), current);
+#ifndef CONFIG_M68000
 	addr = (unsigned long)&fp->un;
 	pr_info("Frame format=%X ", regs->format);
 	switch (regs->format) {
@@ -915,6 +1027,7 @@ void show_registers(struct pt_regs *regs)
 	default:
 		pr_cont("\n");
 	}
+#endif
 	show_stack(NULL, (unsigned long *)addr);
 
 	pr_info("Code:");
@@ -971,6 +1084,7 @@ void show_stack(struct task_struct *task, unsigned long *stack)
 
 void bad_super_trap (struct frame *fp)
 {
+#ifndef CONFIG_M68000
 	int vector = (fp->ptregs.vector >> 2) & 0xff;
 
 	console_verbose();
@@ -1000,12 +1114,13 @@ void bad_super_trap (struct frame *fp)
 				fp->un.fmtb.daddr, space_names[ssw & DFC],
 				fp->ptregs.pc);
 	}
+#endif
 	pr_err("Current process id is %d\n", task_pid_nr(current));
 	die_if_kernel("BAD KERNEL TRAP", &fp->ptregs, 0);
 }
-
 asmlinkage void trap_c(struct frame *fp)
 {
+#ifndef CONFIG_M68000
 	int sig;
 	int vector = (fp->ptregs.vector >> 2) & 0xff;
 	siginfo_t info;
@@ -1103,6 +1218,7 @@ asmlinkage void trap_c(struct frame *fp)
 	}
 	info.si_signo = sig;
 	info.si_errno = 0;
+
 	switch (fp->ptregs.format) {
 	    default:
 		info.si_addr = (void *) fp->ptregs.pc;
@@ -1124,6 +1240,7 @@ asmlinkage void trap_c(struct frame *fp)
 		break;
 	}
 	force_sig_info (sig, &info, current);
+#endif
 }
 
 void die_if_kernel (char *str, struct pt_regs *fp, int nr)

@@ -864,4 +864,11 @@ config GPIO_VIPERBOARD
           River Tech's viperboard.h for detailed meaning
           of the module parameters.
 
+config GPIO_DRAGONBALL
+	bool "Dragonball GPIO"
+	depends on DRAGONBALL
+	select GPIO_GENERIC_PLATFORM
+	help
+	  Enable support for the GPIO found on DragonBall SoCs
+
 endif
