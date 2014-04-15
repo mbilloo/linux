@@ -823,7 +823,16 @@ asmlinkage void illegalinstruction_c(struct frame *fp) {
 }
 
 asmlinkage void zerodivide_c(struct frame *fp){
-		printk("zerodivide!\n");
+		printk("*** zerodivide! ***\n");
+		pr_info("PC: [<%08lx>] %pS\n", fp->ptregs.pc, (void *) fp->ptregs.pc);
+		pr_info("SR: %04x  SP: %p  a2: %08lx\n", fp->ptregs.sr, fp, fp->ptregs.a2);
+		pr_info("d0: %08lx    d1: %08lx    d2: %08lx    d3: %08lx\n", fp->ptregs.d0,
+				fp->ptregs.d1, fp->ptregs.d2, fp->ptregs.d3);
+		pr_info("d4: %08lx    d5: %08lx    a0: %08lx    a1: %08lx\n", fp->ptregs.d4,
+				fp->ptregs.d5, fp->ptregs.a0, fp->ptregs.a1);
+
+		pr_info("Process %s (pid: %d, task=%p)\n", current->comm,
+				task_pid_nr(current), current);
 		panic("we shit our pants\n");
 }
 

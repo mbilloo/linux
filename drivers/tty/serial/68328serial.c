@@ -127,11 +127,16 @@ struct m68k_serial {
 /*
  * Define the number of ports supported and their irqs.
  */
+
+#ifdef CONFIG_M68VZ328
+#define NR_PORTS 2
+static unsigned int uart_irqs[NR_PORTS] = { UART1_IRQ_NUM, UART2_IRQ_NUM };
+#else
 #define NR_PORTS 1
+static unsigned int uart_irqs[NR_PORTS] = { UART_IRQ_NUM };
+#endif
 
 static struct m68k_serial m68k_soft[NR_PORTS];
-
-static unsigned int uart_irqs[NR_PORTS] = { UART_IRQ_NUM };
 
 /* multiple ports are contiguous in memory */
 m68328_uart *uart_addr = (m68328_uart *)USTCNT_ADDR;
