@@ -580,7 +580,7 @@ static void spi_set_cs(struct spi_device *spi, bool enable)
 		spi->master->set_cs(spi, !enable);
 }
 
-#ifdef HAVE_DMA
+#ifdef CONFIG_HAS_DMA
 static int spi_map_buf(struct spi_master *master, struct device *dev,
 		       struct sg_table *sgt, void *buf, size_t len,
 		       enum dma_data_direction dir)
@@ -637,15 +637,88 @@ static void spi_unmap_buf(struct spi_master *master, struct device *dev,
 		sg_free_table(sgt);
 	}
 }
-#endif
 
-static int spi_map_msg(struct spi_master *master, struct spi_message *msg)
+static int __spi_map_msg(struct spi_master *master, struct spi_message *msg)
 {
 	struct device *tx_dev, *rx_dev;
 	struct spi_transfer *xfer;
+	int ret;
+
+	if (!master->can_dma)
+		return 0;
+
+	tx_dev = &master->dma_tx->dev->device;
+	rx_dev = &master->dma_rx->dev->device;
+
+	list_for_each_entry(xfer, &msg->transfers, transfer_list) {
+		if (!master->can_dma(master, msg->spi, xfer))
+			continue;
+
+		if (xfer->tx_buf != NULL) {
+			ret = spi_map_buf(master, tx_dev, &xfer->tx_sg,
+					  (void *)xfer->tx_buf, xfer->len,
+					  DMA_TO_DEVICE);
+			if (ret != 0)
+				return ret;
+		}
+
+		if (xfer->rx_buf != NULL) {
+			ret = spi_map_buf(master, rx_dev, &xfer->rx_sg,
+					  xfer->rx_buf, xfer->len,
+					  DMA_FROM_DEVICE);
+			if (ret != 0) {
+				spi_unmap_buf(master, tx_dev, &xfer->tx_sg,
+					      DMA_TO_DEVICE);
+				return ret;
+			}
+		}
+	}
+
+	master->cur_msg_mapped = true;
+
+	return 0;
+}
+
+static int spi_unmap_msg(struct spi_master *master, struct spi_message *msg)
+{
+	struct spi_transfer *xfer;
+	struct device *tx_dev, *rx_dev;
+
+	if (!master->cur_msg_mapped || !master->can_dma)
+		return 0;
+
+	tx_dev = &master->dma_tx->dev->device;
+	rx_dev = &master->dma_rx->dev->device;
+
+	list_for_each_entry(xfer, &msg->transfers, transfer_list) {
+		if (!master->can_dma(master, msg->spi, xfer))
+			continue;
+
+		spi_unmap_buf(master, rx_dev, &xfer->rx_sg, DMA_FROM_DEVICE);
+		spi_unmap_buf(master, tx_dev, &xfer->tx_sg, DMA_TO_DEVICE);
+	}
+
+	return 0;
+}
+#else /* !CONFIG_HAS_DMA */
+static inline int __spi_map_msg(struct spi_master *master,
+				struct spi_message *msg)
+{
+	return 0;
+}
+
+static inline int spi_unmap_msg(struct spi_master *master,
+				struct spi_message *msg)
+{
+	return 0;
+}
+#endif /* !CONFIG_HAS_DMA */
+
+static int spi_map_msg(struct spi_master *master, struct spi_message *msg)
+{
+	struct spi_transfer *xfer;
 	void *tmp;
 	unsigned int max_tx, max_rx;
-	int ret;
 
 	if (master->flags & (SPI_MASTER_MUST_RX | SPI_MASTER_MUST_TX)) {
 		max_tx = 0;
@@ -688,69 +761,7 @@ static int spi_map_msg(struct spi_master *master, struct spi_message *msg)
 		}
 	}
 
-#ifndef HAVE_DMA
-	return 0;
-#else
-	if (!master->can_dma)
-		return 0;
-
-	tx_dev = &master->dma_tx->dev->device;
-	rx_dev = &master->dma_rx->dev->device;
-
-	list_for_each_entry(xfer, &msg->transfers, transfer_list) {
-		if (!master->can_dma(master, msg->spi, xfer))
-			continue;
-
-		if (xfer->tx_buf != NULL) {
-			ret = spi_map_buf(master, tx_dev, &xfer->tx_sg,
-					  (void *)xfer->tx_buf, xfer->len,
-					  DMA_TO_DEVICE);
-			if (ret != 0)
-				return ret;
-		}
-
-		if (xfer->rx_buf != NULL) {
-			ret = spi_map_buf(master, rx_dev, &xfer->rx_sg,
-					  xfer->rx_buf, xfer->len,
-					  DMA_FROM_DEVICE);
-			if (ret != 0) {
-				spi_unmap_buf(master, tx_dev, &xfer->tx_sg,
-					      DMA_TO_DEVICE);
-				return ret;
-			}
-		}
-	}
-
-	master->cur_msg_mapped = true;
-
-	return 0;
-#endif
-}
-
-static int spi_unmap_msg(struct spi_master *master, struct spi_message *msg)
-{
-	struct spi_transfer *xfer;
-	struct device *tx_dev, *rx_dev;
-
-#ifndef HAVE_DMA
-	return 0;
-#else
-	if (!master->cur_msg_mapped || !master->can_dma)
-		return 0;
-
-	tx_dev = &master->dma_tx->dev->device;
-	rx_dev = &master->dma_rx->dev->device;
-
-	list_for_each_entry(xfer, &msg->transfers, transfer_list) {
-		if (!master->can_dma(master, msg->spi, xfer))
-			continue;
-
-		spi_unmap_buf(master, rx_dev, &xfer->rx_sg, DMA_FROM_DEVICE);
-		spi_unmap_buf(master, tx_dev, &xfer->tx_sg, DMA_TO_DEVICE);
-	}
-
-	return 0;
-#endif
+	return __spi_map_msg(master, msg);
 }
 
 /*
@@ -1161,7 +1172,6 @@ static int spi_master_initialize_queue(struct spi_master *master)
 {
 	int ret;
 
-	master->queued = true;
 	master->transfer = spi_queued_transfer;
 	if (!master->transfer_one_message)
 		master->transfer_one_message = spi_transfer_one_message;
@@ -1172,6 +1182,7 @@ static int spi_master_initialize_queue(struct spi_master *master)
 		dev_err(&master->dev, "problem initializing queue\n");
 		goto err_init_queue;
 	}
+	master->queued = true;
 	ret = spi_start_queue(master);
 	if (ret) {
 		dev_err(&master->dev, "problem starting queue\n");
@@ -1181,8 +1192,8 @@ static int spi_master_initialize_queue(struct spi_master *master)
 	return 0;
 
 err_start_queue:
-err_init_queue:
 	spi_destroy_queue(master);
+err_init_queue:
 	return ret;
 }
 
@@ -1766,7 +1777,7 @@ EXPORT_SYMBOL_GPL(spi_busnum_to_master);
  */
 int spi_setup(struct spi_device *spi)
 {
-	unsigned	bad_bits;
+	unsigned	bad_bits, ugly_bits;
 	int		status = 0;
 
 	/* check mode to prevent that DUAL and QUAD set at the same time
@@ -1786,6 +1797,15 @@ int spi_setup(struct spi_device *spi)
 	 * that aren't supported with their current master
 	 */
 	bad_bits = spi->mode & ~spi->master->mode_bits;
+	ugly_bits = bad_bits &
+		    (SPI_TX_DUAL | SPI_TX_QUAD | SPI_RX_DUAL | SPI_RX_QUAD);
+	if (ugly_bits) {
+		dev_warn(&spi->dev,
+			 "setup: ignoring unsupported mode bits %x\n",
+			 ugly_bits);
+		spi->mode &= ~ugly_bits;
+		bad_bits &= ~ugly_bits;
+	}
 	if (bad_bits) {
 		dev_err(&spi->dev, "setup: unsupported mode bits %x\n",
 			bad_bits);
