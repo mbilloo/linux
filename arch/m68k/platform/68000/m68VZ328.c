@@ -30,6 +30,8 @@
 
 #include <linux/console.h>
 
+#include <linux/platform_device.h>
+
 #ifdef CONFIG_INIT_LCD
 #include "bootlogo-vz.h"
 #endif
@@ -206,8 +208,26 @@ static void __init init_hardware(char *command, int size)
 /***************************************************************************/
 
 
+static struct resource ds1747_resources[] = {
+		{
+			.start	= 0x3000000 ,
+			.end	= 0x3000000 + (0x100000 - 1),
+			.flags	= IORESOURCE_MEM,
+			.name	= "io-memory"
+		},
+};
+
+static struct platform_device ds1747 = {
+		.name 		= "rtc-ds1742",
+		.id			= 0,
+		.resource	= ds1747_resources,
+		.num_resources	= ARRAY_SIZE(ds1747_resources),
+};
+
 void __init config_BSP(char *command, int size)
 {
+
+
 
 
 #ifdef CONFIG_VZADS
@@ -223,6 +243,17 @@ void __init config_BSP(char *command, int size)
 	mach_sched_init = hw_timer_init;
 	mach_hwclk = m68328_hwclk;
 	mach_reset = m68vz328_reset;
+
 }
 
 /***************************************************************************/
+
+static int __init init_vzads(void)
+{
+	int err = platform_device_register(&ds1747);
+	if(err)
+		printk("rtc register failed %d\n", err);
+	return 0;
+}
+
+arch_initcall(init_vzads);

@@ -256,14 +256,14 @@
 /* '328-compatible definitions */
 #define SPIM_IRQ_NUM	SPI_IRQ_NUM
 #define TMR1_IRQ_NUM	TMR_IRQ_NUM
-#define UART_IRQ_NUM	UART1_IRQ_NUM
+//#define UART_IRQ_NUM	UART1_IRQ_NUM
 
 /* 
  * Here go the bitmasks themselves
  */
 #define IMR_MSPI 	(1 << SPI_IRQ_NUM)	/* Mask SPI interrupt */
 #define	IMR_MTMR	(1 << TMR_IRQ_NUM)	/* Mask Timer interrupt */
-#define IMR_MUART	(1 << UART_IRQ_NUM)	/* Mask UART interrupt */	
+//#define IMR_MUART	(1 << UART_IRQ_NUM)	/* Mask UART interrupt */
 #define	IMR_MWDT	(1 << WDT_IRQ_NUM)	/* Mask Watchdog Timer interrupt */
 #define IMR_MRTC	(1 << RTC_IRQ_NUM)	/* Mask RTC interrupt */
 #define	IMR_MKB		(1 << KB_IRQ_NUM)	/* Mask Keyboard Interrupt */
@@ -292,7 +292,7 @@
 
 #define ISR_SPI 	(1 << SPI_IRQ_NUM)	/* SPI interrupt */
 #define	ISR_TMR		(1 << TMR_IRQ_NUM)	/* Timer interrupt */
-#define ISR_UART	(1 << UART_IRQ_NUM)	/* UART interrupt */	
+//#define ISR_UART	(1 << UART_IRQ_NUM)	/* UART interrupt */
 #define	ISR_WDT		(1 << WDT_IRQ_NUM)	/* Watchdog Timer interrupt */
 #define ISR_RTC		(1 << RTC_IRQ_NUM)	/* RTC interrupt */
 #define	ISR_KB		(1 << KB_IRQ_NUM)	/* Keyboard Interrupt */
@@ -603,41 +603,78 @@
 /*
  * PWM Control Register
  */
-#define PWMC_ADDR	0xfffff500
-#define PWMC		WORD_REF(PWMC_ADDR)
+#define PWMC1_ADDR	0xfffff500
+#define PWMC1		WORD_REF(PWMC1_ADDR)
 
-#define PWMC_CLKSEL_MASK	0x0003	/* Clock Selection */
-#define PWMC_CLKSEL_SHIFT	0
-#define PWMC_REPEAT_MASK	0x000c	/* Sample Repeats */
-#define PWMC_REPEAT_SHIFT	2
-#define PWMC_EN			0x0010	/* Enable PWM */
-#define PMNC_FIFOAV		0x0020	/* FIFO Available */
-#define PWMC_IRQEN		0x0040	/* Interrupt Request Enable */
-#define PWMC_IRQ		0x0080	/* Interrupt Request (FIFO empty) */
-#define PWMC_PRESCALER_MASK	0x7f00	/* Incoming Clock prescaler */
-#define PWMC_PRESCALER_SHIFT	8
-#define PWMC_CLKSRC		0x8000	/* Clock Source Select */
+#define PWMC1_CLKSEL_MASK	0x0003	/* Clock Selection */
+#define PWMC1_CLKSEL_SHIFT	0
+#define PWMC1_REPEAT_MASK	0x000c	/* Sample Repeats */
+#define PWMC1_REPEAT_SHIFT	2
+#define PWMC1_EN			0x0010	/* Enable PWM */
+#define PMNC1_FIFOAV		0x0020	/* FIFO Available */
+#define PWMC1_IRQEN		0x0040	/* Interrupt Request Enable */
+#define PWMC1_IRQ		0x0080	/* Interrupt Request (FIFO empty) */
+#define PWMC1_PRESCALER_MASK	0x7f00	/* Incoming Clock prescaler */
+#define PWMC1_PRESCALER_SHIFT	8
+#define PWMC1_CLKSRC		0x8000	/* Clock Source Select */
 
 /* '328-compatible definitions */
-#define PWMC_PWMEN	PWMC_EN
+#define PWMC_PWMEN	PWMC1_EN
 
 /*
  * PWM Sample Register 
  */
-#define PWMS_ADDR	0xfffff502
-#define PWMS		WORD_REF(PWMS_ADDR)
+#define PWMS1_ADDR	0xfffff502
+#define PWMS1		WORD_REF(PWMS1_ADDR)
 
 /*
  * PWM Period Register
  */
-#define PWMP_ADDR	0xfffff504
-#define PWMP		BYTE_REF(PWMP_ADDR)
+#define PWMP1_ADDR	0xfffff504
+#define PWMP1		BYTE_REF(PWMP1_ADDR)
 
 /*
  * PWM Counter Register
  */
-#define PWMCNT_ADDR	0xfffff505
-#define PWMCNT		BYTE_REF(PWMCNT_ADDR)
+#define PWMCNT1_ADDR	0xfffff505
+#define PWMCNT1		BYTE_REF(PWMCNT1_ADDR)
+
+/*
+ * PWM Control Register
+ */
+#define PWMC2_ADDR	0xfffff510
+#define PWMC2		WORD_REF(PWMC1_ADDR)
+
+#define PWMC2_CLKSEL_MASK	0x0003	/* Clock Selection */
+#define PWMC2_CLKSEL_SHIFT	0
+#define PWMC2_REPEAT_MASK	0x000c	/* Sample Repeats */
+#define PWMC2_REPEAT_SHIFT	2
+#define PWMC2_EN			0x0010	/* Enable PWM */
+#define PMNC2_FIFOAV		0x0020	/* FIFO Available */
+#define PWMC2_IRQEN		0x0040	/* Interrupt Request Enable */
+#define PWMC2_IRQ		0x0080	/* Interrupt Request (FIFO empty) */
+#define PWMC2_PRESCALER_MASK	0x7f00	/* Incoming Clock prescaler */
+#define PWMC2_PRESCALER_SHIFT	8
+#define PWMC2_CLKSRC		0x8000	/* Clock Source Select */
+
+/*
+ * PWM Period Register
+ */
+#define PWMP2_ADDR	0xfffff512
+#define PWMP2		BYTE_REF(PWMP2_ADDR)
+
+/*
+ * PWM Pulse Width Register
+ */
+#define PWMW2_ADDR	0xfffff514
+#define PWMW2		BYTE_REF(PWMW2_ADDR)
+
+/*
+ * PWM Counter Register
+ */
+#define PWMCNT2_ADDR	0xfffff516
+#define PWMCNT2		BYTE_REF(PWMCNT2_ADDR)
+
 
 /**********
  *

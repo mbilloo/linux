@@ -62,7 +62,6 @@
 #else
 #define USE_INTS
 #endif
-
 /*
  * I believe this is the optimal setting that reduces the number of interrupts.
  * At high speeds the output might become a little "bursted" (use USTCNT_TXHE
@@ -1204,7 +1203,11 @@ rs68328_init(void)
 	    
 #ifdef CONFIG_M68VZ328
 		if (i > 0 )
+#ifdef CONFIG_SERIAL_68328_RTS_CTS
+			PJSEL &= 0x0F;  /* PSW enable second port output */
+#else
 			PJSEL &= 0xCF;  /* PSW enable second port output */
+#endif
 #endif
 
 	    if (request_irq(uart_irqs[i],

@@ -26,17 +26,19 @@
 
 #define DRV_VERSION "0.4"
 
-#define RTC_SIZE		8
+#define MUL	2
+
+#define RTC_SIZE		(8 * MUL)
 
 #define RTC_CONTROL		0
 #define RTC_CENTURY		0
-#define RTC_SECONDS		1
-#define RTC_MINUTES		2
-#define RTC_HOURS		3
-#define RTC_DAY			4
-#define RTC_DATE		5
-#define RTC_MONTH		6
-#define RTC_YEAR		7
+#define RTC_SECONDS		(1 * MUL)
+#define RTC_MINUTES		(2 * MUL)
+#define RTC_HOURS		(3 * MUL)
+#define RTC_DAY			(4 * MUL)
+#define RTC_DATE		(5 * MUL)
+#define RTC_MONTH		(6 * MUL)
+#define RTC_YEAR		(7 * MUL)
 
 #define RTC_CENTURY_MASK	0x3f
 #define RTC_SECONDS_MASK	0x7f
@@ -134,8 +136,12 @@ static ssize_t ds1742_nvram_read(struct file *filp, struct kobject *kobj,
 	void __iomem *ioaddr = pdata->ioaddr_nvram;
 	ssize_t count;
 
-	for (count = 0; size > 0 && pos < pdata->size_nvram; count++, size--)
-		*buf++ = readb(ioaddr + pos++);
+	pos *= MUL;
+
+	for (count = 0; size > 0 && pos < pdata->size_nvram; count++, size--){
+		*buf++ = readb(ioaddr + pos);
+		pos += MUL;
+	}
 	return count;
 }
 
@@ -149,8 +155,12 @@ static ssize_t ds1742_nvram_write(struct file *filp, struct kobject *kobj,
 	void __iomem *ioaddr = pdata->ioaddr_nvram;
 	ssize_t count;
 
-	for (count = 0; size > 0 && pos < pdata->size_nvram; count++, size--)
-		writeb(*buf++, ioaddr + pos++);
+	pos *= MUL;
+
+	for (count = 0; size > 0 && pos < pdata->size_nvram; count++, size--){
+		writeb(*buf++, ioaddr + pos);
+		pos += MUL;
+	}
 	return count;
 }
 
@@ -175,6 +185,7 @@ static int ds1742_rtc_probe(struct platform_device *pdev)
 	pdata->ioaddr_nvram = ioaddr;
 	pdata->size_nvram = resource_size(res) - RTC_SIZE;
 	pdata->ioaddr_rtc = ioaddr + pdata->size_nvram;
+	pdata->size_nvram /= MUL;
 
 	sysfs_bin_attr_init(&pdata->nvram_attr);
 	pdata->nvram_attr.attr.name = "nvram";
@@ -193,6 +204,7 @@ static int ds1742_rtc_probe(struct platform_device *pdev)
 		writeb(sec, ioaddr + RTC_SECONDS);
 		writeb(cen & RTC_CENTURY_MASK, ioaddr + RTC_CONTROL);
 	}
+
 	if (!(readb(ioaddr + RTC_DAY) & RTC_BATT_FLAG))
 		dev_warn(&pdev->dev, "voltage-low detected.\n");
 

@@ -227,7 +227,7 @@
  */
 #define SPI_IRQ_NUM	0	/* SPI interrupt */
 #define TMR_IRQ_NUM	1	/* Timer interrupt */
-#define UART_IRQ_NUM	2	/* UART interrupt */	
+//#define UART_IRQ_NUM	2	/* UART interrupt */
 #define	WDT_IRQ_NUM	3	/* Watchdog Timer interrupt */
 #define RTC_IRQ_NUM	4	/* RTC interrupt */
 #define	KB_IRQ_NUM	6	/* Keyboard Interrupt */
@@ -253,7 +253,7 @@
  */
 #define IMR_MSPI 	(1 << SPI_IRQ_NUM)	/* Mask SPI interrupt */
 #define	IMR_MTMR	(1 << TMR_IRQ_NUM)	/* Mask Timer interrupt */
-#define IMR_MUART	(1 << UART_IRQ_NUM)	/* Mask UART interrupt */	
+//#define IMR_MUART	(1 << UART_IRQ_NUM)	/* Mask UART interrupt */
 #define	IMR_MWDT	(1 << WDT_IRQ_NUM)	/* Mask Watchdog Timer interrupt */
 #define IMR_MRTC	(1 << RTC_IRQ_NUM)	/* Mask RTC interrupt */
 #define	IMR_MKB		(1 << KB_IRQ_NUM)	/* Mask Keyboard Interrupt */
@@ -282,7 +282,7 @@
 
 #define ISR_SPI 	(1 << SPI_IRQ_NUM)	/* SPI interrupt */
 #define	ISR_TMR		(1 << TMR_IRQ_NUM)	/* Timer interrupt */
-#define ISR_UART	(1 << UART_IRQ_NUM)	/* UART interrupt */	
+//#define ISR_UART	(1 << UART_IRQ_NUM)	/* UART interrupt */
 #define	ISR_WDT		(1 << WDT_IRQ_NUM)	/* Watchdog Timer interrupt */
 #define ISR_RTC		(1 << RTC_IRQ_NUM)	/* RTC interrupt */
 #define	ISR_KB		(1 << KB_IRQ_NUM)	/* Keyboard Interrupt */
@@ -311,7 +311,7 @@
 
 #define IPR_SPI 	(1 << SPI_IRQ_NUM)	/* SPI interrupt */
 #define	IPR_TMR		(1 << TMR_IRQ_NUM)	/* Timer interrupt */
-#define IPR_UART	(1 << UART_IRQ_NUM)	/* UART interrupt */	
+//#define IPR_UART	(1 << UART_IRQ_NUM)	/* UART interrupt */
 #define	IPR_WDT		(1 << WDT_IRQ_NUM)	/* Watchdog Timer interrupt */
 #define IPR_RTC		(1 << RTC_IRQ_NUM)	/* RTC interrupt */
 #define	IPR_KB		(1 << KB_IRQ_NUM)	/* Keyboard Interrupt */

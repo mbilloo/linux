@@ -679,6 +679,7 @@ static int enc28j60_hw_init(struct enc28j60_net *priv)
 	 * If it's 0x00 or 0xFF probably the enc28j60 is not mounted or
 	 * damaged
 	 */
+	printk("checking chip revid\n");
 	reg = locked_regb_read(priv, EREVID);
 	if (netif_msg_drv(priv))
 		printk(KERN_INFO DRV_NAME ": chip RevID: 0x%02x\n", reg);

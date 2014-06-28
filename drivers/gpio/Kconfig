@@ -867,7 +867,6 @@ config GPIO_VIPERBOARD
 config GPIO_DRAGONBALL
 	bool "Dragonball GPIO"
 	depends on DRAGONBALL
-	select GPIO_GENERIC_PLATFORM
 	help
 	  Enable support for the GPIO found on DragonBall SoCs
 

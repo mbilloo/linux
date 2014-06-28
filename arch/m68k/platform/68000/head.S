@@ -16,6 +16,8 @@
 #include <asm/thread_info.h>
 
 
+
+
 /*****************************************************************************
  * UCSIMM and UCDIMM use CONFIG_MEMORY_RESERVE to reserve some RAM
  *****************************************************************************/
@@ -232,8 +234,9 @@ _clear_bss:
 
 
 #ifdef CONFIG_VZADS
-	movew	#0x8800,0xfffffc02
-	movew	#0x403F,0xfffffc00
+	//moveb	#0x7f,  0xfffff40a
+	//movew	#0x8800,0xfffffc02
+	//movew	#0x403F,0xfffffc00
 
 	movew	#0x0138, 0xFFFFF902
 	moveb	#0x03, 0xFFFFF418
