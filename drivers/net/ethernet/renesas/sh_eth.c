@@ -2466,6 +2466,7 @@ static void sh_eth_tsu_enable_cam_entry_post(struct net_device *ndev,
 
 	reg_offset = sh_eth_tsu_get_post_reg_offset(mdp, entry);
 	tmp = ioread32(reg_offset);
+	printk("xxx %x\n",(unsigned) reg_offset);
 	iowrite32(tmp | sh_eth_tsu_get_post_bit(mdp, entry), reg_offset);
 }
 
@@ -2586,6 +2587,8 @@ static int sh_eth_tsu_add_entry(struct net_device *ndev, const u8 *addr)
 	struct sh_eth_private *mdp = netdev_priv(ndev);
 	void *reg_offset = sh_eth_tsu_get_offset(mdp, TSU_ADRH0);
 	int i, ret;
+
+	printk("xxxxsdd %x\n", (unsigned) reg_offset);
 
 	if (!mdp->cd->tsu)
 		return 0;
