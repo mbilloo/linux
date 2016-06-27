@@ -21,7 +21,7 @@
 	};
 
 	chosen {
-		bootargs = "ignore_loglevel rw root=/dev/nfs ip=dhcp";
+		bootargs = "root=/dev/mtdblock4";
 		stdout-path = &scif2;
 	};
 
@@ -34,6 +34,43 @@
 		#address-cells = <1>;
 		#size-cells = <1>;
 	};
+	
+	spirom: spirom@0 {
+		compatible = "mtd-rom";
+		reg = <0x18000000 0x2000000>;
+		bank-width = <4>;
+		
+		partition@0 {
+			label = "u-boot";
+			reg = <0x0000000 0x080000>;
+			read-only;
+		};
+		
+		partition@1 {
+			label = "env";
+			reg = <0x00080000 0x040000>;
+			read-only;
+		};
+		
+		partition@3 {
+			label = "devicetree";
+			reg = <0x000C0000 0x040000>;
+			read-only;
+		};
+		
+		partition@4 {
+			label = "kernel";
+			reg = <0x00100000 0x280000>;
+			read-only;
+		};
+		
+		partition@5 {
+			label = "rootfs";
+			reg = <0x00400000 0x1C0000>;
+			read-only;
+		};
+	};
+	
 };
 
 &extal_clk {

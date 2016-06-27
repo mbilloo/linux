@@ -335,7 +335,8 @@
 
 	ethernet: ethernet@e8203000 {
                 compatible = "renesas,ether-r7s72100";
-                reg = <0xe8203000 0x1000 0xe8204800 0x1000>;
+                reg = <0xe8203000 0x800>,
+                	  <0xe8204800 0x200>;
                 phy-mode = "mii";
                 renesas,ether-link-active-low;
                 #address-cells = <1>;
