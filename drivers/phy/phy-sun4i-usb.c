@@ -264,7 +264,7 @@ static int sun4i_usb_phy_init(struct phy *_phy)
 		return ret;
 	}
 
-	if (data->cfg->enable_pmu_unk1) {
+	if (data->cfg->enable_pmu_unk1 && phy->pmu) {
 		val = readl(phy->pmu + REG_PMU_UNK1);
 		writel(val & ~2, phy->pmu + REG_PMU_UNK1);
 	}
@@ -272,7 +272,10 @@ static int sun4i_usb_phy_init(struct phy *_phy)
 	if (data->cfg->type == sun8i_h3_phy) {
 		if (phy->index == 0) {
 			val = readl(data->base + REG_PHY_UNK_H3);
-			writel(val & ~1, data->base + REG_PHY_UNK_H3);
+			writel(val | 1, data->base + REG_PHY_UNK_H3);
+
+			val = readl(data->base + 0x10);
+			writel(val & ~2, data->base + 0x10);
 		}
 	} else {
 		/* Enable USB 45 Ohm resistor calibration */
