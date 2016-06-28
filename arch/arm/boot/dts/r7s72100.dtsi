@@ -434,4 +434,22 @@
 		power-domains = <&cpg_clocks>;
 		status = "disabled";
 	};
+	
+	dma0: dma@0 {
+		compatible = "renesas,rza1-dma";
+		reg = <0xe8200000 0x1000>,
+		 <0xfcfe1000 0x1000>;
+		 interrupts = <GIC_SPI 41 IRQ_TYPE_LEVEL_HIGH>,
+			     <GIC_SPI 57 IRQ_TYPE_LEVEL_HIGH>;
+	};
+	
+	usb0: usb@e8010000 {
+		compatible = "renesas,r8a66597-hcd";
+		reg = <0xe8010000 0x400>;
+	};
+	
+	usb1: usb@e8207000 {
+		compatible = "renesas,r8a66597-hcd";
+		reg = <0xe8207000 0x400>;
+	};
 };

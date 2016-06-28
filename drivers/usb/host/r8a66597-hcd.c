@@ -2526,12 +2526,21 @@ clean_up:
 	return ret;
 }
 
+static const struct of_device_id of_r8a66597_match[] = {
+	{
+		.compatible	= "renesas,r8a66597-hcd",
+	},
+	{ },
+};
+MODULE_DEVICE_TABLE(of, of_flash_match);
+
 static struct platform_driver r8a66597_driver = {
 	.probe =	r8a66597_probe,
 	.remove =	r8a66597_remove,
 	.driver		= {
 		.name = hcd_name,
 		.pm	= R8A66597_DEV_PM_OPS,
+                .of_match_table = of_r8a66597_match,
 	},
 };
 
