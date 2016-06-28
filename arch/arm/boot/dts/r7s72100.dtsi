@@ -452,4 +452,12 @@
 		compatible = "renesas,r8a66597-hcd";
 		reg = <0xe8207000 0x400>;
 	};
+	
+	pinctrl: pinctrl@xfcfe3000 {
+		compatible = "renesas,rza1-pinctrl";
+	};
+	
+	gpio: gpio@0 {
+		compatible = "renesas,rza1-gpio";
+	};
 };
