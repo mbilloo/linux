@@ -99,3 +99,12 @@
 &scif2 {
 	status = "okay";
 };
+
+&spi2 {
+	status = "okay";
+	mmc-slot@0 {
+				compatible = "renesas, grpeachmmc","mmc-spi-slot";
+				reg = <0>;
+				spi-max-frequency = <50000000>;
+			};
+};

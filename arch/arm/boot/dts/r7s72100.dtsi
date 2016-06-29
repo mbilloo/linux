@@ -107,6 +107,17 @@
 			>;
 			clock-output-names = "scif0", "scif1", "scif2", "scif3", "scif4", "scif5", "scif6", "scif7";
 		};
+		
+		mstp8_clks: mstp8_clks@fcfe0434 {
+			#clock-cells = <1>;
+			compatible = "renesas,r7s72100-mstp-clocks", "renesas,cpg-mstp-clocks";
+			reg = <0xfcfe0434 4>;
+			clocks = <&p1_clk>;
+			clock-indices = <
+				R7S72100_CLK_MMC
+			>;
+			clock-output-names = "mmc";
+		};
 
 		mstp9_clks: mstp9_clks@fcfe0438 {
 			#clock-cells = <1>;
@@ -460,5 +471,14 @@
 	
 	gpio: gpio@0 {
 		compatible = "renesas,rza1-gpio";
+	};
+	
+	sdhc: sdhc@0 {
+		compatible = "renesas,sh-mmcif";
+		reg = <0xe804c800 0x100>;
+		interrupts = <GIC_SPI 300 IRQ_TYPE_LEVEL_HIGH>,
+		<GIC_SPI 301 IRQ_TYPE_LEVEL_HIGH>;
+		clocks = <&mstp8_clks R7S72100_CLK_MMC>;
+		status = "disabled";
 	};
 };
