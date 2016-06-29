@@ -455,6 +455,7 @@
 	
 	pinctrl: pinctrl@xfcfe3000 {
 		compatible = "renesas,rza1-pinctrl";
+		reg = <0xfcfe3000 0x4400>;
 	};
 	
 	gpio: gpio@0 {

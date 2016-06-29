@@ -71,7 +71,7 @@ enum pfc_direction {
 
 #define GPIO_CHIP_NAME "RZA1_INTERNAL_PFC"
 
-#define RZA1_BASE	IOMEM(0xfcfe3000)
+//#define RZA1_BASE	IOMEM(0xfcfe3000)
 #define PORT_OFFSET	0x4
 #define PORT(p)		(0x0000 + (p) * PORT_OFFSET)
 #define PPR(p)		(0x0200 + (p) * PORT_OFFSET)
@@ -83,8 +83,6 @@ enum pfc_direction {
 #define PIBC(p)		(0x4000 + (p) * PORT_OFFSET)
 #define PBDC(p)		(0x4100 + (p) * PORT_OFFSET)
 #define PIPC(p)		(0x4200 + (p) * PORT_OFFSET)
-
-static struct mutex	mutex;
 
 enum {
 	REG_PFC = 0,
@@ -125,98 +123,6 @@ static unsigned int port_nbit[] = {
 	6, 16, 16, 16, 16, 11, 16, 16, 16, 8, 16, 16,
 };
 
-
-static inline int _bit_modify(void __iomem *addr, int bit, bool data)
-{
-	__raw_writel((__raw_readl(addr) & ~(0x1 << bit)) | (data << bit), addr);
-	return 0;
-}
-
-static inline int bit_modify(unsigned int addr, int bit, bool data)
-{
-	return _bit_modify(RZA1_BASE + addr, bit, data);
-}
-
-static int set_direction(unsigned int port, int bit, enum pfc_direction dir)
-{
-	if ((port == 0) && (dir != DIR_IN))	/* p0 is input only */
-		return -1;
-
-	if (dir == DIR_IN) {
-		bit_modify(PM(port), bit, true);
-		bit_modify(PIBC(port), bit, true);
-	} else {
-		bit_modify(PM(port), bit, false);
-		bit_modify(PIBC(port), bit, false);
-	}
-
-	return 0;
-}
-
-static int get_port_bitshift(int *offset)
-{
-	unsigned int i;
-	for (i = 0; *offset >= port_nbit[i]; *offset -= port_nbit[i++])
-		if (i > ARRAY_SIZE(port_nbit))
-			return -1;
-	return i;
-}
-
-static int chip_gpio_get(struct gpio_chip *chip, unsigned offset)
-{
-	int port;
-	unsigned int d;
-
-	port = get_port_bitshift(&offset);
-
-
-	d = __raw_readl(RZA1_BASE + PPR(port));
-
-	return (d &= (0x1 << offset)) ? 1 : 0;
-}
-
-static void chip_gpio_set(struct gpio_chip *chip, unsigned offset, int val)
-{
-	int port;
-
-	port = get_port_bitshift(&offset);
-	if (port <= 0)	/* p0 is input only */
-		return;
-
-	bit_modify(PORT(port), offset, val);
-	return;
-}
-
-static int chip_direction_input(struct gpio_chip *chip, unsigned offset)
-{
-	int port;
-
-	port = get_port_bitshift(&offset);
-
-	mutex_lock(&mutex);
-	set_direction(port, offset, DIR_IN);
-	mutex_unlock(&mutex);
-
-	return 0;
-}
-
-static int chip_direction_output(struct gpio_chip *chip, unsigned offset,
-				int val)
-{
-	int port;
-
-	port = get_port_bitshift(&offset);
-	if (port <= 0)	/* case : p0 is input only && negative value*/
-		return -1;
-
-	mutex_lock(&mutex);
-	bit_modify(PORT(port), offset, val);
-	set_direction(port, offset, DIR_OUT);
-	mutex_unlock(&mutex);
-
-	return 0;
-}
-
 static const char * const gpio_names[] = {
 	"P0_0", "P0_1", "P0_2", "P0_3", "P0_4", "P0_5",
 	"P1_0", "P1_1", "P1_2", "P1_3", "P1_4", "P1_5", "P1_6", "P1_7", "P1_8",
@@ -244,28 +150,130 @@ static const char * const gpio_names[] = {
 	"P11_15",
 };
 
-static struct gpio_chip chip = {
-	.label = GPIO_CHIP_NAME,
-	.names = gpio_names,
-	.base = 0,
-	.ngpio = GPIO_NR,
+struct rza1_pinctrl {
+	struct device			*dev;
+	void __iomem			*base;
+	struct mutex			mutex;
 
-	.get = chip_gpio_get,
-	.set = chip_gpio_set,
-
-	.direction_input = chip_direction_input,
-	.direction_output = chip_direction_output,
 };
 
-static int set_mode(unsigned int port, int bit, int mode)
+static inline int _bit_modify(void __iomem *addr, int bit, bool data)
 {
-	unsigned int reg;
+	__raw_writel((__raw_readl(addr) & ~(0x1 << bit)) | (data << bit), addr);
+	return 0;
+}
 
-	for (reg = REG_PFC; reg < REG_NUM; reg++)
-		bit_modify(regs_addr[port][reg], bit, mode_regset[mode][reg]);
+static inline int bit_modify(void __iomem *base, unsigned int addr, int bit, bool data)
+{
+	return _bit_modify(base + addr, bit, data);
+}
+
+static int set_direction(void __iomem *base, unsigned int port, int bit, enum pfc_direction dir)
+{
+	if ((port == 0) && (dir != DIR_IN))	/* p0 is input only */
+		return -1;
+
+	if (dir == DIR_IN) {
+		bit_modify(base, PM(port), bit, true);
+		bit_modify(base, PIBC(port), bit, true);
+	} else {
+		bit_modify(base, PM(port), bit, false);
+		bit_modify(base, PIBC(port), bit, false);
+	}
 
 	return 0;
 }
+
+static int get_port_bitshift(int *offset)
+{
+	unsigned int i;
+	for (i = 0; *offset >= port_nbit[i]; *offset -= port_nbit[i++])
+		if (i > ARRAY_SIZE(port_nbit))
+			return -1;
+	return i;
+}
+
+static int chip_gpio_get(struct gpio_chip *chip, unsigned offset)
+{
+	struct rza1_pinctrl *rza1pinctrl;
+	int port;
+	unsigned int d;
+
+	rza1pinctrl = gpiochip_get_data(chip);
+
+	port = get_port_bitshift(&offset);
+
+
+	d = __raw_readl(rza1pinctrl->base + PPR(port));
+
+	return (d &= (0x1 << offset)) ? 1 : 0;
+}
+
+static void chip_gpio_set(struct gpio_chip *chip, unsigned offset, int val)
+{
+	struct rza1_pinctrl *rza1pinctrl;
+	int port;
+
+	rza1pinctrl = gpiochip_get_data(chip);
+
+	port = get_port_bitshift(&offset);
+	if (port <= 0)	/* p0 is input only */
+		return;
+
+	bit_modify(rza1pinctrl->base, PORT(port), offset, val);
+	return;
+}
+
+static int chip_direction_input(struct gpio_chip *chip, unsigned offset)
+{
+	struct rza1_pinctrl *rza1pinctrl;
+	int port;
+
+	rza1pinctrl = gpiochip_get_data(chip);
+
+	port = get_port_bitshift(&offset);
+
+	mutex_lock(&rza1pinctrl->mutex);
+	set_direction(rza1pinctrl->base, port, offset, DIR_IN);
+	mutex_unlock(&rza1pinctrl->mutex);
+
+	return 0;
+}
+
+static int chip_direction_output(struct gpio_chip *chip, unsigned offset,
+				int val)
+{
+	struct rza1_pinctrl *rza1pinctrl;
+	int port;
+
+	rza1pinctrl = gpiochip_get_data(chip);
+
+	port = get_port_bitshift(&offset);
+	if (port <= 0)	/* case : p0 is input only && negative value*/
+		return -1;
+
+	mutex_lock(&rza1pinctrl->mutex);
+	bit_modify(rza1pinctrl->base, PORT(port), offset, val);
+	set_direction(rza1pinctrl->base, port, offset, DIR_OUT);
+	mutex_unlock(&rza1pinctrl->mutex);
+
+	return 0;
+}
+
+#if 0
+static int set_mode(unsigned int port, int bit, int mode)
+{
+	struct rza1_pinctrl *rza1pinctrl;
+	unsigned int reg;
+
+	rza1pinctrl = gpiochip_get_data(chip);
+
+	for (reg = REG_PFC; reg < REG_NUM; reg++)
+		bit_modify(rza1pinctrl->base, regs_addr[port][reg], bit, mode_regset[mode][reg]);
+
+	return 0;
+}
+
 
 /*
  * @pinnum: a pin number.
@@ -273,6 +281,7 @@ static int set_mode(unsigned int port, int bit, int mode)
  * @dir:    Kind of I/O mode and data direction and PBDC and Output Level.
  *          PIPC enable SoC IP to control a direction.
  */
+
 int r7s72100_pfc_pin_assign(enum pfc_pin_number pinnum, enum pfc_mode mode,
 			enum pfc_direction dir)
 {
@@ -352,43 +361,59 @@ int r7s72100_pfc_pin_assign(enum pfc_pin_number pinnum, enum pfc_mode mode,
 
 	return 0;
 }
+#endif
 
 static int rza1_pinctrl_probe(struct platform_device *pdev)
 {
-	dev_info(&pdev->dev, "registered\n");
-	return 0;
-}
-
-static int rza1_gpio_probe(struct platform_device *pdev)
-{
+	struct rza1_pinctrl *rza1pinctrl;
+	struct gpio_chip* gpiochip;
+	struct resource *base_res;
+	void __iomem *base;
 	int retval;
-	mutex_init(&mutex);
-	retval = gpiochip_add(&chip);
 
-	if(!retval)
+	/* Get io base address */
+	base_res = platform_get_resource(pdev, IORESOURCE_MEM, 0);
+	if (!base_res)
+		return -ENODEV;
+	base = devm_ioremap_resource(&pdev->dev, base_res);
+	if (IS_ERR(base))
+		return PTR_ERR(rza1pinctrl->base);
+
+	rza1pinctrl = devm_kzalloc(&pdev->dev, sizeof(*rza1pinctrl), GFP_KERNEL);
+	if (!rza1pinctrl)
+		return -ENOMEM;
+
+	rza1pinctrl->base = base;
+	mutex_init(&rza1pinctrl->mutex);
+
+	gpiochip = devm_kzalloc(&pdev->dev, sizeof(*gpiochip), GFP_KERNEL);
+	if (!gpiochip)
+		return -ENOMEM;
+
+	gpiochip->label = GPIO_CHIP_NAME;
+	gpiochip->names = gpio_names;
+	gpiochip->base = 0;
+	gpiochip->ngpio = GPIO_NR;
+	gpiochip->get = chip_gpio_get;
+	gpiochip->set = chip_gpio_set;
+	gpiochip->direction_input = chip_direction_input;
+	gpiochip->direction_output = chip_direction_output;
+
+	retval = gpiochip_add_data(gpiochip, rza1pinctrl);
+
+	if (!retval)
 		dev_info(&pdev->dev, "registered\n");
 	else
-		dev_err(&pdev->dev, "probe failed %d\n",retval);
+		dev_err(&pdev->dev, "probe failed %d\n", retval);
 
-	return retval;
+	platform_set_drvdata(pdev, rza1pinctrl);
+
+	return 0;
 }
 
 static const struct of_device_id rza1_pinctrl_of_match[] = {
 	{ .compatible = "renesas,rza1-pinctrl" },
 	{}
-};
-
-static const struct of_device_id rza1_gpio_of_match[] = {
-	{ .compatible = "renesas,rza1-gpio" },
-	{}
-};
-
-static struct platform_driver rza1_gpio_driver = {
-	.driver = {
-		.name = "gpio-rza1",
-		.of_match_table = rza1_gpio_of_match,
-	},
-	.probe = rza1_gpio_probe,
 };
 
 static struct platform_driver rza1_pinctrl_driver = {
@@ -400,8 +425,7 @@ static struct platform_driver rza1_pinctrl_driver = {
 };
 
 static struct platform_driver * const drivers[] = {
-	&rza1_gpio_driver,
-	&rza1_pinctrl_driver,
+	&rza1_pinctrl_driver
 };
 
 static int __init rza1_module_init(void)
