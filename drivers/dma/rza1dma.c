@@ -845,7 +845,7 @@ static struct dma_chan *rza1dma_xlate(struct of_phandle_args *dma_spec,
 	if (count != 1)
 		return NULL;
 
-	fdata.request = dma_spec->args[0];
+	//fdata.request = dma_spec->args[0];
 
 	return dma_request_channel(rza1dma->dma_device.cap_mask,
 					rza1dma_filter_fn, &fdata);

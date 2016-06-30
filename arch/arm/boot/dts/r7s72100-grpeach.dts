@@ -10,6 +10,7 @@
  */
 
 /dts-v1/;
+#include <dt-bindings/gpio/gpio.h>
 #include "r7s72100.dtsi"
 
 / {
@@ -146,7 +147,7 @@
 				compatible = "renesas, grpeachmmc","mmc-spi-slot";
 				reg = <0>;
 				spi-max-frequency = <50000000>;
-				gpios = <&pinctrl 105 0>;
+				gpios = <&pinctrl 105 GPIO_ACTIVE_LOW>;
 				voltage-ranges = <3300 3300>;
 			};
 };

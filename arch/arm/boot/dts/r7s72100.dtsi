@@ -326,8 +326,8 @@
 		#address-cells = <1>;
 		#size-cells = <0>;
 		status = "disabled";
-		/*dmas = <&dma0 0>, <&dma0 1>;*/
-		/*dma-names = "tx", "rx";*/
+		/*dmas = <&dma0 0>, <&dma0 1>;
+		dma-names = "tx", "rx";*/
 	};
 
 	spi3: spi@e800e000 {
@@ -375,10 +375,10 @@
 			<0xe8204800 0x200>;
 		phy-mode = "mii";
 		renesas,ether-link-active-low;
-    	interrupts = <GIC_SPI 359 IRQ_TYPE_LEVEL_HIGH>;
+    	interrupts = <GIC_SPI 327 IRQ_TYPE_LEVEL_HIGH>;
     	clocks = <&mstp7_clks R7S72100_CLK_ETHER>;
     	phy-handle = <&phy0>;
-    	dmas = <&dma0 0>;
+    	/*dmas = <&dma0 0>;*/
     	
     	#address-cells = <1>;
 		#size-cells = <0>;

@@ -482,7 +482,7 @@ static void sh_eth_chip_reset(struct net_device *ndev)
 	struct sh_eth_private *mdp = netdev_priv(ndev);
 
 	/* reset device */
-	//sh_eth_tsu_write(mdp, ARSTR_ARST, ARSTR);
+	sh_eth_tsu_write(mdp, ARSTR_ARST, ARSTR);
 	mdelay(1);
 }
 
@@ -2588,8 +2588,6 @@ static int sh_eth_tsu_add_entry(struct net_device *ndev, const u8 *addr)
 	void *reg_offset = sh_eth_tsu_get_offset(mdp, TSU_ADRH0);
 	int i, ret;
 
-	printk("xxxxsdd %x\n", (unsigned) reg_offset);
-
 	if (!mdp->cd->tsu)
 		return 0;
 
@@ -2599,21 +2597,15 @@ static int sh_eth_tsu_add_entry(struct net_device *ndev, const u8 *addr)
 		i = sh_eth_tsu_find_empty(ndev);
 		if (i < 0)
 			return -ENOMEM;
-		void* offset = reg_offset + i * 8;
-		printk("kklklk %x\n", (unsigned) offset);
-		ret = sh_eth_tsu_write_entry(ndev, offset , addr);
+		ret = sh_eth_tsu_write_entry(ndev, reg_offset + i * 8, addr);
 		if (ret < 0)
 			return ret;
-		printk("a\n");
 		/* Enable the entry */
 		sh_eth_tsu_write(mdp, sh_eth_tsu_read(mdp, TSU_TEN) |
 				 (1 << (31 - i)), TSU_TEN);
-		printk("c\n");
 	}
-	printk("c %d\n", i);
 	/* Entry found or created, enable POST */
 	sh_eth_tsu_enable_cam_entry_post(ndev, i);
-	printk("c\n");
 	return 0;
 }
 
