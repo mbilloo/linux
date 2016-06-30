@@ -108,6 +108,17 @@
 			clock-output-names = "scif0", "scif1", "scif2", "scif3", "scif4", "scif5", "scif6", "scif7";
 		};
 		
+		mstp7_clks: mstp7_clks@0xfcfe0430 {
+			#clock-cells = <1>;
+			compatible = "renesas,r7s72100-mstp-clocks", "renesas,cpg-mstp-clocks";
+			reg = <0xfcfe0430 4>;
+			clocks = <&p1_clk>, <&p1_clk>, <&p1_clk>;
+			clock-indices = <
+				R7S72100_CLK_USB1 R7S72100_CLK_USB0 R7S72100_CLK_ETHER
+			>;
+			clock-output-names = "usb1", "usb0", "ether";
+		};
+		
 		mstp8_clks: mstp8_clks@fcfe0434 {
 			#clock-cells = <1>;
 			compatible = "renesas,r7s72100-mstp-clocks", "renesas,cpg-mstp-clocks";
@@ -259,6 +270,18 @@
 		power-domains = <&cpg_clocks>;
 		status = "disabled";
 	};
+	
+	pinctrl: pinctrl@xfcfe3000 {
+		compatible = "renesas,rza1-pinctrl";
+		reg = <0xfcfe3000 0x4400>;
+		ngpios = <168>;
+		gpio-controller;
+		#gpio-cells = <2>;
+	};
+	
+	gpio: gpio@0 {
+		compatible = "renesas,rza1-gpio";
+	};
 
 	spi0: spi@e800c800 {
 		compatible = "renesas,rspi-r7s72100", "renesas,rspi-rz";
@@ -303,6 +326,8 @@
 		#address-cells = <1>;
 		#size-cells = <0>;
 		status = "disabled";
+		/*dmas = <&dma0 0>, <&dma0 1>;*/
+		/*dma-names = "tx", "rx";*/
 	};
 
 	spi3: spi@e800e000 {
@@ -345,19 +370,24 @@
 	};
 
 	ethernet: ethernet@e8203000 {
-                compatible = "renesas,ether-r7s72100";
-                reg = <0xe8203000 0x800>,
-                	  <0xe8204800 0x200>;
-                phy-mode = "mii";
-                renesas,ether-link-active-low;
-                #address-cells = <1>;
-                #size-cells = <0>;
-    		interrupts = <GIC_SPI 359 IRQ_TYPE_LEVEL_HIGH>;
-    		phy-handle = <&phy1>;
-	phy1: ethernet-phy@0 {
-		reg = <0>;
+		compatible = "renesas,ether-r7s72100";
+		reg = <0xe8203000 0x800>,
+			<0xe8204800 0x200>;
+		phy-mode = "mii";
+		renesas,ether-link-active-low;
+    	interrupts = <GIC_SPI 359 IRQ_TYPE_LEVEL_HIGH>;
+    	clocks = <&mstp7_clks R7S72100_CLK_ETHER>;
+    	phy-handle = <&phy0>;
+    	dmas = <&dma0 0>;
+    	
+    	#address-cells = <1>;
+		#size-cells = <0>;
+		phy0: ethernet-phy@0 {
+			reg = <0>;
+		};		
 	};
-	};
+
+
 
 	i2c0: i2c@fcfee000 {
 		#address-cells = <1>;
@@ -452,6 +482,8 @@
 		 <0xfcfe1000 0x1000>;
 		 interrupts = <GIC_SPI 41 IRQ_TYPE_LEVEL_HIGH>,
 			     <GIC_SPI 57 IRQ_TYPE_LEVEL_HIGH>;
+		#dma-cells = <1>;
+		dma-channels = <16>;
 	};
 	
 	usb0: usb@e8010000 {
@@ -463,16 +495,7 @@
 		compatible = "renesas,r8a66597-hcd";
 		reg = <0xe8207000 0x400>;
 	};
-	
-	pinctrl: pinctrl@xfcfe3000 {
-		compatible = "renesas,rza1-pinctrl";
-		reg = <0xfcfe3000 0x4400>;
-	};
-	
-	gpio: gpio@0 {
-		compatible = "renesas,rza1-gpio";
-	};
-	
+			
 	sdhc: sdhc@0 {
 		compatible = "renesas,sh-mmcif";
 		reg = <0xe804c800 0x100>;

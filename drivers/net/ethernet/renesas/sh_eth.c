@@ -482,7 +482,7 @@ static void sh_eth_chip_reset(struct net_device *ndev)
 	struct sh_eth_private *mdp = netdev_priv(ndev);
 
 	/* reset device */
-	sh_eth_tsu_write(mdp, ARSTR_ARST, ARSTR);
+	//sh_eth_tsu_write(mdp, ARSTR_ARST, ARSTR);
 	mdelay(1);
 }
 
@@ -2460,14 +2460,14 @@ static u32 sh_eth_tsu_get_post_bit(struct sh_eth_private *mdp, int entry)
 static void sh_eth_tsu_enable_cam_entry_post(struct net_device *ndev,
 					     int entry)
 {
-	struct sh_eth_private *mdp = netdev_priv(ndev);
-	u32 tmp;
-	void *reg_offset;
+//	struct sh_eth_private *mdp = netdev_priv(ndev);
+//	u32 tmp;
+//	void *reg_offset;
 
-	reg_offset = sh_eth_tsu_get_post_reg_offset(mdp, entry);
-	tmp = ioread32(reg_offset);
-	printk("xxx %x\n",(unsigned) reg_offset);
-	iowrite32(tmp | sh_eth_tsu_get_post_bit(mdp, entry), reg_offset);
+//	reg_offset = sh_eth_tsu_get_post_reg_offset(mdp, entry);
+///	printk("xxx %x\n",(unsigned) reg_offset);
+//	tmp = ioread32(reg_offset);
+//	iowrite32(tmp | sh_eth_tsu_get_post_bit(mdp, entry), reg_offset);
 }
 
 static bool sh_eth_tsu_disable_cam_entry_post(struct net_device *ndev,
@@ -2599,18 +2599,21 @@ static int sh_eth_tsu_add_entry(struct net_device *ndev, const u8 *addr)
 		i = sh_eth_tsu_find_empty(ndev);
 		if (i < 0)
 			return -ENOMEM;
-		ret = sh_eth_tsu_write_entry(ndev, reg_offset + i * 8, addr);
+		void* offset = reg_offset + i * 8;
+		printk("kklklk %x\n", (unsigned) offset);
+		ret = sh_eth_tsu_write_entry(ndev, offset , addr);
 		if (ret < 0)
 			return ret;
-
+		printk("a\n");
 		/* Enable the entry */
 		sh_eth_tsu_write(mdp, sh_eth_tsu_read(mdp, TSU_TEN) |
 				 (1 << (31 - i)), TSU_TEN);
+		printk("c\n");
 	}
-
+	printk("c %d\n", i);
 	/* Entry found or created, enable POST */
 	sh_eth_tsu_enable_cam_entry_post(ndev, i);
-
+	printk("c\n");
 	return 0;
 }
 
@@ -3111,8 +3114,8 @@ static int sh_eth_drv_probe(struct platform_device *pdev)
 		goto out_napi_del;
 
 	/* print device information */
-	netdev_info(ndev, "Base address at 0x%x, %pM, IRQ %d.\n",
-		    (u32)ndev->base_addr, ndev->dev_addr, ndev->irq);
+	netdev_info(ndev, "Base address at 0x%x, TSU at 0x%x, %pM, IRQ %d.\n",
+		    (u32)ndev->base_addr, (u32)(mdp->cd->tsu ? mdp->tsu_addr : 0), ndev->dev_addr, ndev->irq);
 
 	pm_runtime_put(&pdev->dev);
 	platform_set_drvdata(pdev, ndev);
@@ -3207,6 +3210,7 @@ static struct platform_device_id sh_eth_id_table[] = {
 	{ "sh7757-ether", (kernel_ulong_t)&sh7757_data },
 	{ "sh7757-gether", (kernel_ulong_t)&sh7757_data_giga },
 	{ "sh7763-gether", (kernel_ulong_t)&sh7763_data },
+	{ "r7s72100-ether", (kernel_ulong_t)&r7s72100_data },
 	{ }
 };
 MODULE_DEVICE_TABLE(platform, sh_eth_id_table);

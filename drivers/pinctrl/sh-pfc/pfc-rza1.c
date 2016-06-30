@@ -368,6 +368,7 @@ static int rza1_pinctrl_probe(struct platform_device *pdev)
 	struct rza1_pinctrl *rza1pinctrl;
 	struct gpio_chip* gpiochip;
 	struct resource *base_res;
+	const char *name = dev_name(&pdev->dev);
 	void __iomem *base;
 	int retval;
 
@@ -390,7 +391,7 @@ static int rza1_pinctrl_probe(struct platform_device *pdev)
 	if (!gpiochip)
 		return -ENOMEM;
 
-	gpiochip->label = GPIO_CHIP_NAME;
+	gpiochip->label = name;
 	gpiochip->names = gpio_names;
 	gpiochip->base = 0;
 	gpiochip->ngpio = GPIO_NR;
@@ -398,6 +399,10 @@ static int rza1_pinctrl_probe(struct platform_device *pdev)
 	gpiochip->set = chip_gpio_set;
 	gpiochip->direction_input = chip_direction_input;
 	gpiochip->direction_output = chip_direction_output;
+	gpiochip->parent = &pdev->dev;
+	gpiochip->owner = THIS_MODULE;
+
+	platform_set_drvdata(pdev, rza1pinctrl);
 
 	retval = gpiochip_add_data(gpiochip, rza1pinctrl);
 
@@ -406,9 +411,7 @@ static int rza1_pinctrl_probe(struct platform_device *pdev)
 	else
 		dev_err(&pdev->dev, "probe failed %d\n", retval);
 
-	platform_set_drvdata(pdev, rza1pinctrl);
-
-	return 0;
+	return retval;
 }
 
 static const struct of_device_id rza1_pinctrl_of_match[] = {

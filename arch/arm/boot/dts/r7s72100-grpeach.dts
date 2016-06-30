@@ -36,6 +36,8 @@
 	};
 	
 	spirom: spirom@0 {
+		#address-cells = <1>;
+		#size-cells = <1>;
 		compatible = "mtd-rom";
 		reg = <0x18000000 0x800000>;
 		bank-width = <4>;
@@ -68,6 +70,44 @@
 			label = "rootfs";
 			reg = <0x00400000 0x400000>;
 			read-only;
+		};
+	};
+	
+	leds {
+		compatible = "gpio-leds";  
+		usr {
+		    label = "usr";
+		    gpios = <&pinctrl 93 0>;
+		    linux,default-trigger = "heartbeat";
+		    default-state = "off";
+		};
+		rgb_r {
+		    label = "rgb_r";
+		    gpios = <&pinctrl 94 0>;
+		    default-state = "off";
+		};
+		rgb_g {
+		    label = "rgb_g";
+		    gpios = <&pinctrl 95 0>;
+		    default-state = "off";
+		};
+		rgb_b {
+		    label = "rgb_b";
+		    gpios = <&pinctrl 96 0>;
+		    default-state = "off";
+		};
+	};
+	
+	gpio_keys_polled {
+		compatible = "gpio-keys-polled";
+		#address-cells = <1>;
+       	#size-cells = <0>;
+     	poll-interval = <100>;
+     	autorepeat;
+		button@21 {
+			label = "GPIO Key UP";
+			linux,code = <103>;
+			gpios = <&pinctrl 81 0>;
 		};
 	};
 	
@@ -106,5 +146,7 @@
 				compatible = "renesas, grpeachmmc","mmc-spi-slot";
 				reg = <0>;
 				spi-max-frequency = <50000000>;
+				gpios = <&pinctrl 105 0>;
+				voltage-ranges = <3300 3300>;
 			};
 };

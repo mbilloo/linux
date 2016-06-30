@@ -30,6 +30,7 @@
 #include <linux/clk.h>
 #include <linux/dmaengine.h>
 #include <linux/module.h>
+#include <linux/of_dma.h>
 
 #include <asm/irq.h>
 #include <linux/platform_data/dma-rza1.h>
@@ -194,6 +195,11 @@ struct rza1dma_engine {
 	spinlock_t			lock;
 	struct rza1dma_channel		*channel;
 	struct rza1_dma_pdata		*pdata;
+};
+
+struct rza1dma_filter_data {
+	struct rza1dma_engine	*rza1dma;
+	int			 request;
 };
 
 static void rza1dma_writel(struct rza1dma_engine *rza1dma, unsigned val,
@@ -813,6 +819,38 @@ static void rza1dma_issue_pending(struct dma_chan *chan)
 	spin_unlock_irqrestore(&rza1dma->lock, flags);
 }
 
+static bool rza1dma_filter_fn(struct dma_chan *chan, void *param)
+{
+	struct rza1dma_filter_data *fdata = param;
+	struct rza1dma_channel *rza1dma_chan = to_rza1dma_chan(chan);
+
+	if (chan->device->dev != fdata->rza1dma->dev)
+		return false;
+
+	//rza1dma_chan->dma_request = fdata->request;
+	chan->private = NULL;
+
+	return true;
+}
+
+static struct dma_chan *rza1dma_xlate(struct of_phandle_args *dma_spec,
+						struct of_dma *ofdma)
+{
+	int count = dma_spec->args_count;
+	struct rza1dma_engine *rza1dma = ofdma->of_dma_data;
+	struct rza1dma_filter_data fdata = {
+		.rza1dma = rza1dma,
+	};
+
+	if (count != 1)
+		return NULL;
+
+	fdata.request = dma_spec->args[0];
+
+	return dma_request_channel(rza1dma->dma_device.cap_mask,
+					rza1dma_filter_fn, &fdata);
+}
+
 static int __init rza1dma_probe(struct platform_device *pdev)
 {
 	struct rza1_dma_pdata *pdata = pdev->dev.platform_data;
@@ -952,7 +990,19 @@ static int __init rza1dma_probe(struct platform_device *pdev)
 		dev_err(&pdev->dev, "unable to register\n");
 		goto err;
 	}
+
+	if (pdev->dev.of_node) {
+		ret = of_dma_controller_register(pdev->dev.of_node,
+				rza1dma_xlate, rza1dma);
+		if (ret) {
+			dev_err(&pdev->dev, "unable to register of_dma_controller\n");
+			goto err_of_dma_controller;
+		}
+	}
+
 	return 0;
+err_of_dma_controller:
+	dma_async_device_unregister(&rza1dma->dma_device);
 err:
 	return ret;
 }
