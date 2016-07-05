@@ -1,6 +1,7 @@
 /*
  * SuperH On-Chip RTC Support
  *
+ * Copyright (C) 2013 Renesas Solutions Corp.
  * Copyright (C) 2006 - 2009  Paul Mundt
  * Copyright (C) 2006  Jamie Lenehan
  * Copyright (C) 2008  Angelo Castello
@@ -27,9 +28,14 @@
 #include <linux/log2.h>
 #include <linux/clk.h>
 #include <linux/slab.h>
+#ifdef CONFIG_ARCH_SHMOBILE
+#include "/home/daniel/peachylinux/linux/arch/arm/mach-shmobile/include/mach/rtc.h"
+#else
 #include <asm/rtc.h>
+#endif
 
 #define DRV_NAME	"sh-rtc"
+#define DRV_VERSION	"0.2.3"
 
 #define RTC_REG(r)	((r) * rtc_reg_size)
 
@@ -584,13 +590,14 @@ static struct rtc_class_ops sh_rtc_ops = {
 	.alarm_irq_enable = sh_rtc_alarm_irq_enable,
 };
 
-static int __init sh_rtc_probe(struct platform_device *pdev)
+static int sh_rtc_probe(struct platform_device *pdev)
 {
 	struct sh_rtc *rtc;
 	struct resource *res;
 	struct rtc_time r;
 	char clk_name[6];
 	int clk_id, ret;
+	unsigned int tmp;
 
 	rtc = devm_kzalloc(&pdev->dev, sizeof(*rtc), GFP_KERNEL);
 	if (unlikely(!rtc))
@@ -609,9 +616,17 @@ static int __init sh_rtc_probe(struct platform_device *pdev)
 	rtc->carry_irq = platform_get_irq(pdev, 1);
 	rtc->alarm_irq = platform_get_irq(pdev, 2);
 
+#ifdef CONFIG_ARCH_SHMOBILE
+	res = platform_get_resource(pdev, IORESOURCE_MEM, 0);
+#else
 	res = platform_get_resource(pdev, IORESOURCE_IO, 0);
+#endif
 	if (unlikely(res == NULL)) {
+#ifdef CONFIG_ARCH_SHMOBILE
+		dev_err(&pdev->dev, "No MEM resource\n");
+#else
 		dev_err(&pdev->dev, "No IO resource\n");
+#endif
 		return -ENOENT;
 	}
 
@@ -646,6 +661,10 @@ static int __init sh_rtc_probe(struct platform_device *pdev)
 	}
 
 	clk_enable(rtc->clk);
+	/* Start RTC */
+	tmp = readb(rtc->regbase + RCR2);
+	tmp |= RCR2_RTCEN ;				
+	writeb(tmp, rtc->regbase + RCR2);
 
 	rtc->capabilities = RTC_DEF_CAPABILITIES;
 	if (dev_get_platdata(&pdev->dev)) {
@@ -721,11 +740,22 @@ static int __init sh_rtc_probe(struct platform_device *pdev)
 		rtc_time_to_tm(0, &r);
 		rtc_set_time(rtc->rtc_dev, &r);
 	}
+	
+	tmp = readb(rtc->regbase + RCR2);
+	if( ( tmp & RCR2_START) == 0) {
+		tmp |= RCR2_START;
+		writeb(tmp, rtc->regbase + RCR2);
+	}
 
 	device_init_wakeup(&pdev->dev, 1);
+
 	return 0;
 
 err_unmap:
+	/* STOP RTC */
+	tmp = readb(rtc->regbase + RCR2);
+	tmp &= ~RCR2_RTCEN;				
+	writeb(tmp, rtc->regbase + RCR2);
 	clk_disable(rtc->clk);
 
 	return ret;
@@ -733,6 +763,7 @@ err_unmap:
 
 static int __exit sh_rtc_remove(struct platform_device *pdev)
 {
+	unsigned int tmp;
 	struct sh_rtc *rtc = platform_get_drvdata(pdev);
 
 	sh_rtc_irq_set_state(&pdev->dev, 0);
@@ -740,6 +771,20 @@ static int __exit sh_rtc_remove(struct platform_device *pdev)
 	sh_rtc_setaie(&pdev->dev, 0);
 	sh_rtc_setcie(&pdev->dev, 0);
 
+	free_irq(rtc->periodic_irq, rtc);
+
+	if (rtc->carry_irq > 0) {
+		free_irq(rtc->carry_irq, rtc);
+		free_irq(rtc->alarm_irq, rtc);
+	}
+
+	/* STOP RTC */
+	tmp = readb(rtc->regbase + RCR2);
+	tmp &= ~RCR2_RTCEN;				
+	writeb(tmp, rtc->regbase + RCR2);
+
+	iounmap(rtc->regbase);
+	release_mem_region(rtc->res->start, rtc->regsize);
 	clk_disable(rtc->clk);
 
 	return 0;
@@ -781,14 +826,17 @@ static SIMPLE_DEV_PM_OPS(sh_rtc_pm_ops, sh_rtc_suspend, sh_rtc_resume);
 static struct platform_driver sh_rtc_platform_driver = {
 	.driver		= {
 		.name	= DRV_NAME,
+		.owner	= THIS_MODULE,
 		.pm	= &sh_rtc_pm_ops,
 	},
+	.probe		= sh_rtc_probe,
 	.remove		= __exit_p(sh_rtc_remove),
 };
 
-module_platform_driver_probe(sh_rtc_platform_driver, sh_rtc_probe);
+module_platform_driver(sh_rtc_platform_driver);
 
 MODULE_DESCRIPTION("SuperH on-chip RTC driver");
+MODULE_VERSION(DRV_VERSION);
 MODULE_AUTHOR("Paul Mundt <lethal@linux-sh.org>, "
 	      "Jamie Lenehan <lenehan@twibble.org>, "
 	      "Angelo Castello <angelo.castello@st.com>");

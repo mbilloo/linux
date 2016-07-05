@@ -1265,13 +1265,17 @@ config RTC_DRV_SA1100
 
 config RTC_DRV_SH
 	tristate "SuperH On-Chip RTC"
-	depends on SUPERH && HAVE_CLK
+	depends on (SUPERH || ARCH_R7S72100) && HAVE_CLK
 	help
 	  Say Y here to enable support for the on-chip RTC found in
 	  most SuperH processors.
 
 	  To compile this driver as a module, choose M here: the
 	  module will be called rtc-sh.
+
+config RTC_DRV_SH_OF
+	bool "Device tree support"
+	depends on RTC_DRV_SH
 
 config RTC_DRV_VR41XX
 	tristate "NEC VR41XX"

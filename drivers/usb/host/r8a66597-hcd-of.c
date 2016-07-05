@@ -47,13 +47,13 @@ static int r8a66597_of_probe(struct platform_device *pdev) {
 	memcpy(resources + 1, irq, sizeof(struct resource));
 
 	platinfo->name = "r8a66597_hcd";
-	platinfo->id = 1;
+	platinfo->id = 0;
 	platinfo->data = &r8a66597_pdata;
 	platinfo->size_data = sizeof(r8a66597_pdata);
 	platinfo->res = resources;
 	platinfo->num_res = 2;
 
-	platform_device_register_full(platinfo); /* USB ch1 as Host */
+	platform_device_register_full(platinfo);
 
 	return 0;
 	cleanup: //
