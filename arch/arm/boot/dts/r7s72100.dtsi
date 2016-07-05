@@ -378,7 +378,7 @@
     	interrupts = <GIC_SPI 327 IRQ_TYPE_LEVEL_HIGH>;
     	clocks = <&mstp7_clks R7S72100_CLK_ETHER>;
     	phy-handle = <&phy0>;
-    	/*dmas = <&dma0 0>;*/
+    	dmas = <&dma0 0>;
     	
     	#address-cells = <1>;
 		#size-cells = <0>;
@@ -480,20 +480,26 @@
 		compatible = "renesas,rza1-dma";
 		reg = <0xe8200000 0x1000>,
 		 <0xfcfe1000 0x1000>;
-		 interrupts = <GIC_SPI 41 IRQ_TYPE_LEVEL_HIGH>,
-			     <GIC_SPI 57 IRQ_TYPE_LEVEL_HIGH>;
+		 interrupts = <GIC_SPI 9 IRQ_TYPE_LEVEL_HIGH>,
+			     <GIC_SPI 25 IRQ_TYPE_LEVEL_HIGH>;
 		#dma-cells = <1>;
 		dma-channels = <16>;
 	};
-	
+/*
 	usb0: usb@e8010000 {
 		compatible = "renesas,r8a66597-hcd";
-		reg = <0xe8010000 0x400>;
-	};
+		reg = <0xe8010000 0x1a0>;
+		interrupts = <GIC_SPI 41 IRQ_TYPE_LEVEL_HIGH>;
+		clocks = <&mstp7_clks R7S72100_CLK_USB0>;
+		clock-names = "clk";
+	};*/
 	
 	usb1: usb@e8207000 {
 		compatible = "renesas,r8a66597-hcd";
-		reg = <0xe8207000 0x400>;
+		reg = <0xe8207000 0x1a0>;
+		interrupts = <GIC_SPI 42 IRQ_TYPE_LEVEL_HIGH>;
+		clocks = <&mstp7_clks R7S72100_CLK_USB1>;
+		clock-names = "usb-1";
 	};
 			
 	sdhc: sdhc@0 {

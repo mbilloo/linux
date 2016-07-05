@@ -724,6 +724,10 @@ config USB_R8A66597_HCD
 	  To compile this driver as a module, choose M here: the
 	  module will be called r8a66597-hcd.
 
+config USB_R8A66597_HCD_OF
+	bool "Device Tree support"
+	depends on USB_R8A66597_HCD
+
 config USB_RENESAS_USBHS_HCD
 	tristate "Renesas USBHS HCD support"
 	depends on USB_RENESAS_USBHS

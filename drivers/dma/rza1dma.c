@@ -851,16 +851,103 @@ static struct dma_chan *rza1dma_xlate(struct of_phandle_args *dma_spec,
 					rza1dma_filter_fn, &fdata);
 }
 
+#define CHCFGM(reqd_v, loen_v, hien_v, lvl_v, am_v, sds_v, dds_v, tm_v)\
+	{								\
+		.reqd	=	reqd_v,					\
+		.loen	=	loen_v,					\
+		.hien	=	hien_v,					\
+		.lvl	=	lvl_v,					\
+		.am	=	am_v,					\
+		.sds	=	sds_v,					\
+		.dds	=	dds_v,					\
+		.tm	=	tm_v,					\
+	}
+
+#define DMARS(rid_v, mid_v)	\
+	{								\
+		.rid	= rid_v,					\
+		.mid	= mid_v,					\
+	}
+
+static const struct rza1_dma_slave_config rza1_dma_slaves[] = {
+	{
+		.slave_id	= RZA1DMA_SLAVE_SDHI0_TX,
+		.addr		= 0xe804e030,
+		.chcfg		= CHCFGM(0x1, 0x0, 0x1, 0x1, 0x1, 0x2, 0x2, 0x0),
+		.dmars		= DMARS(0x1, 0x30),
+	},
+	{
+		.slave_id	= RZA1DMA_SLAVE_SDHI0_RX,
+		.addr		= 0xe804e030,
+		.chcfg		= CHCFGM(0x0, 0x0, 0x1, 0x1, 0x1, 0x2, 0x2, 0x0),
+		.dmars		= DMARS(0x2, 0x30),
+	},
+	{
+		.slave_id	= RZA1DMA_SLAVE_SDHI1_TX,
+		.addr		= 0xe804e830,
+		.chcfg		= CHCFGM(0x1, 0x0, 0x1, 0x1, 0x1, 0x2, 0x2, 0x0),
+		.dmars		= DMARS(0x1, 0x31),
+	},
+	{
+		.slave_id	= RZA1DMA_SLAVE_SDHI1_RX,
+		.addr		= 0xe804e830,
+		.chcfg		= CHCFGM(0x0, 0x0, 0x1, 0x1, 0x1, 0x2, 0x2, 0x0),
+		.dmars		= DMARS(0x2, 0x31),
+	},
+	{
+		.slave_id	= RZA1DMA_SLAVE_MMCIF_TX,
+		.addr		= 0xe804c834,
+		.chcfg		= CHCFGM(0x1, 0x0, 0x1, 0x1, 0x1, 0x2, 0x2, 0x0),
+		.dmars		= DMARS(0x1, 0x32),
+	},
+	{
+		.slave_id	= RZA1DMA_SLAVE_MMCIF_RX,
+		.addr		= 0xe804c834,
+		.chcfg		= CHCFGM(0x0, 0x0, 0x1, 0x1, 0x1, 0x2, 0x2, 0x0),
+		.dmars		= DMARS(0x2, 0x32),
+	},
+	{
+		.slave_id	= RZA1DMA_SLAVE_PCM_MEM_SSI0,
+		.addr		= 0xe820b018,		/* SSIFTDR_0 */
+		.chcfg		= CHCFGM(0x1, 0x0, 0x1, 0x1, 0x1, 0x2, 0x2, 0x0),
+		.dmars		= DMARS(0x1, 0x38),
+	}, {
+		.slave_id	= RZA1DMA_SLAVE_PCM_MEM_SRC1,
+		.addr		= 0xe820970c,		/* DMATD1_CIM */
+		.chcfg		= CHCFGM(0x1, 0x0, 0x1, 0x1, 0x1, 0x1, 0x1, 0x0),
+		.dmars		= DMARS(0x1, 0x41),
+	}, {
+		.slave_id	= RZA1DMA_SLAVE_PCM_SSI0_MEM,
+		.addr		= 0xe820b01c,		/* SSIFRDR_0 */
+		.chcfg		= CHCFGM(0x0, 0x0, 0x1, 0x1, 0x1, 0x2, 0x2, 0x0),
+		.dmars		= DMARS(0x2, 0x38),
+	}, {
+		.slave_id	= RZA1DMA_SLAVE_PCM_SRC0_MEM,
+		.addr		= 0xe8209718,		/* DMATU0_CIM */
+		.chcfg		= CHCFGM(0x0, 0x0, 0x1, 0x1, 0x1, 0x1, 0x1, 0x0),
+		.dmars		= DMARS(0x2, 0x40),
+	},
+};
+
 static int __init rza1dma_probe(struct platform_device *pdev)
 {
 	struct rza1_dma_pdata *pdata = pdev->dev.platform_data;
-	//int channel_num = pdata->channel_num;
-	int channel_num = 16;
 
 	struct rza1dma_engine *rza1dma;
 	struct resource *base_res, *ext_res, *cirq_res, *eirq_res;
 	int ret, i;
 	int irq, irq_err;
+
+
+	if(!pdata){
+		pdata = devm_kzalloc(&pdev->dev, sizeof(*pdata), GFP_KERNEL);
+		if(!pdata)
+			return -ENOMEM;
+
+		pdata->channel_num = 16;
+		pdata->slave = rza1_dma_slaves;
+		pdata->slave_num = ARRAY_SIZE(rza1_dma_slaves);
+	}
 
 	rza1dma = devm_kzalloc(&pdev->dev, sizeof(*rza1dma), GFP_KERNEL);
 	if (!rza1dma)
@@ -915,11 +1002,11 @@ static int __init rza1dma_probe(struct platform_device *pdev)
 	spin_lock_init(&rza1dma->lock);
 
 	rza1dma->channel = devm_kzalloc(&pdev->dev,
-				sizeof(struct rza1dma_channel) * channel_num,
+				sizeof(struct rza1dma_channel) * pdata->channel_num,
 				GFP_KERNEL);
 
 	/* Initialize channel parameters */
-	for (i = 0; i < channel_num; i++) {
+	for (i = 0; i < pdata->channel_num; i++) {
 		struct rza1dma_channel *rza1dmac = &rza1dma->channel[i];
 
 		rza1dmac->rza1dma = rza1dma;

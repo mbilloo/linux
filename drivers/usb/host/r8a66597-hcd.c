@@ -1,7 +1,7 @@
 /*
  * R8A66597 HCD (Host Controller Driver)
  *
- * Copyright (C) 2006-2007 Renesas Solutions Corp.
+ * Copyright (C) 2006-2013 Renesas Solutions Corp.
  * Portions Copyright (C) 2004 Psion Teklogix (for NetBook PRO)
  * Portions Copyright (C) 2004-2005 David Brownell
  * Portions Copyright (C) 1999 Roman Weissgaerber
@@ -88,6 +88,7 @@ static void set_devadd_reg(struct r8a66597 *r8a66597, u8 r8a66597_address,
 	r8a66597_write(r8a66597, val, devadd_reg);
 }
 
+#ifndef CONFIG_ARCH_R7S72100
 static int r8a66597_clock_enable(struct r8a66597 *r8a66597)
 {
 	u16 tmp;
@@ -145,6 +146,46 @@ static void r8a66597_clock_disable(struct r8a66597 *r8a66597)
 		r8a66597_bclr(r8a66597, USBE, SYSCFG0);
 	}
 }
+#else
+static int r8a66597_clock_enable(struct r8a66597 *r8a66597)
+{
+	u16 tmp;
+	int i = 0;
+
+	if (r8a66597->pdata->on_chip)
+		clk_enable(r8a66597->clk);
+
+	do {
+		r8a66597_write(r8a66597, USBE, SYSCFG0);
+		tmp = r8a66597_read(r8a66597, SYSCFG0);
+		if (i++ > 1000) {
+			printk(KERN_ERR "r8a66597: reg access fail.\n");
+			return -ENXIO;
+		}
+	} while ((tmp & USBE) != USBE);
+	r8a66597_bclr(r8a66597, USBE, SYSCFG0);
+
+	if (XTAL48 == get_xtal_from_pdata(r8a66597->pdata))
+		r8a66597_bclr(r8a66597, XTAL, SYSCFG0);
+	else
+		r8a66597_bset(r8a66597, XTAL, SYSCFG0);
+	msleep(20);
+	r8a66597_bset(r8a66597, UPLLE, SYSCFG0);
+	msleep(20);
+	r8a66597_bset(r8a66597, SUSPM, SUSPMODE0);
+	return 0;
+}
+static void r8a66597_clock_disable(struct r8a66597 *r8a66597)
+{
+	r8a66597_bclr(r8a66597, SUSPM, SUSPMODE0);
+	r8a66597_bclr(r8a66597, UPLLE, SYSCFG0);
+	msleep(20);
+	r8a66597_bclr(r8a66597, USBE, SYSCFG0);
+	msleep(20);
+	if (r8a66597->pdata->on_chip)
+		clk_disable(r8a66597->clk);
+}
+#endif /* CONFIG_ARCH_R7S72100 */
 
 static void r8a66597_enable_port(struct r8a66597 *r8a66597, int port)
 {
@@ -154,7 +195,9 @@ static void r8a66597_enable_port(struct r8a66597 *r8a66597, int port)
 	r8a66597_bset(r8a66597, val, get_syscfg_reg(port));
 	r8a66597_bset(r8a66597, HSE, get_syscfg_reg(port));
 
+#ifndef CONFIG_ARCH_R7S72100
 	r8a66597_write(r8a66597, BURST | CPU_ADR_RD_WR, get_dmacfg_reg(port));
+#endif
 	r8a66597_bclr(r8a66597, DTCHE, get_intenb_reg(port));
 	r8a66597_bset(r8a66597, ATTCHE, get_intenb_reg(port));
 }
@@ -181,7 +224,9 @@ static void r8a66597_disable_port(struct r8a66597 *r8a66597, int port)
 static int enable_controller(struct r8a66597 *r8a66597)
 {
 	int ret, port;
+#ifndef CONFIG_ARCH_R7S72100
 	u16 vif = r8a66597->pdata->vif ? LDRV : 0;
+#endif
 	u16 irq_sense = r8a66597->irq_sense_low ? INTL : 0;
 	u16 endian = r8a66597->pdata->endian ? BIGEND : 0;
 
@@ -189,7 +234,9 @@ static int enable_controller(struct r8a66597 *r8a66597)
 	if (ret < 0)
 		return ret;
 
+#ifndef CONFIG_ARCH_R7S72100
 	r8a66597_bset(r8a66597, vif & LDRV, PINCFG);
+#endif
 	r8a66597_bset(r8a66597, USBE, SYSCFG0);
 
 	r8a66597_bset(r8a66597, BEMPE | NRDYE | BRDYE, INTENB0);
@@ -1785,6 +1832,7 @@ static void r8a66597_td_timer(unsigned long _r8a66597)
 		pipe = td->pipe;
 		pipe_stop(r8a66597, pipe);
 
+		/* Select a different address or endpoint */
 		new_td = td;
 		do {
 			list_move_tail(&new_td->queue,
@@ -1794,7 +1842,8 @@ static void r8a66597_td_timer(unsigned long _r8a66597)
 				new_td = td;
 				break;
 			}
-		} while (td != new_td && td->address == new_td->address);
+		} while (td != new_td && td->address == new_td->address &&
+			td->pipe->info.epnum == new_td->pipe->info.epnum);
 
 		start_transfer(r8a66597, new_td);
 
@@ -2133,13 +2182,12 @@ static int r8a66597_hub_status_data(struct usb_hcd *hcd, char *buf)
 static void r8a66597_hub_descriptor(struct r8a66597 *r8a66597,
 				    struct usb_hub_descriptor *desc)
 {
-	desc->bDescriptorType = USB_DT_HUB;
+	desc->bDescriptorType = 0x29;
 	desc->bHubContrCurrent = 0;
 	desc->bNbrPorts = r8a66597->max_root_hub;
 	desc->bDescLength = 9;
 	desc->bPwrOn2PwrGood = 0;
-	desc->wHubCharacteristics =
-		cpu_to_le16(HUB_CHAR_INDV_PORT_LPSM | HUB_CHAR_NO_OCPM);
+	desc->wHubCharacteristics = cpu_to_le16(0x0011);
 	desc->u.hs.DeviceRemovable[0] =
 		((1 << r8a66597->max_root_hub) - 1) << 1;
 	desc->u.hs.DeviceRemovable[1] = ~0;
@@ -2298,7 +2346,7 @@ static int r8a66597_bus_resume(struct usb_hcd *hcd)
 		rh->port &= ~USB_PORT_STAT_SUSPEND;
 		rh->port |= USB_PORT_STAT_C_SUSPEND << 16;
 		r8a66597_mdfy(r8a66597, RESUME, RESUME | UACT, dvstctr_reg);
-		msleep(USB_RESUME_TIMEOUT);
+		msleep(50);
 		r8a66597_mdfy(r8a66597, UACT, RESUME | UACT, dvstctr_reg);
 	}
 
@@ -2481,8 +2529,9 @@ static int r8a66597_probe(struct platform_device *pdev)
 		r8a66597->max_root_hub = 2;
 
 	spin_lock_init(&r8a66597->lock);
-	setup_timer(&r8a66597->rh_timer, r8a66597_timer,
-		    (unsigned long)r8a66597);
+	init_timer(&r8a66597->rh_timer);
+	r8a66597->rh_timer.function = r8a66597_timer;
+	r8a66597->rh_timer.data = (unsigned long)r8a66597;
 	r8a66597->reg = reg;
 
 	/* make sure no interrupts are pending */
@@ -2493,8 +2542,9 @@ static int r8a66597_probe(struct platform_device *pdev)
 
 	for (i = 0; i < R8A66597_MAX_NUM_PIPE; i++) {
 		INIT_LIST_HEAD(&r8a66597->pipe_queue[i]);
-		setup_timer(&r8a66597->td_timer[i], r8a66597_td_timer,
-			    (unsigned long)r8a66597);
+		init_timer(&r8a66597->td_timer[i]);
+		r8a66597->td_timer[i].function = r8a66597_td_timer;
+		r8a66597->td_timer[i].data = (unsigned long)r8a66597;
 		setup_timer(&r8a66597->interval_timer[i],
 				r8a66597_interval_timer,
 				(unsigned long)r8a66597);
@@ -2526,21 +2576,13 @@ clean_up:
 	return ret;
 }
 
-static const struct of_device_id of_r8a66597_match[] = {
-	{
-		.compatible	= "renesas,r8a66597-hcd",
-	},
-	{ },
-};
-MODULE_DEVICE_TABLE(of, of_flash_match);
-
 static struct platform_driver r8a66597_driver = {
 	.probe =	r8a66597_probe,
 	.remove =	r8a66597_remove,
 	.driver		= {
 		.name = hcd_name,
+		.owner	= THIS_MODULE,
 		.pm	= R8A66597_DEV_PM_OPS,
-                .of_match_table = of_r8a66597_match,
 	},
 };
 
