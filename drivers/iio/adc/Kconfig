@@ -509,4 +509,12 @@ config XILINX_XADC
 	  The driver can also be build as a module. If so, the module will be called
 	  xilinx-xadc.
 
+config SH_ADC
+	tristate "RZA1 ADC support"
+	depends on ARCH_R7S72100
+	select IIO_BUFFER
+	select IIO_TRIGGERED_BUFFER
+	help
+	  Support RZA1 ADC
+
 endmenu

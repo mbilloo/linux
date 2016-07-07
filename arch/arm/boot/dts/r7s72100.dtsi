@@ -108,6 +108,17 @@
 			clock-output-names = "scif0", "scif1", "scif2", "scif3", "scif4", "scif5", "scif6", "scif7";
 		};
 		
+		mstp6_clks: mstp6_clks@fcfe042c {
+			#clock-cells = <1>;
+			compatible = "renesas,r7s72100-mstp-clocks", "renesas,cpg-mstp-clocks";
+			reg = <0xfcfe042c 4>;
+			clocks = <&p1_clk>;
+			clock-indices = <
+				R7S72100_CLK_ADC
+			>;
+			clock-output-names = "adc";
+		};
+		
 		mstp7_clks: mstp7_clks@0xfcfe0430 {
 			#clock-cells = <1>;
 			compatible = "renesas,r7s72100-mstp-clocks", "renesas,cpg-mstp-clocks";
@@ -517,5 +528,18 @@
 		interrupts = <GIC_SPI 277 IRQ_TYPE_LEVEL_HIGH>,
 			<GIC_SPI 278 IRQ_TYPE_LEVEL_HIGH>,
 			<GIC_SPI 276 IRQ_TYPE_LEVEL_HIGH>;
+	};
+	
+	adc: adc@0xe8005800 {
+		compatible = "renesas,sh-adc";
+		reg = <0xe8005800 0x100>,
+			<0xfcff0280 0x6>,
+			<0xfcff0380 0x21>;
+		interrupts = <GIC_SPI 138 IRQ_TYPE_LEVEL_HIGH>,
+			<GIC_SPI 139 IRQ_TYPE_LEVEL_HIGH>,
+			<GIC_SPI 114 IRQ_TYPE_LEVEL_HIGH>;
+		clocks = <&mstp6_clks R7S72100_CLK_ADC>, 
+			<&mstp3_clks R7S72100_CLK_MTU2>;
+		clock-names = "mtu2_fck", "adc0";
 	};
 };

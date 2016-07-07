@@ -25,6 +25,9 @@
 #define R7S72100_CLK_SCIF6	1
 #define R7S72100_CLK_SCIF7	0
 
+/* MSTP6 */
+#define R7S72100_CLK_ADC	7
+
 /* MSTP7 */
 #define R7S72100_CLK_USB1	0
 #define R7S72100_CLK_USB0	1
