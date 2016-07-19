@@ -9,6 +9,7 @@
  * kind, whether express or implied.
  */
 
+#include <dt-bindings/pinctrl/rza1pfc.h>
 #include <dt-bindings/clock/r7s72100-clock.h>
 #include <dt-bindings/interrupt-controller/arm-gic.h>
 #include <dt-bindings/interrupt-controller/irq.h>
@@ -288,6 +289,35 @@
 		ngpios = <168>;
 		gpio-controller;
 		#gpio-cells = <2>;
+		
+		spi0_pins: spi0 {
+			renesas,pins = <RZA1PFC_PIN_P10_12 RZA1PFC_MODE_ALT1 DIR_OUT>,	/* sck */
+							<RZA1PFC_PIN_P10_15 RZA1PFC_MODE_ALT1 DIR_OUT>,	/* ssl */
+							<RZA1PFC_PIN_P10_14 RZA1PFC_MODE_ALT1 DIR_OUT>,	/* mosi */
+							<RZA1PFC_PIN_P10_13 RZA1PFC_MODE_ALT1 DIR_IN>;  /* miso */
+		};
+		
+		spi1_pins: spi1 {
+			renesas,pins = <0 0 0>,
+							<1 1 1>;
+		};
+		
+		spi2_pins: spi2 {
+			renesas,pins = <0 0 0>,
+							<1 1 1>;
+		};
+		
+		spi3_pins: spi3 {
+			renesas,pins = <0 0 0>,
+							<1 1 1>;
+		};
+		
+		spi4_pins: spi4 {
+			renesas,pins = <0 0 0>,
+							<1 1 1>;
+		};
+		
+		
 	};
 	
 	gpio: gpio@0 {
@@ -306,6 +336,8 @@
 		num-cs = <1>;
 		#address-cells = <1>;
 		#size-cells = <0>;
+		pinctrl-names = "default";
+		pinctrl-0 = <&spi0_pins>;
 		status = "disabled";
 	};
 
