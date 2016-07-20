@@ -35,54 +35,8 @@ MODULE_LICENSE("GPL");
 MODULE_AUTHOR("Renesas Solutions Corp.");
 MODULE_ALIAS("platform:pfc-rza1");
 
-enum pfc_pin_number {
-	P0_0, P0_1, P0_2, P0_3, P0_4, P0_5,
-	P1_0, P1_1, P1_2, P1_3, P1_4, P1_5, P1_6, P1_7, P1_8,
-	P1_9, P1_10, P1_11, P1_12, P1_13, P1_14, P1_15,
-	P2_0, P2_1, P2_2, P2_3, P2_4, P2_5, P2_6, P2_7, P2_8,
-	P2_9, P2_10, P2_11, P2_12, P2_13, P2_14, P2_15,
-	P3_0, P3_1, P3_2, P3_3, P3_4, P3_5, P3_6, P3_7, P3_8,
-	P3_9, P3_10, P3_11, P3_12, P3_13, P3_14, P3_15,
-	P4_0, P4_1, P4_2, P4_3, P4_4, P4_5, P4_6, P4_7, P4_8,
-	P4_9, P4_10, P4_11, P4_12, P4_13, P4_14, P4_15,
-	P5_0, P5_1, P5_2, P5_3, P5_4, P5_5, P5_6, P5_7, P5_8,
-	P5_9, P5_10,
-	P6_0, P6_1, P6_2, P6_3, P6_4, P6_5, P6_6, P6_7, P6_8,
-	P6_9, P6_10, P6_11, P6_12, P6_13, P6_14, P6_15,
-	P7_0, P7_1, P7_2, P7_3, P7_4, P7_5, P7_6, P7_7, P7_8,
-	P7_9, P7_10, P7_11, P7_12, P7_13, P7_14, P7_15,
-	P8_0, P8_1, P8_2, P8_3, P8_4, P8_5, P8_6, P8_7, P8_8,
-	P8_9, P8_10, P8_11, P8_12, P8_13, P8_14, P8_15,
-	P9_0, P9_1, P9_2, P9_3, P9_4, P9_5, P9_6, P9_7,
-	P10_0, P10_1, P10_2, P10_3, P10_4, P10_5, P10_6, P10_7, P10_8,
-	P10_9, P10_10, P10_11, P10_12, P10_13, P10_14, P10_15,
-	P11_0, P11_1, P11_2, P11_3, P11_4, P11_5, P11_6, P11_7, P11_8,
-	P11_9, P11_10, P11_11, P11_12, P11_13, P11_14, P11_15,
-	GPIO_NR,
-};
-
-/*
-enum pfc_mode {
-	PMODE = 0,
-	ALT1, ALT2, ALT3, ALT4, ALT5, ALT6, ALT7, ALT8,
-	PINMUX_STATE_NUM,
-};*/
-
-//enum pfc_direction {
-//	DIIO_PBDC_DIS = 0,	/* Direct I/O Mode & PBDC Disable */
-//	DIIO_PBDC_EN,		/* Direct I/O Mode & PBDC Enable */
-//	SWIO_OUT_PBDCDIS,	/* Software I/O Mode & Output direction PBDC Disable */
-//	SWIO_OUT_PBDCEN,	/* Software I/O Mode & Output direction PBDC Enable */
-//	PORT_OUT_HIGH,		/* Port Mode & Output direction & High Level Output Pn = 1 */
-//	PORT_OUT_LOW,		/* Port Mode & Output direction & Low Level Output Pn = 0 */
-//	DIR_OUT,
-//	DIR_IN,			/* Port Mode or Software I/O Mode is Direction IN */
-//	DIR_LVDS,
-//};
-
 #define GPIO_CHIP_NAME "RZA1_INTERNAL_PFC"
 
-//#define RZA1_BASE	IOMEM(0xfcfe3000)
 #define PORT_OFFSET	0x4
 #define PORT(p)		(0x0000 + (p) * PORT_OFFSET)
 #define PPR(p)		(0x0200 + (p) * PORT_OFFSET)
@@ -115,52 +69,6 @@ static bool mode_regset[][REG_NUM] = {
 	{true,	true,	true	}, /* alt 8 */
 };
 
-static unsigned int regs_addr[][REG_NUM] = {
-	{PFC(0), PFCE(0), PFCAE(0)},
-	{PFC(1), PFCE(1), PFCAE(1)},
-	{PFC(2), PFCE(2), PFCAE(2)},
-	{PFC(3), PFCE(3), PFCAE(3)},
-	{PFC(4), PFCE(4), PFCAE(4)},
-	{PFC(5), PFCE(5), PFCAE(5)},
-	{PFC(6), PFCE(6), PFCAE(6)},
-	{PFC(7), PFCE(7), PFCAE(7)},
-	{PFC(8), PFCE(8), PFCAE(8)},
-	{PFC(9), PFCE(9), PFCAE(9)},
-	{PFC(10), PFCE(10), PFCAE(10)},
-	{PFC(11), PFCE(11), PFCAE(11)},
-};
-
-static unsigned int port_nbit[] = {
-	6, 16, 16, 16, 16, 11, 16, 16, 16, 8, 16, 16,
-};
-
-static const char * const gpio_names[] = {
-	"P0_0", "P0_1", "P0_2", "P0_3", "P0_4", "P0_5",
-	"P1_0", "P1_1", "P1_2", "P1_3", "P1_4", "P1_5", "P1_6", "P1_7", "P1_8",
-	"P1_9", "P1_10", "P1_11", "P1_12", "P1_13", "P1_14", "P1_15",
-	"P2_0", "P2_1", "P2_2", "P2_3", "P2_4", "P2_5", "P2_6", "P2_7", "P2_8",
-	"P2_9", "P2_10", "P2_11", "P2_12", "P2_13", "P2_14", "P2_15",
-	"P3_0", "P3_1", "P3_2", "P3_3", "P3_4", "P3_5", "P3_6", "P3_7", "P3_8",
-	"P3_9", "P3_10", "P3_11", "P3_12", "P3_13", "P3_14", "P3_15",
-	"P4_0", "P4_1", "P4_2", "P4_3", "P4_4", "P4_5", "P4_6", "P4_7", "P4_8",
-	"P4_9", "P4_10", "P4_11", "P4_12", "P4_13", "P4_14", "P4_15",
-	"P5_0", "P5_1", "P5_2", "P5_3", "P5_4", "P5_5", "P5_6", "P5_7", "P5_8",
-	"P5_9", "P5_10",
-	"P6_0", "P6_1", "P6_2", "P6_3", "P6_4", "P6_5", "P6_6", "P6_7", "P6_8",
-	"P6_9", "P6_10", "P6_11", "P6_12", "P6_13", "P6_14", "P6_15",
-	"P7_0", "P7_1", "P7_2", "P7_3", "P7_4", "P7_5", "P7_6", "P7_7", "P7_8",
-	"P7_9", "P7_10", "P7_11", "P7_12", "P7_13", "P7_14", "P7_15",
-	"P8_0", "P8_1", "P8_2", "P8_3", "P8_4", "P8_5", "P8_6", "P8_7", "P8_8",
-	"P8_9", "P8_10", "P8_11", "P8_12", "P8_13", "P8_14", "P8_15",
-	"P9_0", "P9_1", "P9_2", "P9_3", "P9_4", "P9_5", "P9_6", "P9_7",
-	"P10_0", "P10_1", "P10_2", "P10_3", "P10_4", "P10_5", "P10_6", "P10_7",
-	"P10_8", "P10_9", "P10_10", "P10_11", "P10_12", "P10_13", "P10_14",
-	"P10_15",
-	"P11_0", "P11_1", "P11_2", "P11_3", "P11_4", "P11_5", "P11_6", "P11_7",
-	"P11_8", "P11_9", "P11_10", "P11_11", "P11_12", "P11_13", "P11_14",
-	"P11_15",
-};
-
 static const struct pinctrl_pin_desc rza1_pins [] = {
 		// port 0
 		{ .number = 0,	.name = "P0_0",		.drv_data = NULL },
@@ -176,9 +84,9 @@ static const struct pinctrl_pin_desc rza1_pins [] = {
 		{ .number = 9,	.name = "P1_3",		.drv_data = NULL },
 		{ .number = 10,	.name = "P1_4",		.drv_data = NULL },
 		{ .number = 11,	.name = "P1_5",		.drv_data = NULL },
-		{ .number = 12,	.name = "P1_6",		.drv_data = NULL },
-		{ .number = 13,	.name = "P1_7",		.drv_data = NULL },
-		{ .number = 14,	.name = "P1_8",		.drv_data = NULL },
+		{ .number = RZA1PFC_PIN(1,6),	.name = "P1_6",		.drv_data = NULL },
+		{ .number = RZA1PFC_PIN(1,7),	.name = "P1_7",		.drv_data = NULL },
+		{ .number = RZA1PFC_PIN(1,8),	.name = "P1_8",		.drv_data = NULL },
 		{ .number = 15,	.name = "P1_9",		.drv_data = NULL },
 		{ .number = 16,	.name = "P1_10",	.drv_data = NULL },
 		{ .number = 17,	.name = "P1_11",	.drv_data = NULL },
@@ -284,22 +192,22 @@ static const struct pinctrl_pin_desc rza1_pins [] = {
 		{ .number = 111,.name = "P7_14",	.drv_data = NULL },
 		{ .number = 112,.name = "P7_15",	.drv_data = NULL },
 		// port 8
-		{ .number = 113,.name = "P8_0",		.drv_data = NULL },
-		{ .number = 114,.name = "P8_1",		.drv_data = NULL },
-		{ .number = 115,.name = "P8_2",		.drv_data = NULL },
-		{ .number = 116,.name = "P8_3",		.drv_data = NULL },
-		{ .number = 117,.name = "P8_4",		.drv_data = NULL },
-		{ .number = 118,.name = "P8_5",		.drv_data = NULL },
-		{ .number = 119,.name = "P8_6",		.drv_data = NULL },
-		{ .number = 120,.name = "P8_7",		.drv_data = NULL },
-		{ .number = 121,.name = "P8_8",		.drv_data = NULL },
-		{ .number = 122,.name = "P8_9",		.drv_data = NULL },
-		{ .number = 123,.name = "P8_10",	.drv_data = NULL },
-		{ .number = 124,.name = "P8_11",	.drv_data = NULL },
-		{ .number = 125,.name = "P8_12",	.drv_data = NULL },
-		{ .number = 126,.name = "P8_13",	.drv_data = NULL },
-		{ .number = 127,.name = "P8_14",	.drv_data = NULL },
-		{ .number = 128,.name = "P8_15",	.drv_data = NULL },
+		{ .number = RZA1PFC_PIN(8,0),		.name = "P8_0",		.drv_data = NULL },
+		{ .number = RZA1PFC_PIN(8,1),		.name = "P8_1",		.drv_data = NULL },
+		{ .number = RZA1PFC_PIN(8,2),		.name = "P8_2",		.drv_data = NULL },
+		{ .number = RZA1PFC_PIN(8,3),		.name = "P8_3",		.drv_data = NULL },
+		{ .number = RZA1PFC_PIN(8,4),		.name = "P8_4",		.drv_data = NULL },
+		{ .number = RZA1PFC_PIN(8,5),		.name = "P8_5",		.drv_data = NULL },
+		{ .number = RZA1PFC_PIN(8,6),		.name = "P8_6",		.drv_data = NULL },
+		{ .number = RZA1PFC_PIN(8,7),		.name = "P8_7",		.drv_data = NULL },
+		{ .number = RZA1PFC_PIN(8,8),		.name = "P8_8",		.drv_data = NULL },
+		{ .number = RZA1PFC_PIN(8,9),		.name = "P8_9",		.drv_data = NULL },
+		{ .number = RZA1PFC_PIN(8,10),		.name = "P8_10",	.drv_data = NULL },
+		{ .number = RZA1PFC_PIN(8,11),		.name = "P8_11",	.drv_data = NULL },
+		{ .number = RZA1PFC_PIN(8,12),		.name = "P8_12",	.drv_data = NULL },
+		{ .number = RZA1PFC_PIN(8,13),		.name = "P8_13",	.drv_data = NULL },
+		{ .number = RZA1PFC_PIN(8,14),		.name = "P8_14",	.drv_data = NULL },
+		{ .number = RZA1PFC_PIN(8,15),		.name = "P8_15",	.drv_data = NULL },
 		// port 9
 		{ .number = 129,.name = "P9_0",		.drv_data = NULL },
 		{ .number = 130,.name = "P9_1",		.drv_data = NULL },
@@ -310,22 +218,22 @@ static const struct pinctrl_pin_desc rza1_pins [] = {
 		{ .number = 135,.name = "P9_6",		.drv_data = NULL },
 		{ .number = 136,.name = "P9_7",		.drv_data = NULL },
 		// port 10
-		{ .number = 137,.name = "P10_0",	.drv_data = NULL },
-		{ .number = 138,.name = "P10_1",	.drv_data = NULL },
-		{ .number = 139,.name = "P10_2",	.drv_data = NULL },
-		{ .number = 140,.name = "P10_3",	.drv_data = NULL },
-		{ .number = 141,.name = "P10_4",	.drv_data = NULL },
-		{ .number = 142,.name = "P10_5",	.drv_data = NULL },
-		{ .number = 143,.name = "P10_6",	.drv_data = NULL },
-		{ .number = 144,.name = "P10_7",	.drv_data = NULL },
-		{ .number = 145,.name = "P10_8",	.drv_data = NULL },
-		{ .number = 146,.name = "P10_9",	.drv_data = NULL },
-		{ .number = 147,.name = "P10_10",	.drv_data = NULL },
-		{ .number = 148,.name = "P10_11",	.drv_data = NULL },
-		{ .number = 149,.name = "P10_12",	.drv_data = NULL },
-		{ .number = 150,.name = "P10_13",	.drv_data = NULL },
-		{ .number = 151,.name = "P10_14",	.drv_data = NULL },
-		{ .number = 152,.name = "P10_15",	.drv_data = NULL },
+		{ .number = RZA1PFC_PIN(10,0),	.name = "P10_0",	.drv_data = NULL },
+		{ .number = RZA1PFC_PIN(10,1),	.name = "P10_1",	.drv_data = NULL },
+		{ .number = RZA1PFC_PIN(10,2),	.name = "P10_2",	.drv_data = NULL },
+		{ .number = RZA1PFC_PIN(10,3),	.name = "P10_3",	.drv_data = NULL },
+		{ .number = RZA1PFC_PIN(10,4),	.name = "P10_4",	.drv_data = NULL },
+		{ .number = RZA1PFC_PIN(10,5),	.name = "P10_5",	.drv_data = NULL },
+		{ .number = RZA1PFC_PIN(10,6),	.name = "P10_6",	.drv_data = NULL },
+		{ .number = RZA1PFC_PIN(10,7),	.name = "P10_7",	.drv_data = NULL },
+		{ .number = RZA1PFC_PIN(10,8),	.name = "P10_8",	.drv_data = NULL },
+		{ .number = RZA1PFC_PIN(10,9),	.name = "P10_9",	.drv_data = NULL },
+		{ .number = RZA1PFC_PIN(10,10),	.name = "P10_10",	.drv_data = NULL },
+		{ .number = RZA1PFC_PIN(10,11),	.name = "P10_11",	.drv_data = NULL },
+		{ .number = RZA1PFC_PIN(10,12),	.name = "P10_12",	.drv_data = NULL },
+		{ .number = RZA1PFC_PIN(10,13),	.name = "P10_13",	.drv_data = NULL },
+		{ .number = RZA1PFC_PIN(10,14),	.name = "P10_14",	.drv_data = NULL },
+		{ .number = RZA1PFC_PIN(10,15),	.name = "P10_15",	.drv_data = NULL },
 		// port 11
 		{ .number = 153,.name = "P11_0",	.drv_data = NULL },
 		{ .number = 154,.name = "P11_1",	.drv_data = NULL },
@@ -366,6 +274,12 @@ struct rza1pfc {
 	int	nfunctions;
 };
 
+struct rza1pfc_gpio {
+	struct rza1pfc* pfc;
+	unsigned port;
+	unsigned npins;
+};
+
 struct rza1pfc_config {
 	unsigned pin;
 	unsigned mode;
@@ -399,88 +313,66 @@ static int set_direction(void __iomem *base, unsigned int port, int bit, unsigne
 	return 0;
 }
 
-static int get_port_bitshift(int *offset)
+static int chip_gpio_get(struct gpio_chip *chip, unsigned pin)
 {
-	unsigned int i;
-	for (i = 0; *offset >= port_nbit[i]; *offset -= port_nbit[i++])
-		if (i > ARRAY_SIZE(port_nbit))
-			return -1;
-	return i;
-}
-
-static int chip_gpio_get(struct gpio_chip *chip, unsigned offset)
-{
-	struct rza1pfc *rza1pinctrl;
-	int port;
+	struct rza1pfc_gpio *gpio;
 	unsigned int d;
 
-	rza1pinctrl = gpiochip_get_data(chip);
+	gpio = gpiochip_get_data(chip);
+	d = __raw_readl(gpio->pfc->base + PPR(gpio->port));
 
-	port = get_port_bitshift(&offset);
-
-
-	d = __raw_readl(rza1pinctrl->base + PPR(port));
-
-	return (d &= (0x1 << offset)) ? 1 : 0;
+	return (d &= (0x1 << pin)) ? 1 : 0;
 }
 
-static void chip_gpio_set(struct gpio_chip *chip, unsigned offset, int val)
+static void chip_gpio_set(struct gpio_chip *chip, unsigned pin, int val)
 {
-	struct rza1pfc *rza1pinctrl;
-	int port;
+	struct rza1pfc_gpio *gpio;
 
-	rza1pinctrl = gpiochip_get_data(chip);
+	gpio = gpiochip_get_data(chip);
 
-	port = get_port_bitshift(&offset);
-	if (port <= 0)	/* p0 is input only */
+	if (gpio->port <= 0)	/* p0 is input only */
 		return;
 
-	bit_modify(rza1pinctrl->base, PORT(port), offset, val);
+	bit_modify(gpio->pfc->base, PORT(gpio->port), pin, val);
 	return;
 }
 
-static int chip_direction_input(struct gpio_chip *chip, unsigned offset)
+static int chip_direction_input(struct gpio_chip *chip, unsigned pin)
 {
-	struct rza1pfc *rza1pinctrl;
-	int port;
+	struct rza1pfc_gpio *gpio;
 
-	rza1pinctrl = gpiochip_get_data(chip);
+	gpio = gpiochip_get_data(chip);
 
-	port = get_port_bitshift(&offset);
-
-	mutex_lock(&rza1pinctrl->mutex);
-	set_direction(rza1pinctrl->base, port, offset, DIR_IN);
-	mutex_unlock(&rza1pinctrl->mutex);
+	mutex_lock(&gpio->pfc->mutex);
+	set_direction(&gpio->pfc->base, gpio->port, pin, DIR_IN);
+	mutex_unlock(&gpio->pfc->mutex);
 
 	return 0;
 }
 
-static int chip_direction_output(struct gpio_chip *chip, unsigned offset,
+static int chip_direction_output(struct gpio_chip *chip, unsigned pin,
 				int val)
 {
-	struct rza1pfc *rza1pinctrl;
-	int port;
+	struct rza1pfc_gpio *gpio;
 
-	rza1pinctrl = gpiochip_get_data(chip);
+	gpio = gpiochip_get_data(chip);
 
-	port = get_port_bitshift(&offset);
-	if (port <= 0)	/* case : p0 is input only && negative value*/
+	if (gpio->port == 0)	/* case : p0 is input only*/
 		return -1;
 
-	mutex_lock(&rza1pinctrl->mutex);
-	bit_modify(rza1pinctrl->base, PORT(port), offset, val);
-	set_direction(rza1pinctrl->base, port, offset, DIR_OUT);
-	mutex_unlock(&rza1pinctrl->mutex);
+	mutex_lock(&gpio->pfc->mutex);
+	bit_modify(gpio->pfc->base, PORT(gpio->port), pin, val);
+	set_direction(gpio->pfc->base, gpio->port, pin, DIR_OUT);
+	mutex_unlock(&gpio->pfc->mutex);
 
 	return 0;
 }
-
 
 static int set_mode(void __iomem *base, unsigned int port, int bit, int mode)
 {
-	unsigned int reg;
-	for (reg = REG_PFC; reg < REG_NUM; reg++)
-		bit_modify(base, regs_addr[port][reg], bit, mode_regset[mode][reg]);
+	bit_modify(base, PFC(port), bit, mode_regset[mode][0]);
+	bit_modify(base, PFCE(port), bit, mode_regset[mode][1]);
+	bit_modify(base, PFCAE(port), bit, mode_regset[mode][2]);
 	return 0;
 }
 
@@ -492,12 +384,12 @@ static int set_mode(void __iomem *base, unsigned int port, int bit, int mode)
  *          PIPC enable SoC IP to control a direction.
  */
 
-int r7s72100_pfc_pin_assign(void __iomem *base, enum pfc_pin_number pinnum, unsigned mode,
+static int r7s72100_pfc_pin_assign(struct device *dev, void __iomem *base, unsigned pin, unsigned mode,
 			unsigned dir)
 {
-	int port, bit = (int)pinnum;
+	int port = (pin >> RZA1PFC_PORT_SHIFT) & 0xff, bit = pin & 0xff;
 
-	port = get_port_bitshift(&bit);
+	dev_info(dev, "setting mux for %d:%d\n", port, bit);
 
 	/* Error is less than 0 port */
 	if (port < 0)
@@ -519,7 +411,7 @@ int r7s72100_pfc_pin_assign(void __iomem *base, enum pfc_pin_number pinnum, unsi
 			}
 		/* Alternative Mode */
 		} else {
-			if ((bit == P0_4) || (bit == P0_5)) {
+			if ((bit == 4) || (bit == 5)) {
 				/* PMC Setting : Alternative mode */
 				bit_modify(base, PMC(port), bit, true);
 			} else {
@@ -663,9 +555,12 @@ static int rza1pfc_pmx_set_mux(struct pinctrl_dev *pctldev,
 
 	dev_info(pctl->dev, "rza1pfc_pmx_set_mux %u %d\n", function, group);
 
+	mutex_lock(&pctl->mutex);
 	for(i = 0; i < func->npins; i++){
-		r7s72100_pfc_pin_assign(pctl->base, func->pins[i], func->modes[i], func->dirs[i]);
+		dev_info(pctl->dev, "pin %d %u %u %u\n", i, func->pins[i], func->modes[i], func->dirs[i]);
+		r7s72100_pfc_pin_assign(pctl->dev, pctl->base, func->pins[i], func->modes[i], func->dirs[i]);
 	}
+	mutex_unlock(&pctl->mutex);
 
 	return 0;
 }
@@ -713,20 +608,74 @@ static const struct pinconf_ops rza1pfc_pconf_ops = {
 	.pin_config_dbg_show	= rza1pfc_pconf_dbg_show,
 };
 
+static int rza1pfc_gpio_registerport(struct platform_device *pdev, struct device_node *ofnode,
+		struct rza1pfc *rza1pinctrl, unsigned port, unsigned pins){
+	struct gpio_chip* gpiochip;
+	struct rza1pfc_gpio* gpio;
+	const char* *names;
+	char* namestrings;
+	int i, retval = 0;
+
+	gpiochip = devm_kzalloc(&pdev->dev, sizeof(*gpiochip), GFP_KERNEL);
+	if (!gpiochip)
+		return -ENOMEM;
+
+	gpio = devm_kzalloc(&pdev->dev, sizeof(*gpio), GFP_KERNEL);
+		if (!gpio)
+			return -ENOMEM;
+
+	names = devm_kzalloc(&pdev->dev, sizeof(*names) * pins, GFP_KERNEL);
+		if (!names)
+			return -ENOMEM;
+
+	namestrings = devm_kzalloc(&pdev->dev, (8 * pins), GFP_KERNEL);
+		if (!namestrings)
+			return -ENOMEM;
+
+	gpio->pfc = rza1pinctrl;
+	gpio->port = port;
+	gpio->npins = pins;
+
+	for(i = 0; i < pins; i++){
+		sprintf(namestrings, "p%u-%u", port, i);
+		names[i] = namestrings;
+		namestrings += 8;
+	}
+
+	gpiochip->label = ofnode->name;
+	gpiochip->names = names;
+	gpiochip->base = port * 16;
+	gpiochip->ngpio = pins;
+	gpiochip->get = chip_gpio_get;
+	gpiochip->set = chip_gpio_set;
+	gpiochip->direction_input = chip_direction_input;
+	gpiochip->direction_output = chip_direction_output;
+	gpiochip->parent = &pdev->dev;
+	gpiochip->owner = THIS_MODULE;
+	gpiochip->of_node = ofnode;
+
+	retval = gpiochip_add_data(gpiochip, gpio);
+
+	if (retval)
+		dev_err(&pdev->dev, "Failed to register GPIO for port %u %d\n", port, retval);
+
+	return retval;
+}
+
 static int rza1pfc_pinctrl_probe(struct platform_device *pdev)
 {
 	struct device_node *np = pdev->dev.of_node;
 	struct device_node *child;
-	struct property *pins;
+	struct property *prop;
 
 	struct rza1pfc *rza1pinctrl;
-	struct gpio_chip* gpiochip;
 	struct resource *base_res;
-	const char *name = dev_name(&pdev->dev);
 	void __iomem *base;
 	int i, j, retval, length;
 	const __be32 *p;
 	u32 val;
+
+	int port, npins;
 
 	/* Get io base address */
 	base_res = platform_get_resource(pdev, IORESOURCE_MEM, 0);
@@ -756,18 +705,24 @@ static int rza1pfc_pinctrl_probe(struct platform_device *pdev)
 
 	// populate functions
 	rza1pinctrl->nfunctions = 0;
+
+	// find how many function blocks there are
 	for_each_child_of_node(np, child) {
 		dev_info(&pdev->dev, "child %s\n", child->name);
-		rza1pinctrl->nfunctions++;
+		prop = of_find_property(child, "renesas,pins", &length);
+		if(prop)
+			rza1pinctrl->nfunctions++;
 	}
+
 	rza1pinctrl->functions = devm_kzalloc(&pdev->dev, sizeof(*rza1pinctrl->functions) * rza1pinctrl->nfunctions, GFP_KERNEL);
 	i = 0;
 	for_each_child_of_node(np, child) {
 		rza1pinctrl->functions[i].name = child->name;
-		pins = of_find_property(child, "renesas,pins", &length);
 
-		if(!pins)
-			break;
+		// check if this is a function block
+		prop = of_find_property(child, "renesas,pins", &length);
+		if(!prop)
+			continue;
 
 		rza1pinctrl->functions[i].npins = (length / 4) / 3;
 
@@ -782,11 +737,11 @@ static int rza1pfc_pinctrl_probe(struct platform_device *pdev)
 
 		p = NULL;
 		for(j = 0; j < rza1pinctrl->functions[i].npins; j++){
-			p = of_prop_next_u32(pins, p, &val);
+			p = of_prop_next_u32(prop, p, &val);
 			rza1pinctrl->functions[i].pins[j] = val;
-			p = of_prop_next_u32(pins, p, &val);
+			p = of_prop_next_u32(prop, p, &val);
 			rza1pinctrl->functions[i].modes[j] = val;
-			p = of_prop_next_u32(pins, p, &val);
+			p = of_prop_next_u32(prop, p, &val);
 			rza1pinctrl->functions[i].dirs[j] = val;
 			dev_info(&pdev->dev, "pin %u mode: %i dir: %i\n", rza1pinctrl->functions[i].pins[j],
 					rza1pinctrl->functions[i].modes[j], rza1pinctrl->functions[i].dirs[j]);
@@ -803,31 +758,19 @@ static int rza1pfc_pinctrl_probe(struct platform_device *pdev)
 	}
 
 
+	// find and register gpios
+	for_each_child_of_node(np, child) {
+			prop = of_find_property(child, "gpio-controller", &length);
+			if(prop){
+				if(of_property_read_u32(child, "renesas,port", &port))
+					continue;
+				if(of_property_read_u32(child, "ngpios", &npins))
+					continue;
+				rza1pfc_gpio_registerport(pdev, child, rza1pinctrl, port, npins);
+			}
+	}
 
-	gpiochip = devm_kzalloc(&pdev->dev, sizeof(*gpiochip), GFP_KERNEL);
-	if (!gpiochip)
-		return -ENOMEM;
-
-	gpiochip->label = name;
-	gpiochip->names = gpio_names;
-	gpiochip->base = 0;
-	gpiochip->ngpio = GPIO_NR;
-	gpiochip->get = chip_gpio_get;
-	gpiochip->set = chip_gpio_set;
-	gpiochip->direction_input = chip_direction_input;
-	gpiochip->direction_output = chip_direction_output;
-	gpiochip->parent = &pdev->dev;
-	gpiochip->owner = THIS_MODULE;
-
-	platform_set_drvdata(pdev, rza1pinctrl);
-
-	retval = gpiochip_add_data(gpiochip, rza1pinctrl);
-
-	if (!retval)
-		dev_info(&pdev->dev, "registered\n");
-	else
-		dev_err(&pdev->dev, "Failed to register GPIO %d\n", retval);
-
+	/*
 	rza1pinctrl->gpio_range.name = name;
 	rza1pinctrl->gpio_range.id = 0;
 	rza1pinctrl->gpio_range.base = gpiochip->base;
@@ -836,22 +779,14 @@ static int rza1pfc_pinctrl_probe(struct platform_device *pdev)
 	rza1pinctrl->gpio_range.gc = gpiochip;
 
 	pinctrl_add_gpio_range(rza1pinctrl->pctl_dev,
-					&rza1pinctrl->gpio_range);
+					&rza1pinctrl->gpio_range);*/
 
 	return retval;
 }
 
-struct rza1pfc_match_data {
-};
-
-static const struct rza1pfc_match_data rza1pfc_match_data = {
-};
-
-
 static const struct of_device_id rza1_pinctrl_of_match[] = {
 	{
 			.compatible = "renesas,rza1-pinctrl",
-			.data = &rza1pfc_match_data
 	},
 	{}
 };
@@ -865,7 +800,7 @@ static struct platform_driver rza1_pinctrl_driver = {
 };
 
 static struct platform_driver * const drivers[] = {
-	&rza1_pinctrl_driver
+	&rza1_pinctrl_driver,
 };
 
 static int __init rza1_module_init(void)

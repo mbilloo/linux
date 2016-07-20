@@ -286,44 +286,114 @@
 	pinctrl: pinctrl@xfcfe3000 {
 		compatible = "renesas,rza1-pinctrl";
 		reg = <0xfcfe3000 0x4400>;
-		ngpios = <168>;
-		gpio-controller;
-		#gpio-cells = <2>;
 		
-		spi0_pins: spi0 {
-			renesas,pins = <RZA1PFC_PIN_P10_12 RZA1PFC_MODE_ALT1 DIR_OUT>,	/* sck */
-							<RZA1PFC_PIN_P10_15 RZA1PFC_MODE_ALT1 DIR_OUT>,	/* ssl */
-							<RZA1PFC_PIN_P10_14 RZA1PFC_MODE_ALT1 DIR_OUT>,	/* mosi */
-							<RZA1PFC_PIN_P10_13 RZA1PFC_MODE_ALT1 DIR_IN>;  /* miso */
+		port0: port0 {
+			renesas,port = <0>;
+			gpio-controller;
+			#gpio-cells = <2>;
+			ngpios = <6>;
 		};
 		
-		spi1_pins: spi1 {
-			renesas,pins = <0 0 0>,
-							<1 1 1>;
+		port1: port1 {
+			renesas,port = <1>;
+			gpio-controller;
+			#gpio-cells = <2>;
+			ngpios = <16>;
+		};
+		
+		port2: port2 {
+			renesas,port = <2>;
+			gpio-controller;
+			#gpio-cells = <2>;
+			ngpios = <16>;
+		};
+		
+		port3: port3 {
+			renesas,port = <3>;
+			gpio-controller;
+			#gpio-cells = <2>;
+			ngpios = <16>;
+		};
+		
+		port4: port4 {
+			renesas,port = <4>;
+			gpio-controller;
+			#gpio-cells = <2>;
+			ngpios = <16>;
+		};
+		
+		port5: port5 {
+			renesas,port = <5>;
+			gpio-controller;
+			#gpio-cells = <2>;
+			ngpios = <11>;
+		};
+		
+		port6: port6 {
+			renesas,port = <6>;
+			gpio-controller;
+			#gpio-cells = <2>;
+			ngpios = <16>;
+		};
+		
+		port7: port7 {
+			renesas,port = <7>;
+			gpio-controller;
+			#gpio-cells = <2>;
+			ngpios = <16>;
+		};
+		
+		port8: port8 {
+			renesas,port = <8>;
+			gpio-controller;
+			#gpio-cells = <2>;
+			ngpios = <16>;
+		};
+		
+		port9: port9 {
+			renesas,port = <9>;
+			gpio-controller;
+			#gpio-cells = <2>;
+			ngpios = <8>;
+		};
+		
+		port10: port10 {
+			renesas,port = <10>;
+			gpio-controller;
+			#gpio-cells = <2>;
+			ngpios = <16>;
+		};
+		
+		port11: port11 {
+			renesas,port = <11>;
+			gpio-controller;
+			#gpio-cells = <2>;
+			ngpios = <16>;
+		};
+		
+		spi0_pins: spi0 {
+			renesas,pins = <RZA1PFC_PIN(10,12) RZA1PFC_MODE_ALT4 DIIO_PBDC_EN>,	/* sck */
+							<RZA1PFC_PIN(10,13) RZA1PFC_MODE_ALT4 DIIO_PBDC_EN>,/* ssl */
+							<RZA1PFC_PIN(10,14) RZA1PFC_MODE_ALT4 DIIO_PBDC_EN>,/* mosi */
+							<RZA1PFC_PIN(10,15) RZA1PFC_MODE_ALT4 DIIO_PBDC_EN>;/* miso */
+							
+							
 		};
 		
 		spi2_pins: spi2 {
-			renesas,pins = <0 0 0>,
-							<1 1 1>;
+			renesas,pins = <RZA1PFC_PIN(8,3) RZA1PFC_MODE_ALT3 DIIO_PBDC_EN>,	/* sck */
+							<RZA1PFC_PIN(8,4) RZA1PFC_MODE_ALT3 DIIO_PBDC_EN>,	/* ssl */
+							<RZA1PFC_PIN(8,5) RZA1PFC_MODE_ALT3 DIIO_PBDC_EN>,	/* mosi */
+							<RZA1PFC_PIN(8,6) RZA1PFC_MODE_ALT3 DIIO_PBDC_EN>;	/* miso */
 		};
-		
-		spi3_pins: spi3 {
-			renesas,pins = <0 0 0>,
-							<1 1 1>;
+						
+		i2c3_pins: i2c3 {
+			renesas,pins = <RZA1PFC_PIN(1,6) RZA1PFC_MODE_ALT1 DIIO_PBDC_EN>,	/* scl */
+							<RZA1PFC_PIN(1,7) RZA1PFC_MODE_ALT1 DIIO_PBDC_EN>;	/* sda */
+														
 		};
-		
-		spi4_pins: spi4 {
-			renesas,pins = <0 0 0>,
-							<1 1 1>;
-		};
-		
-		
 	};
 	
-	gpio: gpio@0 {
-		compatible = "renesas,rza1-gpio";
-	};
-
 	spi0: spi@e800c800 {
 		compatible = "renesas,rspi-r7s72100", "renesas,rspi-rz";
 		reg = <0xe800c800 0x24>;
@@ -336,8 +406,6 @@
 		num-cs = <1>;
 		#address-cells = <1>;
 		#size-cells = <0>;
-		pinctrl-names = "default";
-		pinctrl-0 = <&spi0_pins>;
 		status = "disabled";
 	};
 

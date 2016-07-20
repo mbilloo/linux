@@ -78,26 +78,27 @@
 		compatible = "gpio-leds";  
 		usr {
 		    label = "usr";
-		    gpios = <&pinctrl 93 0>;
+		    gpios = <&port6 12 0>;
 		    linux,default-trigger = "heartbeat";
 		    default-state = "off";
 		};
 		rgb_r {
 		    label = "rgb_r";
-		    gpios = <&pinctrl 94 0>;
+		    gpios = <&port6 13 0>;
 		    default-state = "off";
 		};
 		rgb_g {
 		    label = "rgb_g";
-		    gpios = <&pinctrl 95 0>;
+		    gpios = <&port6 14 0>;
 		    default-state = "off";
 		};
 		rgb_b {
 		    label = "rgb_b";
-		    gpios = <&pinctrl 96 0>;
+		    gpios = <&port6 15 0>;
 		    default-state = "off";
 		};
 	};
+	
 	
 	gpio_keys_polled {
 		compatible = "gpio-keys-polled";
@@ -108,9 +109,35 @@
 		button@21 {
 			label = "GPIO Key UP";
 			linux,code = <103>;
-			gpios = <&pinctrl 81 0>;
+			gpios = <&port6 0 0>;
 		};
 	};
+	
+	
+	/*
+	bitbangspi	{
+		compatible = "spi-gpio";
+		#address-cells = <0x1>;
+		#size-cells = <0>;
+
+		gpio-sck = <&port8 3 0>;
+		cs-gpios = <&port8 4 0>;
+		gpio-mosi = <&port8 5 0>;
+		gpio-miso = <&port8 6 0>;
+		
+		num-chipselects = <1>;
+
+		pinctrl-names = "default";
+		pinctrl-0 = <&spi2bb_pins>;
+
+		mmc-slot@0 {
+				compatible = "renesas, grpeachmmc","mmc-spi-slot";
+				reg = <0>;
+				spi-max-frequency = <500000>;
+				gpios = <&port7 8 GPIO_ACTIVE_LOW>;
+				voltage-ranges = <3300 3300>;
+			};	
+	};*/
 	
 };
 
@@ -126,15 +153,11 @@
 	status = "okay";
 };
 
-&i2c2 {
+&i2c3 {
 	status = "okay";
 	clock-frequency = <400000>;
-
-	eeprom@50 {
-		compatible = "renesas,24c128";
-		reg = <0x50>;
-		pagesize = <64>;
-	};
+	pinctrl-names = "default";
+	pinctrl-0 = <&i2c3_pins>;
 };
 
 &scif2 {
@@ -143,6 +166,8 @@
 
 &spi0 {
 	status = "okay";
+	pinctrl-names = "default";
+	pinctrl-0 = <&spi0_pins>;
 	spidev@0 {
 		spi-max-frequency = <24000000>;
 		reg = <0>;
@@ -152,11 +177,13 @@
 
 &spi2 {
 	status = "okay";
+	pinctrl-names = "default";
+	pinctrl-0 = <&spi2_pins>;
 	mmc-slot@0 {
 				compatible = "renesas, grpeachmmc","mmc-spi-slot";
 				reg = <0>;
-				spi-max-frequency = <50000000>;
-				gpios = <&pinctrl 105 GPIO_ACTIVE_LOW>;
+				spi-max-frequency = <10000000>;
+				gpios = <&port7 8 GPIO_ACTIVE_LOW>;
 				voltage-ranges = <3300 3300>;
 			};
 };
