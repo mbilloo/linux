@@ -372,24 +372,24 @@
 		};
 		
 		spi0_pins: spi0 {
-			renesas,pins = <RZA1PFC_PIN(10,12) RZA1PFC_MODE_ALT4 DIIO_PBDC_EN>,	/* sck */
-							<RZA1PFC_PIN(10,13) RZA1PFC_MODE_ALT4 DIIO_PBDC_EN>,/* ssl */
-							<RZA1PFC_PIN(10,14) RZA1PFC_MODE_ALT4 DIIO_PBDC_EN>,/* mosi */
-							<RZA1PFC_PIN(10,15) RZA1PFC_MODE_ALT4 DIIO_PBDC_EN>;/* miso */
+			renesas,pins = <RZA1PFC_PIN(10,12) RZA1PFC_MODE_ALT4 RZA1PFC_DIIO_PBDC_EN>,	/* sck */
+							<RZA1PFC_PIN(10,13) RZA1PFC_MODE_ALT4 RZA1PFC_DIIO_PBDC_EN>,/* ssl */
+							<RZA1PFC_PIN(10,14) RZA1PFC_MODE_ALT4 RZA1PFC_DIIO_PBDC_EN>,/* mosi */
+							<RZA1PFC_PIN(10,15) RZA1PFC_MODE_ALT4 RZA1PFC_DIIO_PBDC_EN>;/* miso */
 							
 							
 		};
 		
 		spi2_pins: spi2 {
-			renesas,pins = <RZA1PFC_PIN(8,3) RZA1PFC_MODE_ALT3 DIIO_PBDC_EN>,	/* sck */
-							<RZA1PFC_PIN(8,4) RZA1PFC_MODE_ALT3 DIIO_PBDC_EN>,	/* ssl */
-							<RZA1PFC_PIN(8,5) RZA1PFC_MODE_ALT3 DIIO_PBDC_EN>,	/* mosi */
-							<RZA1PFC_PIN(8,6) RZA1PFC_MODE_ALT3 DIIO_PBDC_EN>;	/* miso */
+			renesas,pins = <RZA1PFC_PIN(8,3) RZA1PFC_MODE_ALT3 RZA1PFC_DIIO_PBDC_EN>,	/* sck */
+							<RZA1PFC_PIN(8,4) RZA1PFC_MODE_ALT3 RZA1PFC_DIIO_PBDC_EN>,	/* ssl */
+							<RZA1PFC_PIN(8,5) RZA1PFC_MODE_ALT3 RZA1PFC_DIIO_PBDC_EN>,	/* mosi */
+							<RZA1PFC_PIN(8,6) RZA1PFC_MODE_ALT3 RZA1PFC_DIIO_PBDC_EN>;	/* miso */
 		};
-						
+								
 		i2c3_pins: i2c3 {
-			renesas,pins = <RZA1PFC_PIN(1,6) RZA1PFC_MODE_ALT1 DIIO_PBDC_EN>,	/* scl */
-							<RZA1PFC_PIN(1,7) RZA1PFC_MODE_ALT1 DIIO_PBDC_EN>;	/* sda */
+			renesas,pins = <RZA1PFC_PIN(1,6) RZA1PFC_MODE_ALT1 RZA1PFC_DIIO_PBDC_EN>,	/* scl */
+							<RZA1PFC_PIN(1,7) RZA1PFC_MODE_ALT1 RZA1PFC_DIIO_PBDC_EN>;	/* sda */
 														
 		};
 	};
@@ -490,9 +490,9 @@
     	clocks = <&mstp7_clks R7S72100_CLK_ETHER>;
     	phy-handle = <&phy0>;
     	dmas = <&dma0 0>;
-    	
     	#address-cells = <1>;
 		#size-cells = <0>;
+		status = "disabled";
 		phy0: ethernet-phy@0 {
 			reg = <0>;
 		};		

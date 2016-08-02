@@ -1391,6 +1391,7 @@ static int mmc_spi_probe(struct spi_device *spi)
 	if (!host->data)
 		goto fail_nobuf1;
 
+#if 0
 	if (spi->master->dev.parent->dma_mask) {
 		struct device	*dev = spi->master->dev.parent;
 
@@ -1408,6 +1409,7 @@ static int mmc_spi_probe(struct spi_device *spi)
 				host->data_dma, sizeof(*host->data),
 				DMA_BIDIRECTIONAL);
 	}
+#endif
 
 	/* setup message for status/busy readback */
 	spi_message_init(&host->readback);

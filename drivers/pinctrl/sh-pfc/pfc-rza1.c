@@ -69,190 +69,6 @@ static bool mode_regset[][REG_NUM] = {
 	{true,	true,	true	}, /* alt 8 */
 };
 
-static const struct pinctrl_pin_desc rza1_pins [] = {
-		// port 0
-		{ .number = 0,	.name = "P0_0",		.drv_data = NULL },
-		{ .number = 1,	.name = "P0_1",		.drv_data = NULL },
-		{ .number = 2,	.name = "P0_2",		.drv_data = NULL },
-		{ .number = 3,	.name = "P0_3",		.drv_data = NULL },
-		{ .number = 4,	.name = "P0_4",		.drv_data = NULL },
-		{ .number = 5,	.name = "P0_5",		.drv_data = NULL },
-		// port 1
-		{ .number = 6,	.name = "P1_0",		.drv_data = NULL },
-		{ .number = 7,	.name = "P1_1",		.drv_data = NULL },
-		{ .number = 8,	.name = "P1_2",		.drv_data = NULL },
-		{ .number = 9,	.name = "P1_3",		.drv_data = NULL },
-		{ .number = 10,	.name = "P1_4",		.drv_data = NULL },
-		{ .number = 11,	.name = "P1_5",		.drv_data = NULL },
-		{ .number = RZA1PFC_PIN(1,6),	.name = "P1_6",		.drv_data = NULL },
-		{ .number = RZA1PFC_PIN(1,7),	.name = "P1_7",		.drv_data = NULL },
-		{ .number = RZA1PFC_PIN(1,8),	.name = "P1_8",		.drv_data = NULL },
-		{ .number = 15,	.name = "P1_9",		.drv_data = NULL },
-		{ .number = 16,	.name = "P1_10",	.drv_data = NULL },
-		{ .number = 17,	.name = "P1_11",	.drv_data = NULL },
-		{ .number = 18,	.name = "P1_12",	.drv_data = NULL },
-		{ .number = 19,	.name = "P1_13",	.drv_data = NULL },
-		{ .number = 20,	.name = "P1_14",	.drv_data = NULL },
-		{ .number = 21,	.name = "P1_15",	.drv_data = NULL },
-		// port 2
-		{ .number = 22,	.name = "P2_0",		.drv_data = NULL },
-		{ .number = 23,	.name = "P2_1",		.drv_data = NULL },
-		{ .number = 24,	.name = "P2_2",		.drv_data = NULL },
-		{ .number = 25,	.name = "P2_3",		.drv_data = NULL },
-		{ .number = 26,	.name = "P2_4",		.drv_data = NULL },
-		{ .number = 27,	.name = "P2_5",		.drv_data = NULL },
-		{ .number = 28,	.name = "P2_6",		.drv_data = NULL },
-		{ .number = 29,	.name = "P2_7",		.drv_data = NULL },
-		{ .number = 30,	.name = "P2_8",		.drv_data = NULL },
-		{ .number = 31,	.name = "P2_9",		.drv_data = NULL },
-		{ .number = 32,	.name = "P2_10",	.drv_data = NULL },
-		{ .number = 33,	.name = "P2_11",	.drv_data = NULL },
-		{ .number = 34,	.name = "P2_12",	.drv_data = NULL },
-		{ .number = 35,	.name = "P2_13",	.drv_data = NULL },
-		{ .number = 36,	.name = "P2_14",	.drv_data = NULL },
-		{ .number = 37,	.name = "P2_15",	.drv_data = NULL },
-		// port 3
-		{ .number = 38,	.name = "P3_0",		.drv_data = NULL },
-		{ .number = 39,	.name = "P3_1",		.drv_data = NULL },
-		{ .number = 40,	.name = "P3_2",		.drv_data = NULL },
-		{ .number = 41,	.name = "P3_3",		.drv_data = NULL },
-		{ .number = 42,	.name = "P3_4",		.drv_data = NULL },
-		{ .number = 43,	.name = "P3_5",		.drv_data = NULL },
-		{ .number = 44,	.name = "P3_6",		.drv_data = NULL },
-		{ .number = 45,	.name = "P3_7",		.drv_data = NULL },
-		{ .number = 46,	.name = "P3_8",		.drv_data = NULL },
-		{ .number = 47,	.name = "P3_9",		.drv_data = NULL },
-		{ .number = 48,	.name = "P3_10",	.drv_data = NULL },
-		{ .number = 49,	.name = "P3_11",	.drv_data = NULL },
-		{ .number = 50,	.name = "P3_12",	.drv_data = NULL },
-		{ .number = 51,	.name = "P3_13",	.drv_data = NULL },
-		{ .number = 52,	.name = "P3_14",	.drv_data = NULL },
-		{ .number = 53,	.name = "P3_15",	.drv_data = NULL },
-		// port 4
-		{ .number = 54,	.name = "P4_0",		.drv_data = NULL },
-		{ .number = 55,	.name = "P4_1",		.drv_data = NULL },
-		{ .number = 56,	.name = "P4_2",		.drv_data = NULL },
-		{ .number = 57,	.name = "P4_3",		.drv_data = NULL },
-		{ .number = 58,	.name = "P4_4",		.drv_data = NULL },
-		{ .number = 59,	.name = "P4_5",		.drv_data = NULL },
-		{ .number = 60,	.name = "P4_6",		.drv_data = NULL },
-		{ .number = 61,	.name = "P4_7",		.drv_data = NULL },
-		{ .number = 62,	.name = "P4_8",		.drv_data = NULL },
-		{ .number = 63,	.name = "P4_9",		.drv_data = NULL },
-		{ .number = 64,	.name = "P4_10",	.drv_data = NULL },
-		{ .number = 65,	.name = "P4_11",	.drv_data = NULL },
-		{ .number = 66,	.name = "P4_12",	.drv_data = NULL },
-		{ .number = 67,	.name = "P4_13",	.drv_data = NULL },
-		{ .number = 68,	.name = "P4_14",	.drv_data = NULL },
-		{ .number = 69,	.name = "P4_15",	.drv_data = NULL },
-		// port 5
-		{ .number = 70,	.name = "P5_0",		.drv_data = NULL },
-		{ .number = 71,	.name = "P5_1",		.drv_data = NULL },
-		{ .number = 72,	.name = "P5_2",		.drv_data = NULL },
-		{ .number = 73,	.name = "P5_3",		.drv_data = NULL },
-		{ .number = 74,	.name = "P5_4",		.drv_data = NULL },
-		{ .number = 75,	.name = "P5_5",		.drv_data = NULL },
-		{ .number = 76,	.name = "P5_6",		.drv_data = NULL },
-		{ .number = 77,	.name = "P5_7",		.drv_data = NULL },
-		{ .number = 78,	.name = "P5_8",		.drv_data = NULL },
-		{ .number = 79,	.name = "P5_9",		.drv_data = NULL },
-		{ .number = 80,	.name = "P5_10",	.drv_data = NULL },
-		// port 6
-		{ .number = 81,	.name = "P6_0",		.drv_data = NULL },
-		{ .number = 82,	.name = "P6_1",		.drv_data = NULL },
-		{ .number = 83,	.name = "P6_2",		.drv_data = NULL },
-		{ .number = 84,	.name = "P6_3",		.drv_data = NULL },
-		{ .number = 85,	.name = "P6_4",		.drv_data = NULL },
-		{ .number = 86,	.name = "P6_5",		.drv_data = NULL },
-		{ .number = 87,	.name = "P6_6",		.drv_data = NULL },
-		{ .number =	88,	.name = "P6_7",		.drv_data = NULL },
-		{ .number = 89,	.name = "P6_8",		.drv_data = NULL },
-		{ .number = 90,	.name = "P6_9",		.drv_data = NULL },
-		{ .number = 91,	.name = "P6_10",	.drv_data = NULL },
-		{ .number = 92,	.name = "P6_11",	.drv_data = NULL },
-		{ .number = 93,	.name = "P6_12",	.drv_data = NULL },
-		{ .number = 94,	.name = "P6_13",	.drv_data = NULL },
-		{ .number = 95,.name = "P6_14",	.drv_data = NULL },
-		{ .number = 96,.name = "P6_15",	.drv_data = NULL },
-		// port 7
-		{ .number = 97,.name = "P7_0",		.drv_data = NULL },
-		{ .number = 98,.name = "P7_1",		.drv_data = NULL },
-		{ .number = 99,.name = "P7_2",		.drv_data = NULL },
-		{ .number = 100,.name = "P7_3",		.drv_data = NULL },
-		{ .number = 101,.name = "P7_4",		.drv_data = NULL },
-		{ .number = 102,.name = "P7_5",		.drv_data = NULL },
-		{ .number = 103,.name = "P7_6",		.drv_data = NULL },
-		{ .number = 104,.name = "P7_7",		.drv_data = NULL },
-		{ .number = 105,.name = "P7_8",		.drv_data = NULL },
-		{ .number = 106,.name = "P7_9",		.drv_data = NULL },
-		{ .number = 107,.name = "P7_10",	.drv_data = NULL },
-		{ .number = 108,.name = "P7_11",	.drv_data = NULL },
-		{ .number = 109,.name = "P7_12",	.drv_data = NULL },
-		{ .number = 110,.name = "P7_13",	.drv_data = NULL },
-		{ .number = 111,.name = "P7_14",	.drv_data = NULL },
-		{ .number = 112,.name = "P7_15",	.drv_data = NULL },
-		// port 8
-		{ .number = RZA1PFC_PIN(8,0),		.name = "P8_0",		.drv_data = NULL },
-		{ .number = RZA1PFC_PIN(8,1),		.name = "P8_1",		.drv_data = NULL },
-		{ .number = RZA1PFC_PIN(8,2),		.name = "P8_2",		.drv_data = NULL },
-		{ .number = RZA1PFC_PIN(8,3),		.name = "P8_3",		.drv_data = NULL },
-		{ .number = RZA1PFC_PIN(8,4),		.name = "P8_4",		.drv_data = NULL },
-		{ .number = RZA1PFC_PIN(8,5),		.name = "P8_5",		.drv_data = NULL },
-		{ .number = RZA1PFC_PIN(8,6),		.name = "P8_6",		.drv_data = NULL },
-		{ .number = RZA1PFC_PIN(8,7),		.name = "P8_7",		.drv_data = NULL },
-		{ .number = RZA1PFC_PIN(8,8),		.name = "P8_8",		.drv_data = NULL },
-		{ .number = RZA1PFC_PIN(8,9),		.name = "P8_9",		.drv_data = NULL },
-		{ .number = RZA1PFC_PIN(8,10),		.name = "P8_10",	.drv_data = NULL },
-		{ .number = RZA1PFC_PIN(8,11),		.name = "P8_11",	.drv_data = NULL },
-		{ .number = RZA1PFC_PIN(8,12),		.name = "P8_12",	.drv_data = NULL },
-		{ .number = RZA1PFC_PIN(8,13),		.name = "P8_13",	.drv_data = NULL },
-		{ .number = RZA1PFC_PIN(8,14),		.name = "P8_14",	.drv_data = NULL },
-		{ .number = RZA1PFC_PIN(8,15),		.name = "P8_15",	.drv_data = NULL },
-		// port 9
-		{ .number = 129,.name = "P9_0",		.drv_data = NULL },
-		{ .number = 130,.name = "P9_1",		.drv_data = NULL },
-		{ .number = 131,.name = "P9_2",		.drv_data = NULL },
-		{ .number = 132,.name = "P9_3",		.drv_data = NULL },
-		{ .number = 133,.name = "P9_4",		.drv_data = NULL },
-		{ .number = 134,.name = "P9_5",		.drv_data = NULL },
-		{ .number = 135,.name = "P9_6",		.drv_data = NULL },
-		{ .number = 136,.name = "P9_7",		.drv_data = NULL },
-		// port 10
-		{ .number = RZA1PFC_PIN(10,0),	.name = "P10_0",	.drv_data = NULL },
-		{ .number = RZA1PFC_PIN(10,1),	.name = "P10_1",	.drv_data = NULL },
-		{ .number = RZA1PFC_PIN(10,2),	.name = "P10_2",	.drv_data = NULL },
-		{ .number = RZA1PFC_PIN(10,3),	.name = "P10_3",	.drv_data = NULL },
-		{ .number = RZA1PFC_PIN(10,4),	.name = "P10_4",	.drv_data = NULL },
-		{ .number = RZA1PFC_PIN(10,5),	.name = "P10_5",	.drv_data = NULL },
-		{ .number = RZA1PFC_PIN(10,6),	.name = "P10_6",	.drv_data = NULL },
-		{ .number = RZA1PFC_PIN(10,7),	.name = "P10_7",	.drv_data = NULL },
-		{ .number = RZA1PFC_PIN(10,8),	.name = "P10_8",	.drv_data = NULL },
-		{ .number = RZA1PFC_PIN(10,9),	.name = "P10_9",	.drv_data = NULL },
-		{ .number = RZA1PFC_PIN(10,10),	.name = "P10_10",	.drv_data = NULL },
-		{ .number = RZA1PFC_PIN(10,11),	.name = "P10_11",	.drv_data = NULL },
-		{ .number = RZA1PFC_PIN(10,12),	.name = "P10_12",	.drv_data = NULL },
-		{ .number = RZA1PFC_PIN(10,13),	.name = "P10_13",	.drv_data = NULL },
-		{ .number = RZA1PFC_PIN(10,14),	.name = "P10_14",	.drv_data = NULL },
-		{ .number = RZA1PFC_PIN(10,15),	.name = "P10_15",	.drv_data = NULL },
-		// port 11
-		{ .number = 153,.name = "P11_0",	.drv_data = NULL },
-		{ .number = 154,.name = "P11_1",	.drv_data = NULL },
-		{ .number = 155,.name = "P11_2",	.drv_data = NULL },
-		{ .number = 156,.name = "P11_3",	.drv_data = NULL },
-		{ .number = 157,.name = "P11_4",	.drv_data = NULL },
-		{ .number = 158,.name = "P11_5",	.drv_data = NULL },
-		{ .number = 159,.name = "P11_6",	.drv_data = NULL },
-		{ .number = 160,.name = "P11_7",	.drv_data = NULL },
-		{ .number = 161,.name = "P11_8",	.drv_data = NULL },
-		{ .number = 162,.name = "P11_9",	.drv_data = NULL },
-		{ .number = 163,.name = "P11_10",	.drv_data = NULL },
-		{ .number = 164,.name = "P11_11",	.drv_data = NULL },
-		{ .number = 165,.name = "P11_12",	.drv_data = NULL },
-		{ .number = 166,.name = "P11_13",	.drv_data = NULL },
-		{ .number = 167,.name = "P11_14",	.drv_data = NULL },
-		{ .number = 168,.name = "P11_15",	.drv_data = NULL },
-};
-
 struct rza1pfc_function {
 	const char *name;
 	unsigned *pins;
@@ -299,10 +115,10 @@ static inline int bit_modify(void __iomem *base, unsigned int addr, int bit, boo
 
 static int set_direction(void __iomem *base, unsigned int port, int bit, unsigned dir)
 {
-	if ((port == 0) && (dir != DIR_IN))	/* p0 is input only */
+	if ((port == 0) && (dir != RZA1PFC_DIR_IN))	/* p0 is input only */
 		return -1;
 
-	if (dir == DIR_IN) {
+	if (dir == RZA1PFC_DIR_IN) {
 		bit_modify(base, PM(port), bit, true);
 		bit_modify(base, PIBC(port), bit, true);
 	} else {
@@ -344,7 +160,7 @@ static int chip_direction_input(struct gpio_chip *chip, unsigned pin)
 	gpio = gpiochip_get_data(chip);
 
 	mutex_lock(&gpio->pfc->mutex);
-	set_direction(&gpio->pfc->base, gpio->port, pin, DIR_IN);
+	set_direction(&gpio->pfc->base, gpio->port, pin, RZA1PFC_DIR_IN);
 	mutex_unlock(&gpio->pfc->mutex);
 
 	return 0;
@@ -362,7 +178,7 @@ static int chip_direction_output(struct gpio_chip *chip, unsigned pin,
 
 	mutex_lock(&gpio->pfc->mutex);
 	bit_modify(gpio->pfc->base, PORT(gpio->port), pin, val);
-	set_direction(gpio->pfc->base, gpio->port, pin, DIR_OUT);
+	set_direction(gpio->pfc->base, gpio->port, pin, RZA1PFC_DIR_OUT);
 	mutex_unlock(&gpio->pfc->mutex);
 
 	return 0;
@@ -387,7 +203,7 @@ static int set_mode(void __iomem *base, unsigned int port, int bit, int mode)
 static int r7s72100_pfc_pin_assign(struct device *dev, void __iomem *base, unsigned pin, unsigned mode,
 			unsigned dir)
 {
-	int port = (pin >> RZA1PFC_PORT_SHIFT) & 0xff, bit = pin & 0xff;
+	int port = (pin >> RZA1PFC_PORT_SHIFT) & 0xf, bit = pin & 0xf;
 
 	dev_info(dev, "setting mux for %d:%d\n", port, bit);
 
@@ -403,7 +219,7 @@ static int r7s72100_pfc_pin_assign(struct device *dev, void __iomem *base, unsig
 
 		/* Port Mode */
 		if (mode == RZA1PFC_MODE_GPIO) {
-			if (dir == DIR_IN) {
+			if (dir == RZA1PFC_DIR_IN) {
 				/* PIBC Setting : Input buffer allowed */
 				bit_modify(base, PIBC(port), bit, true);
 			} else {
@@ -429,17 +245,17 @@ static int r7s72100_pfc_pin_assign(struct device *dev, void __iomem *base, unsig
 	bit_modify(base, PIPC(port), bit, false);	/* software I/Ocontrol. */
 
 	/* PBDC Setting */
-	if ((dir == DIIO_PBDC_EN) || (dir == SWIO_OUT_PBDCEN))
+	if ((dir == RZA1PFC_DIIO_PBDC_EN) || (dir == RZA1PFC_SWIO_OUT_PBDCEN))
 		bit_modify(base, PBDC(port), bit, true);	/* Bidirection enable */
 
 	/* Port Mode */
 	if (mode == RZA1PFC_MODE_GPIO) {
-		if (dir == DIR_IN) {
+		if (dir == RZA1PFC_DIR_IN) {
 			bit_modify(base, PIBC(port), bit, true); /*Inputbuffer allow*/
-		} else if (dir == PORT_OUT_LOW) {
+		} else if (dir == RZA1PFC_PORT_OUT_LOW) {
 			bit_modify(base, PORT(port), bit, false); /*Output low level*/
 			bit_modify(base, PM(port), bit, false);  /* Output mode */
-		} else if (dir == PORT_OUT_HIGH) {
+		} else if (dir == RZA1PFC_PORT_OUT_HIGH) {
 			bit_modify(base, PORT(port), bit, true); /*Output high level*/
 			bit_modify(base, PM(port), bit, false);  /* Output mode */
 		} else {
@@ -451,13 +267,13 @@ static int r7s72100_pfc_pin_assign(struct device *dev, void __iomem *base, unsig
 		set_mode(base, port, bit, mode); /* Alternative Function Select */
 
 		/* PIPC Setting */
-		if ((dir == DIIO_PBDC_DIS) || (dir == DIIO_PBDC_EN))
+		if ((dir == RZA1PFC_DIIO_PBDC_DIS) || (dir == RZA1PFC_DIIO_PBDC_EN))
 			bit_modify(base, PIPC(port), bit, true); /* direct I/O cont */
 		/* PMC Setting */
 		bit_modify(base, PMC(port), bit, true);	/* Alternative Mode */
 
 		/* PM Setting : Output mode (output enabled)*/
-		if ((dir == SWIO_OUT_PBDCDIS) || (dir == SWIO_OUT_PBDCEN))
+		if ((dir == RZA1PFC_SWIO_OUT_PBDCDIS) || (dir == RZA1PFC_SWIO_OUT_PBDCEN))
 			bit_modify(base, PM(port), bit, false);
 	}
 
@@ -669,13 +485,14 @@ static int rza1pfc_pinctrl_probe(struct platform_device *pdev)
 	struct property *prop;
 
 	struct rza1pfc *rza1pinctrl;
+	struct pinctrl_pin_desc *rza1_pins;
 	struct resource *base_res;
 	void __iomem *base;
 	int i, j, retval, length;
 	const __be32 *p;
 	u32 val;
 
-	int port, npins;
+	int port, npins, curpin;
 
 	/* Get io base address */
 	base_res = platform_get_resource(pdev, IORESOURCE_MEM, 0);
@@ -690,13 +507,17 @@ static int rza1pfc_pinctrl_probe(struct platform_device *pdev)
 	if (!rza1pinctrl)
 		return -ENOMEM;
 
+	rza1_pins = devm_kzalloc(&pdev->dev, sizeof(*rza1pinctrl) * 168, GFP_KERNEL);
+		if (!rza1pinctrl)
+			return -ENOMEM;
+
 	rza1pinctrl->base = base;
 	mutex_init(&rza1pinctrl->mutex);
 
 	rza1pinctrl->pctl_desc.name = dev_name(&pdev->dev);
 	rza1pinctrl->pctl_desc.owner = THIS_MODULE;
 	rza1pinctrl->pctl_desc.pins = rza1_pins;
-	rza1pinctrl->pctl_desc.npins = ARRAY_SIZE(rza1_pins);
+	rza1pinctrl->pctl_desc.npins = 168;
 	rza1pinctrl->pctl_desc.confops = &rza1pfc_pconf_ops;
 	rza1pinctrl->pctl_desc.pctlops = &rza1pfc_pctrl_ops;
 	rza1pinctrl->pctl_desc.pmxops = &rza1pfc_pmx_ops;
@@ -750,15 +571,8 @@ static int rza1pfc_pinctrl_probe(struct platform_device *pdev)
 	}
 	//
 
-	rza1pinctrl->pctl_dev = devm_pinctrl_register(&pdev->dev, &rza1pinctrl->pctl_desc,
-					       rza1pinctrl);
-	if (IS_ERR(rza1pinctrl->pctl_dev)) {
-		dev_err(&pdev->dev, "Failed pinctrl registration\n");
-		//return PTR_ERR(rza1pinctrl->pctl_dev);
-	}
-
-
 	// find and register gpios
+	curpin = 0;
 	for_each_child_of_node(np, child) {
 			prop = of_find_property(child, "gpio-controller", &length);
 			if(prop){
@@ -767,7 +581,20 @@ static int rza1pfc_pinctrl_probe(struct platform_device *pdev)
 				if(of_property_read_u32(child, "ngpios", &npins))
 					continue;
 				rza1pfc_gpio_registerport(pdev, child, rza1pinctrl, port, npins);
+
+				for(i = 0; i < npins; i++){
+					rza1_pins[curpin].number = RZA1PFC_PIN(port, i);
+					curpin++;
+				}
 			}
+	}
+	//
+
+	rza1pinctrl->pctl_dev = devm_pinctrl_register(&pdev->dev, &rza1pinctrl->pctl_desc,
+						       rza1pinctrl);
+	if (IS_ERR(rza1pinctrl->pctl_dev)) {
+		dev_err(&pdev->dev, "Failed pinctrl registration\n");
+		retval = PTR_ERR(rza1pinctrl->pctl_dev);
 	}
 
 	/*

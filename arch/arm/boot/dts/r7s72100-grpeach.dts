@@ -112,33 +112,7 @@
 			gpios = <&port6 0 0>;
 		};
 	};
-	
-	
-	/*
-	bitbangspi	{
-		compatible = "spi-gpio";
-		#address-cells = <0x1>;
-		#size-cells = <0>;
-
-		gpio-sck = <&port8 3 0>;
-		cs-gpios = <&port8 4 0>;
-		gpio-mosi = <&port8 5 0>;
-		gpio-miso = <&port8 6 0>;
 		
-		num-chipselects = <1>;
-
-		pinctrl-names = "default";
-		pinctrl-0 = <&spi2bb_pins>;
-
-		mmc-slot@0 {
-				compatible = "renesas, grpeachmmc","mmc-spi-slot";
-				reg = <0>;
-				spi-max-frequency = <500000>;
-				gpios = <&port7 8 GPIO_ACTIVE_LOW>;
-				voltage-ranges = <3300 3300>;
-			};	
-	};*/
-	
 };
 
 &extal_clk {
@@ -164,15 +138,16 @@
 	status = "okay";
 };
 
+
 &spi0 {
 	status = "okay";
 	pinctrl-names = "default";
 	pinctrl-0 = <&spi0_pins>;
-	spidev@0 {
+	/*spidev@0 {
 		spi-max-frequency = <24000000>;
 		reg = <0>;
 		compatible = "linux,spidev";
-	};
+	};*/
 };
 
 &spi2 {
@@ -180,10 +155,14 @@
 	pinctrl-names = "default";
 	pinctrl-0 = <&spi2_pins>;
 	mmc-slot@0 {
-				compatible = "renesas, grpeachmmc","mmc-spi-slot";
-				reg = <0>;
-				spi-max-frequency = <10000000>;
-				gpios = <&port7 8 GPIO_ACTIVE_LOW>;
-				voltage-ranges = <3300 3300>;
-			};
+		compatible = "renesas, grpeachmmc","mmc-spi-slot";
+		reg = <0>;
+		spi-max-frequency = <24000000>;
+		gpios = <&port7 8 GPIO_ACTIVE_LOW>;
+		voltage-ranges = <3300 3300>;
+	};
+};
+
+&ethernet {
+	status = "okay";
 };
