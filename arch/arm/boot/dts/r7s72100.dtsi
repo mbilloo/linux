@@ -10,6 +10,7 @@
  */
 
 #include <dt-bindings/pinctrl/rza1pfc.h>
+#include <dt-bindings/dma/rza1dma.h>
 #include <dt-bindings/clock/r7s72100-clock.h>
 #include <dt-bindings/interrupt-controller/arm-gic.h>
 #include <dt-bindings/interrupt-controller/irq.h>
@@ -437,8 +438,8 @@
 		#address-cells = <1>;
 		#size-cells = <0>;
 		status = "disabled";
-		/*dmas = <&dma0 0>, <&dma0 1>;
-		dma-names = "tx", "rx";*/
+		dmas = <&dma0 RZA1DMA_SLAVE_SPI2_TX>, <&dma0 RZA1DMA_SLAVE_SPI2_RX>;
+		dma-names = "tx", "rx";
 	};
 
 	spi3: spi@e800e000 {
@@ -489,7 +490,6 @@
     	interrupts = <GIC_SPI 327 IRQ_TYPE_LEVEL_HIGH>;
     	clocks = <&mstp7_clks R7S72100_CLK_ETHER>;
     	phy-handle = <&phy0>;
-    	dmas = <&dma0 0>;
     	#address-cells = <1>;
 		#size-cells = <0>;
 		status = "disabled";
@@ -591,8 +591,23 @@
 		compatible = "renesas,rza1-dma";
 		reg = <0xe8200000 0x1000>,
 		 <0xfcfe1000 0x1000>;
-		 interrupts = <GIC_SPI 9 IRQ_TYPE_LEVEL_HIGH>,
-			     <GIC_SPI 25 IRQ_TYPE_LEVEL_HIGH>;
+		 interrupts = <GIC_SPI 9 IRQ_TYPE_EDGE_RISING>,
+		 		<GIC_SPI 10 IRQ_TYPE_EDGE_RISING>,
+				<GIC_SPI 11 IRQ_TYPE_EDGE_RISING>,
+				<GIC_SPI 12 IRQ_TYPE_EDGE_RISING>,
+				<GIC_SPI 13 IRQ_TYPE_EDGE_RISING>,
+				<GIC_SPI 14 IRQ_TYPE_EDGE_RISING>,
+				<GIC_SPI 15 IRQ_TYPE_EDGE_RISING>,
+				<GIC_SPI 16 IRQ_TYPE_EDGE_RISING>,
+				<GIC_SPI 17 IRQ_TYPE_EDGE_RISING>,
+				<GIC_SPI 18 IRQ_TYPE_EDGE_RISING>,
+				<GIC_SPI 19 IRQ_TYPE_EDGE_RISING>,
+				<GIC_SPI 20 IRQ_TYPE_EDGE_RISING>,
+				<GIC_SPI 21 IRQ_TYPE_EDGE_RISING>,
+				<GIC_SPI 22 IRQ_TYPE_EDGE_RISING>,
+				<GIC_SPI 23 IRQ_TYPE_EDGE_RISING>,
+				<GIC_SPI 24 IRQ_TYPE_EDGE_RISING>,
+				<GIC_SPI 25 IRQ_TYPE_EDGE_RISING>;							
 		#dma-cells = <1>;
 		dma-channels = <16>;
 	};

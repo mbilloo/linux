@@ -33,9 +33,57 @@
 #include <linux/of_dma.h>
 
 #include <asm/irq.h>
-#include <linux/platform_data/dma-rza1.h>
+
+#include <dt-bindings/dma/rza1dma.h>
 
 #include "dmaengine.h"
+
+struct chcfg_reg {
+	u32	reqd:1;
+	u32	loen:1;
+	u32	hien:1;
+	u32	lvl:1;
+	u32	am:3;
+	u32	sds:4;
+	u32	dds:4;
+	u32	tm:1;
+};
+
+struct dmars_reg {
+	u32	rid:2;
+	u32	mid:7;
+};
+
+/*
+ * Drivers, using this library are expected to embed struct shdma_dev,
+ * struct shdma_chan, struct shdma_desc, and struct shdma_slave
+ * in their respective device, channel, descriptor and slave objects.
+ */
+
+struct rza1dma_slave {
+	int slave_id;
+};
+
+/* Used by slave DMA clients to request DMA to/from a specific peripheral */
+struct rza1_dma_slave {
+	struct rza1dma_slave	rza1dma_slaveid;	/* Set by the platform */
+};
+
+struct rza1_dma_slave_config {
+	int			slave_id;
+	dma_addr_t		addr;
+	struct chcfg_reg	chcfg;
+	struct dmars_reg	dmars;
+};
+
+struct rza1_dma_pdata {
+	const struct rza1_dma_slave_config *slave;
+	int slave_num;
+	int channel_num;
+};
+
+static bool rza1dma_chan_filter(struct dma_chan *chan, int slave_id);
+
 #define RZA1DMA_MAX_CHAN_DESCRIPTORS	16
 
 /* set the offset of regs */
@@ -621,7 +669,7 @@ static const struct rza1_dma_slave_config *dma_find_slave(
 	return NULL;
 }
 
-bool rza1dma_chan_filter(struct dma_chan *chan, void *arg)
+static bool rza1dma_chan_filter(struct dma_chan *chan, int slave_id)
 {
 	struct rza1dma_channel *rza1dmac = to_rza1dma_chan(chan);
 	struct rza1dma_engine *rza1dma = rza1dmac->rza1dma;
@@ -629,7 +677,6 @@ bool rza1dma_chan_filter(struct dma_chan *chan, void *arg)
 	const struct rza1_dma_slave_config *slave = pdata->slave;
 	const struct rza1_dma_slave_config *hit;
 	int slave_num = pdata->slave_num;
-	int slave_id = (int)arg;
 
 	hit = dma_find_slave(slave, slave_num, slave_id);
 	if (hit) {
@@ -638,7 +685,6 @@ bool rza1dma_chan_filter(struct dma_chan *chan, void *arg)
 	}
 	return false;
 }
-EXPORT_SYMBOL(rza1dma_chan_filter);
 
 static enum dma_status rza1dma_tx_status(struct dma_chan *chan,
 					dma_cookie_t cookie,
@@ -841,14 +887,20 @@ static struct dma_chan *rza1dma_xlate(struct of_phandle_args *dma_spec,
 	struct rza1dma_filter_data fdata = {
 		.rza1dma = rza1dma,
 	};
+	struct dma_chan *chan;
 
 	if (count != 1)
 		return NULL;
 
-	//fdata.request = dma_spec->args[0];
-
-	return dma_request_channel(rza1dma->dma_device.cap_mask,
+	chan = dma_request_channel(rza1dma->dma_device.cap_mask,
 					rza1dma_filter_fn, &fdata);
+
+	if(chan != NULL){
+		if(!rza1dma_chan_filter(chan, dma_spec->args[0]))
+			chan = NULL;
+	}
+
+	return chan;
 }
 
 #define CHCFGM(reqd_v, loen_v, hien_v, lvl_v, am_v, sds_v, dds_v, tm_v)\
@@ -927,6 +979,18 @@ static const struct rza1_dma_slave_config rza1_dma_slaves[] = {
 		.chcfg		= CHCFGM(0x0, 0x0, 0x1, 0x1, 0x1, 0x1, 0x1, 0x0),
 		.dmars		= DMARS(0x2, 0x40),
 	},
+	{
+		.slave_id	= RZA1DMA_SLAVE_SPI2_TX,
+		.addr		= 0xe800D804,
+		.chcfg		= CHCFGM(0x1, 0x0, 0x1, 0x1, 0x1, 0x2, 0x2, 0x0),
+		.dmars		= DMARS(0x1, 0x32),
+	},
+	{
+		.slave_id	= RZA1DMA_SLAVE_SPI2_RX,
+		.addr		= 0xe800D804,
+		.chcfg		= CHCFGM(0x0, 0x0, 0x1, 0x1, 0x1, 0x2, 0x2, 0x0),
+		.dmars		= DMARS(0x2, 0x32),
+	},
 };
 
 static int __init rza1dma_probe(struct platform_device *pdev)
@@ -937,7 +1001,7 @@ static int __init rza1dma_probe(struct platform_device *pdev)
 	struct resource *base_res, *ext_res, *cirq_res, *eirq_res;
 	int ret, i;
 	int irq, irq_err;
-
+	const char *name;
 
 	if(!pdata){
 		pdata = devm_kzalloc(&pdev->dev, sizeof(*pdata), GFP_KERNEL);
@@ -970,27 +1034,33 @@ static int __init rza1dma_probe(struct platform_device *pdev)
 		return PTR_ERR(rza1dma->base);
 
 	/* Register interrupt handler for channels */
-	cirq_res = platform_get_resource(pdev, IORESOURCE_IRQ, 0);
-	if (!cirq_res)
-		return -ENODEV;
+	for (i = 0; i < pdata->channel_num; i++) {
+		dev_info(&pdev->dev, "registering irq for channel %d\n", i);
 
-	for (irq = cirq_res->start; irq <= cirq_res->end; irq++) {
-		ret = devm_request_irq(&pdev->dev, irq,
-				       rza1dma_irq_handler, 0, "RZA1DMA", rza1dma);
+		cirq_res = platform_get_resource(pdev, IORESOURCE_IRQ, i);
+		if (!cirq_res)
+			goto err;
+
+		name = devm_kasprintf(&pdev->dev, GFP_KERNEL, "%s:chan%d",
+							  pdev->name, i);
+		ret = devm_request_irq(&pdev->dev, cirq_res->start,
+				       rza1dma_irq_handler, 0, name, rza1dma);
 		if (ret) {
-			dev_warn(rza1dma->dev, "Can't register IRQ for DMA\n");
+			dev_warn(&pdev->dev, "Can't register IRQ for DMA: %d\n", ret);
 			goto err;
 		}
 	}
 
 	/* Register interrupt handler for error */
-	eirq_res = platform_get_resource(pdev, IORESOURCE_IRQ, 1);
+	eirq_res = platform_get_resource(pdev, IORESOURCE_IRQ, pdata->channel_num);
 	if (!eirq_res)
 		return -ENODEV;
 
 	irq_err = eirq_res->start;
+	name = devm_kasprintf(&pdev->dev, GFP_KERNEL, "%s:error",
+								  pdev->name);
 	ret = devm_request_irq(&pdev->dev, irq_err,
-				rza1dma_irq_handler, 0, "RZA1DMA_E", rza1dma);
+				rza1dma_irq_handler, 0, name, rza1dma);
 	if (ret) {
 		dev_warn(rza1dma->dev, "Can't register ERRIRQ for DMA\n");
 		goto err;
