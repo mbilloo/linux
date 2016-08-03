@@ -868,14 +868,8 @@ static void rza1dma_issue_pending(struct dma_chan *chan)
 static bool rza1dma_filter_fn(struct dma_chan *chan, void *param)
 {
 	struct rza1dma_filter_data *fdata = param;
-	struct rza1dma_channel *rza1dma_chan = to_rza1dma_chan(chan);
-
 	if (chan->device->dev != fdata->rza1dma->dev)
 		return false;
-
-	//rza1dma_chan->dma_request = fdata->request;
-	chan->private = NULL;
-
 	return true;
 }
 
@@ -980,18 +974,32 @@ static const struct rza1_dma_slave_config rza1_dma_slaves[] = {
 		.dmars		= DMARS(0x2, 0x40),
 	},
 	{
+		.slave_id	= RZA1DMA_SLAVE_SPI0_TX,
+		.addr		= 0xe800C804,
+		.chcfg		= CHCFGM(0x1, 0x0, 0x1, 0x1, 0x2, 0x0, 0x0, 0x0),
+		.dmars		= DMARS(0x1, 0x48),
+	},
+	{
+		.slave_id	= RZA1DMA_SLAVE_SPI0_RX,
+		.addr		= 0xe800C804,
+		.chcfg		= CHCFGM(0x0, 0x0, 0x1, 0x1, 0x2, 0x0, 0x0, 0x0),
+		.dmars		= DMARS(0x2, 0x48),
+	},
+	{
 		.slave_id	= RZA1DMA_SLAVE_SPI2_TX,
 		.addr		= 0xe800D804,
-		.chcfg		= CHCFGM(0x1, 0x0, 0x1, 0x1, 0x1, 0x2, 0x2, 0x0),
-		.dmars		= DMARS(0x1, 0x32),
+		.chcfg		= CHCFGM(0x1, 0x0, 0x1, 0x1, 0x2, 0x0, 0x0, 0x0),
+		.dmars		= DMARS(0x1, 0x4A),
 	},
 	{
 		.slave_id	= RZA1DMA_SLAVE_SPI2_RX,
 		.addr		= 0xe800D804,
-		.chcfg		= CHCFGM(0x0, 0x0, 0x1, 0x1, 0x1, 0x2, 0x2, 0x0),
-		.dmars		= DMARS(0x2, 0x32),
+		.chcfg		= CHCFGM(0x0, 0x0, 0x1, 0x1, 0x2, 0x0, 0x0, 0x0),
+		.dmars		= DMARS(0x2, 0x4A),
 	},
 };
+
+//(reqd_v, loen_v, hien_v, lvl_v, am_v, sds_v, dds_v, tm_v)
 
 static int __init rza1dma_probe(struct platform_device *pdev)
 {

@@ -408,6 +408,8 @@
 		#address-cells = <1>;
 		#size-cells = <0>;
 		status = "disabled";
+		dmas = <&dma0 RZA1DMA_SLAVE_SPI0_TX>, <&dma0 RZA1DMA_SLAVE_SPI0_RX>;
+		dma-names = "tx", "rx";
 	};
 
 	spi1: spi@e800d000 {
