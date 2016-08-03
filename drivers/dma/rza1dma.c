@@ -38,22 +38,6 @@
 
 #include "dmaengine.h"
 
-struct chcfg_reg {
-	u32	reqd:1;
-	u32	loen:1;
-	u32	hien:1;
-	u32	lvl:1;
-	u32	am:3;
-	u32	sds:4;
-	u32	dds:4;
-	u32	tm:1;
-};
-
-struct dmars_reg {
-	u32	rid:2;
-	u32	mid:7;
-};
-
 /*
  * Drivers, using this library are expected to embed struct shdma_dev,
  * struct shdma_chan, struct shdma_desc, and struct shdma_slave
@@ -64,25 +48,9 @@ struct rza1dma_slave {
 	int slave_id;
 };
 
-/* Used by slave DMA clients to request DMA to/from a specific peripheral */
-struct rza1_dma_slave {
-	struct rza1dma_slave	rza1dma_slaveid;	/* Set by the platform */
-};
-
-struct rza1_dma_slave_config {
-	int			slave_id;
-	dma_addr_t		addr;
-	struct chcfg_reg	chcfg;
-	struct dmars_reg	dmars;
-};
-
 struct rza1_dma_pdata {
-	const struct rza1_dma_slave_config *slave;
-	int slave_num;
 	int channel_num;
 };
-
-static bool rza1dma_chan_filter(struct dma_chan *chan, int slave_id);
 
 #define RZA1DMA_MAX_CHAN_DESCRIPTORS	16
 
@@ -137,34 +105,14 @@ static bool rza1dma_chan_filter(struct dma_chan *chan, int slave_id);
 /* CHCFG */
 #define	CHCFG_DMS		(0x1 << 31)
 #define	CHCFG_DEM		(0x1 << 24)
-#define	CHCFG_TM(bit)		(bit << 22)
 #define	CHCFG_DAD		(0x1 << 21)
 #define	CHCFG_SAD		(0x1 << 20)
-#define	CHCFG_8BIT	(0x00)
-#define	CHCFG_16BIT	(0x01)
-#define	CHCFG_32BIT	(0x02)
-#define	CHCFG_64BIT	(0x03)
-#define CHCFG_128BIT	(0x04)
-#define	CHCFG_256BIT	(0x05)
-#define	CHCFG_512BIT	(0x06)
-#define	CHCFG_1024BIT	(0x07)
-#define	CHCFG_DDS(bit)		(bit << 16)
-#define	CHCFG_SDS(bit)		(bit << 12)
-#define	CHCFG_AM(bits)		(bits << 8)
-#define	CHCFG_LVL(bit)		(bit << 6)
-#define	CHCFG_HIEN(bit)		(bit << 5)
-#define	CHCFG_LOEN(bit)		(bit << 4)
-#define	CHCFG_REQD(bit)		(bit << 3)
 #define	CHCFG_SEL(bits)		((bits & 0x07) << 0)
 
 /* DCTRL */
 #define	DCTRL_LVINT		(0x1 << 1)
 #define	DCTRL_PR		(0x1 << 0)
 #define DCTRL_DEFAULT		(DCTRL_LVINT | DCTRL_PR)
-
-/* DMARS */
-#define	DMARS_RID(bit)		(bit << 0)
-#define	DMARS_MID(bit)		(bit << 2)
 
 /* LINK MODE DESCRIPTOR */
 #define	HEADER_DIM	(0x1 << 3)
@@ -232,6 +180,11 @@ struct rza1dma_channel {
 
 	u32	chcfg;
 	u32	chctrl;
+
+	// slave config
+	u32 slave_addr;
+	u32 slave_dmars;
+	u32 slave_chcfg;
 };
 
 struct rza1dma_engine {
@@ -421,9 +374,6 @@ static void prepare_descs_for_slave_sg(struct rza1dma_desc *d)
 	struct rza1dma_channel *rza1dmac = to_rza1dma_chan(chan);
 	struct rza1dma_engine *rza1dma = rza1dmac->rza1dma;
 	struct format_desc *descs = rza1dmac->desc_base;
-	const struct rza1_dma_slave_config *slave = rza1dmac->slave;
-	const struct chcfg_reg *chcfg_p = &slave->chcfg;
-	const struct dmars_reg *dmars_p = &slave->dmars;
 	int channel = rza1dmac->channel;
 	struct scatterlist *sg, *sgl = d->sg;
 	unsigned int i, sg_len = d->sgcount;
@@ -437,14 +387,7 @@ static void prepare_descs_for_slave_sg(struct rza1dma_desc *d)
 	dev_dbg(rza1dma->dev, "%s called\n", __func__);
 
 	chcfg = (CHCFG_SEL(channel) |
-		CHCFG_REQD(chcfg_p->reqd) |
-		CHCFG_LOEN(chcfg_p->loen) |
-		CHCFG_HIEN(chcfg_p->hien) |
-		CHCFG_LVL(chcfg_p->lvl) |
-		CHCFG_AM(chcfg_p->am) |
-		CHCFG_SDS(chcfg_p->sds) |
-		CHCFG_DDS(chcfg_p->dds) |
-		CHCFG_TM(chcfg_p->tm) |
+		rza1dmac->slave_chcfg |
 		CHCFG_DEM |
 		CHCFG_DMS);
 
@@ -453,7 +396,7 @@ static void prepare_descs_for_slave_sg(struct rza1dma_desc *d)
 	else
 		chcfg |= CHCFG_DAD;	/* distation address is fixed */
 
-	rza1dmac->per_address = slave->addr;	/* slave device address */
+	rza1dmac->per_address = rza1dmac->slave_addr;	/* slave device address */
 
 	spin_lock_irqsave(&rza1dma->lock, flags);
 
@@ -545,7 +488,7 @@ static void prepare_descs_for_slave_sg(struct rza1dma_desc *d)
 	descs[sg_len - 1].next_lk_addr = 0;
 
 	/* and set DMARS register */
-	dmars = DMARS_RID(dmars_p->rid) | DMARS_MID(dmars_p->mid);
+	dmars = rza1dmac->slave_dmars;
 	set_dmars_register(rza1dma, channel, dmars);
 
 	rza1dmac->chcfg = descs[sg_len - 1].config;
@@ -652,40 +595,6 @@ static int rza1dma_config(struct dma_chan *chan,
 	return 0;
 }
 
-static const struct rza1_dma_slave_config *dma_find_slave(
-		const struct rza1_dma_slave_config *slave,
-		int slave_num,
-		int slave_id)
-{
-	int i;
-
-	for (i = 0; i < slave_num; i++) {
-		const struct rza1_dma_slave_config *t = &slave[i];
-
-		if (slave_id == t->slave_id)
-			return t;
-	}
-
-	return NULL;
-}
-
-static bool rza1dma_chan_filter(struct dma_chan *chan, int slave_id)
-{
-	struct rza1dma_channel *rza1dmac = to_rza1dma_chan(chan);
-	struct rza1dma_engine *rza1dma = rza1dmac->rza1dma;
-	struct rza1_dma_pdata *pdata = rza1dma->pdata;
-	const struct rza1_dma_slave_config *slave = pdata->slave;
-	const struct rza1_dma_slave_config *hit;
-	int slave_num = pdata->slave_num;
-
-	hit = dma_find_slave(slave, slave_num, slave_id);
-	if (hit) {
-		rza1dmac->slave = hit;
-		return true;
-	}
-	return false;
-}
-
 static enum dma_status rza1dma_tx_status(struct dma_chan *chan,
 					dma_cookie_t cookie,
 					struct dma_tx_state *txstate)
@@ -714,17 +623,6 @@ static int rza1dma_alloc_chan_resources(struct dma_chan *chan)
 	struct rza1dma_channel *rza1dmac = to_rza1dma_chan(chan);
 	struct rza1dma_engine *rza1dma = rza1dmac->rza1dma;
 	struct rza1_dma_pdata *pdata = rza1dma->pdata;
-	const struct rza1_dma_slave_config *slave = pdata->slave;
-	const struct rza1_dma_slave_config *hit;
-	int slave_num = pdata->slave_num;
-	int *slave_id = chan->private;
-
-	if (slave_id) {
-		hit = dma_find_slave(slave, slave_num, *slave_id);
-		if (!hit)
-			return -ENODEV;
-		rza1dmac->slave = hit;
-	}
 
 	while (rza1dmac->descs_allocated < RZA1DMA_MAX_CHAN_DESCRIPTORS) {
 		struct rza1dma_desc *desc;
@@ -878,128 +776,27 @@ static struct dma_chan *rza1dma_xlate(struct of_phandle_args *dma_spec,
 {
 	int count = dma_spec->args_count;
 	struct rza1dma_engine *rza1dma = ofdma->of_dma_data;
+	struct dma_chan *chan;
+	struct rza1dma_channel *rza1dmac;
 	struct rza1dma_filter_data fdata = {
 		.rza1dma = rza1dma,
 	};
-	struct dma_chan *chan;
 
-	if (count != 1)
+	if (count != 3)
 		return NULL;
 
 	chan = dma_request_channel(rza1dma->dma_device.cap_mask,
 					rza1dma_filter_fn, &fdata);
 
 	if(chan != NULL){
-		if(!rza1dma_chan_filter(chan, dma_spec->args[0]))
-			chan = NULL;
+		rza1dmac = to_rza1dma_chan(chan);
+		rza1dmac->slave_addr = dma_spec->args[0];
+		rza1dmac->slave_dmars = dma_spec->args[1];
+		rza1dmac->slave_chcfg = dma_spec->args[2];
 	}
 
 	return chan;
 }
-
-#define CHCFGM(reqd_v, loen_v, hien_v, lvl_v, am_v, sds_v, dds_v, tm_v)\
-	{								\
-		.reqd	=	reqd_v,					\
-		.loen	=	loen_v,					\
-		.hien	=	hien_v,					\
-		.lvl	=	lvl_v,					\
-		.am	=	am_v,					\
-		.sds	=	sds_v,					\
-		.dds	=	dds_v,					\
-		.tm	=	tm_v,					\
-	}
-
-#define DMARS(rid_v, mid_v)	\
-	{								\
-		.rid	= rid_v,					\
-		.mid	= mid_v,					\
-	}
-
-static const struct rza1_dma_slave_config rza1_dma_slaves[] = {
-	{
-		.slave_id	= RZA1DMA_SLAVE_SDHI0_TX,
-		.addr		= 0xe804e030,
-		.chcfg		= CHCFGM(0x1, 0x0, 0x1, 0x1, 0x1, 0x2, 0x2, 0x0),
-		.dmars		= DMARS(0x1, 0x30),
-	},
-	{
-		.slave_id	= RZA1DMA_SLAVE_SDHI0_RX,
-		.addr		= 0xe804e030,
-		.chcfg		= CHCFGM(0x0, 0x0, 0x1, 0x1, 0x1, 0x2, 0x2, 0x0),
-		.dmars		= DMARS(0x2, 0x30),
-	},
-	{
-		.slave_id	= RZA1DMA_SLAVE_SDHI1_TX,
-		.addr		= 0xe804e830,
-		.chcfg		= CHCFGM(0x1, 0x0, 0x1, 0x1, 0x1, 0x2, 0x2, 0x0),
-		.dmars		= DMARS(0x1, 0x31),
-	},
-	{
-		.slave_id	= RZA1DMA_SLAVE_SDHI1_RX,
-		.addr		= 0xe804e830,
-		.chcfg		= CHCFGM(0x0, 0x0, 0x1, 0x1, 0x1, 0x2, 0x2, 0x0),
-		.dmars		= DMARS(0x2, 0x31),
-	},
-	{
-		.slave_id	= RZA1DMA_SLAVE_MMCIF_TX,
-		.addr		= 0xe804c834,
-		.chcfg		= CHCFGM(0x1, 0x0, 0x1, 0x1, 0x1, 0x2, 0x2, 0x0),
-		.dmars		= DMARS(0x1, 0x32),
-	},
-	{
-		.slave_id	= RZA1DMA_SLAVE_MMCIF_RX,
-		.addr		= 0xe804c834,
-		.chcfg		= CHCFGM(0x0, 0x0, 0x1, 0x1, 0x1, 0x2, 0x2, 0x0),
-		.dmars		= DMARS(0x2, 0x32),
-	},
-	{
-		.slave_id	= RZA1DMA_SLAVE_PCM_MEM_SSI0,
-		.addr		= 0xe820b018,		/* SSIFTDR_0 */
-		.chcfg		= CHCFGM(0x1, 0x0, 0x1, 0x1, 0x1, 0x2, 0x2, 0x0),
-		.dmars		= DMARS(0x1, 0x38),
-	}, {
-		.slave_id	= RZA1DMA_SLAVE_PCM_MEM_SRC1,
-		.addr		= 0xe820970c,		/* DMATD1_CIM */
-		.chcfg		= CHCFGM(0x1, 0x0, 0x1, 0x1, 0x1, 0x1, 0x1, 0x0),
-		.dmars		= DMARS(0x1, 0x41),
-	}, {
-		.slave_id	= RZA1DMA_SLAVE_PCM_SSI0_MEM,
-		.addr		= 0xe820b01c,		/* SSIFRDR_0 */
-		.chcfg		= CHCFGM(0x0, 0x0, 0x1, 0x1, 0x1, 0x2, 0x2, 0x0),
-		.dmars		= DMARS(0x2, 0x38),
-	}, {
-		.slave_id	= RZA1DMA_SLAVE_PCM_SRC0_MEM,
-		.addr		= 0xe8209718,		/* DMATU0_CIM */
-		.chcfg		= CHCFGM(0x0, 0x0, 0x1, 0x1, 0x1, 0x1, 0x1, 0x0),
-		.dmars		= DMARS(0x2, 0x40),
-	},
-	{
-		.slave_id	= RZA1DMA_SLAVE_SPI0_TX,
-		.addr		= 0xe800C804,
-		.chcfg		= CHCFGM(0x1, 0x0, 0x1, 0x1, 0x2, 0x0, 0x0, 0x0),
-		.dmars		= DMARS(0x1, 0x48),
-	},
-	{
-		.slave_id	= RZA1DMA_SLAVE_SPI0_RX,
-		.addr		= 0xe800C804,
-		.chcfg		= CHCFGM(0x0, 0x0, 0x1, 0x1, 0x2, 0x0, 0x0, 0x0),
-		.dmars		= DMARS(0x2, 0x48),
-	},
-	{
-		.slave_id	= RZA1DMA_SLAVE_SPI2_TX,
-		.addr		= 0xe800D804,
-		.chcfg		= CHCFGM(0x1, 0x0, 0x1, 0x1, 0x2, 0x0, 0x0, 0x0),
-		.dmars		= DMARS(0x1, 0x4A),
-	},
-	{
-		.slave_id	= RZA1DMA_SLAVE_SPI2_RX,
-		.addr		= 0xe800D804,
-		.chcfg		= CHCFGM(0x0, 0x0, 0x1, 0x1, 0x2, 0x0, 0x0, 0x0),
-		.dmars		= DMARS(0x2, 0x4A),
-	},
-};
-
-//(reqd_v, loen_v, hien_v, lvl_v, am_v, sds_v, dds_v, tm_v)
 
 static int __init rza1dma_probe(struct platform_device *pdev)
 {
@@ -1008,7 +805,7 @@ static int __init rza1dma_probe(struct platform_device *pdev)
 	struct rza1dma_engine *rza1dma;
 	struct resource *base_res, *ext_res, *cirq_res, *eirq_res;
 	int ret, i;
-	int irq, irq_err;
+	int irq_err;
 	const char *name;
 
 	if(!pdata){
@@ -1017,8 +814,6 @@ static int __init rza1dma_probe(struct platform_device *pdev)
 			return -ENOMEM;
 
 		pdata->channel_num = 16;
-		pdata->slave = rza1_dma_slaves;
-		pdata->slave_num = ARRAY_SIZE(rza1_dma_slaves);
 	}
 
 	rza1dma = devm_kzalloc(&pdev->dev, sizeof(*rza1dma), GFP_KERNEL);

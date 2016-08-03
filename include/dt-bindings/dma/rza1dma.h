@@ -1,21 +1,36 @@
 #ifndef __DT_BINDINGS_RZA1_DMA_H__
 #define __DT_BINDINGS_RZA1_DMA_H__
 
-#define RZA1DMA_SLAVE_PCM_MEM_SSI0	1	/* DMA0		MEM->(DMA0)->SSI0 */
-#define RZA1DMA_SLAVE_PCM_MEM_SRC1	2	/* DMA1		MEM->(DMA1)->FFD0_1->SRC1->SSI0 */
-#define RZA1DMA_SLAVE_PCM_SSI0_MEM	3	/* DMA2		SSI0->(DMA2)->MEM */
-#define RZA1DMA_SLAVE_PCM_SRC0_MEM	4	/* DMA3		SSI0->SRC0->FFU0_0->(DMA3)->MEM */
-#define RZA1DMA_SLAVE_PCM_MAX 		5
-#define RZA1DMA_SLAVE_SDHI0_TX		6
-#define RZA1DMA_SLAVE_SDHI0_RX		7
-#define RZA1DMA_SLAVE_SDHI1_TX		8
-#define RZA1DMA_SLAVE_SDHI1_RX		9
-#define RZA1DMA_SLAVE_MMCIF_TX		10
-#define RZA1DMA_SLAVE_MMCIF_RX		11
+/*
+#define	CHCFG_TM(bit)		(bit << 22)
+#define	CHCFG_DDS(bit)		(bit << 16)
+#define	CHCFG_SDS(bit)		(bit << 12)
+#define	CHCFG_AM(bits)		(bits << 8)
+#define	CHCFG_LVL(bit)		(bit << 6)
+#define	CHCFG_HIEN(bit)		(bit << 5)
+#define	CHCFG_LOEN(bit)		(bit << 4)
+#define	CHCFG_REQD(bit)		(bit << 3)
 
-#define RZA1DMA_SLAVE_SPI0_TX		12
-#define RZA1DMA_SLAVE_SPI0_RX		13
-#define RZA1DMA_SLAVE_SPI2_TX		14
-#define RZA1DMA_SLAVE_SPI2_RX		15
+// DMARS
+#define	DMARS_RID(bit)		(bit << 0)
+#define	DMARS_MID(bit)		(bit << 2)
+
+*/
+
+#define	RZA1DMA_CHCFG_8BIT		0x00
+#define	RZA1DMA_CHCFG_16BIT		0x01
+#define	RZA1DMA_CHCFG_32BIT		0x02
+#define	RZA1DMA_CHCFG_64BIT		0x03
+#define RZA1DMA_CHCFG_128BIT	0x04
+#define	RZA1DMA_CHCFG_256BIT	0x05
+#define	RZA1DMA_CHCFG_512BIT	0x06
+#define	RZA1DMA_CHCFG_1024BIT	0x07
+
+#define RZA1DMA_CHCFGM(reqd_v, loen_v, hien_v, lvl_v, am_v, sds_v, dds_v, tm_v) ((reqd_v << 3) | (loen_v << 4) | (hien_v << 5) | (lvl_v << 6) | (am_v << 8) | (sds_v << 12) | (dds_v << 16 ) | (tm_v << 22))
+
+#define RZA1DMA_DMARS(rid_v, mid_v) (rid_v | (mid_v << 2))
+
+#define RZA1DMA_SPI0 0x48
+#define RZA1DMA_SPI2 0x4A
 
 #endif /* __DT_BINDINGS_RZA1_DMA_H__ */
