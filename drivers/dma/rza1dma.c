@@ -38,10 +38,6 @@
 
 #include "dmaengine.h"
 
-struct rza1_dma_pdata {
-	int channel_num;
-};
-
 #define RZA1DMA_MAX_CHAN_DESCRIPTORS	16
 
 /* set the offset of regs */
@@ -188,6 +184,7 @@ struct rza1dma_engine {
 	void __iomem			*ext_base;
 	spinlock_t			lock;
 	struct rza1dma_channel		*channel;
+	u32 channel_num;
 	struct rza1_dma_pdata		*pdata;
 };
 
@@ -322,7 +319,7 @@ static irqreturn_t rza1dma_irq_handler(int irq, void *dev_id)
 {
 	struct rza1dma_engine *rza1dma = dev_id;
 	int i;
-	for(i = 0; i < rza1dma->pdata->channel_num; i++){
+	for(i = 0; i < rza1dma->channel_num; i++){
 		if(rza1dma->channel[i].irq == irq){
 			dma_irq_handle_channel(&rza1dma->channel[i]);
 			return IRQ_HANDLED;
@@ -619,8 +616,6 @@ static dma_cookie_t rza1dma_tx_submit(struct dma_async_tx_descriptor *tx)
 static int rza1dma_alloc_chan_resources(struct dma_chan *chan)
 {
 	struct rza1dma_channel *rza1dmac = to_rza1dma_chan(chan);
-	struct rza1dma_engine *rza1dma = rza1dmac->rza1dma;
-	struct rza1_dma_pdata *pdata = rza1dma->pdata;
 
 	while (rza1dmac->descs_allocated < RZA1DMA_MAX_CHAN_DESCRIPTORS) {
 		struct rza1dma_desc *desc;
@@ -798,25 +793,17 @@ static struct dma_chan *rza1dma_xlate(struct of_phandle_args *dma_spec,
 
 static int __init rza1dma_probe(struct platform_device *pdev)
 {
-	struct rza1_dma_pdata *pdata = pdev->dev.platform_data;
-
 	struct rza1dma_engine *rza1dma;
 	struct resource *base_res, *ext_res, *cirq_res, *eirq_res;
 	int ret, i;
 	int irq_err;
 	const char *name;
 
-	if(!pdata){
-		pdata = devm_kzalloc(&pdev->dev, sizeof(*pdata), GFP_KERNEL);
-		if(!pdata)
-			return -ENOMEM;
-
-		pdata->channel_num = 16;
-	}
-
 	rza1dma = devm_kzalloc(&pdev->dev, sizeof(*rza1dma), GFP_KERNEL);
 	if (!rza1dma)
 		return -ENOMEM;
+
+	if(of_property_read_u32(pdev->dev.of_node, "dma-channels", &rza1dma->channel_num));
 
 	/* Get io base address */
 	base_res = platform_get_resource(pdev, IORESOURCE_MEM, 0);
@@ -835,11 +822,11 @@ static int __init rza1dma_probe(struct platform_device *pdev)
 		return PTR_ERR(rza1dma->base);
 
 	rza1dma->channel = devm_kzalloc(&pdev->dev,
-				sizeof(struct rza1dma_channel) * pdata->channel_num,
+				sizeof(struct rza1dma_channel) * rza1dma->channel_num,
 				GFP_KERNEL);
 
 	/* Register interrupt handler for channels */
-	for (i = 0; i < pdata->channel_num; i++) {
+	for (i = 0; i < rza1dma->channel_num; i++) {
 		cirq_res = platform_get_resource(pdev, IORESOURCE_IRQ, i);
 		if (!cirq_res)
 			goto err;
@@ -855,7 +842,7 @@ static int __init rza1dma_probe(struct platform_device *pdev)
 	}
 
 	/* Register interrupt handler for error */
-	eirq_res = platform_get_resource(pdev, IORESOURCE_IRQ, pdata->channel_num);
+	eirq_res = platform_get_resource(pdev, IORESOURCE_IRQ, rza1dma->channel_num);
 	if (!eirq_res)
 		return -ENODEV;
 
@@ -875,7 +862,7 @@ static int __init rza1dma_probe(struct platform_device *pdev)
 	spin_lock_init(&rza1dma->lock);
 
 	/* Initialize channel parameters */
-	for (i = 0; i < pdata->channel_num; i++) {
+	for (i = 0; i < rza1dma->channel_num; i++) {
 		struct rza1dma_channel *rza1dmac = &rza1dma->channel[i];
 
 		rza1dmac->rza1dma = rza1dma;
@@ -919,7 +906,6 @@ static int __init rza1dma_probe(struct platform_device *pdev)
 	rza1dma_writel(rza1dma, DCTRL_DEFAULT, CHANNEL_0_7_COMMON_BASE	+ DCTRL);
 	rza1dma_writel(rza1dma, DCTRL_DEFAULT, CHANNEL_8_15_COMMON_BASE + DCTRL);
 
-	rza1dma->pdata = pdata;
 	rza1dma->dev = &pdev->dev;
 	rza1dma->dma_device.dev = &pdev->dev;
 
@@ -966,12 +952,10 @@ err:
 static int __exit rza1dma_remove(struct platform_device *pdev)
 {
 	struct rza1dma_engine *rza1dma = platform_get_drvdata(pdev);
-	struct rza1_dma_pdata *pdata = rza1dma->pdata;
-	//int i, channel_num = pdata->channel_num;
-	int i, channel_num = 16;
+	int i;
 
 	/* free allocated resources */
-	for (i = 0; i < channel_num; i++) {
+	for (i = 0; i < rza1dma->channel_num; i++) {
 		struct rza1dma_channel *rza1dmac = &rza1dma->channel[i];
 
 		dma_free_coherent(NULL,
