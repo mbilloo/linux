@@ -26,11 +26,19 @@
 #define	RZA1DMA_CHCFG_512BIT	0x06
 #define	RZA1DMA_CHCFG_1024BIT	0x07
 
-#define RZA1DMA_CHCFGM(reqd_v, loen_v, hien_v, lvl_v, am_v, sds_v, dds_v, tm_v) ((reqd_v << 3) | (loen_v << 4) | (hien_v << 5) | (lvl_v << 6) | (am_v << 8) | (sds_v << 12) | (dds_v << 16 ) | (tm_v << 22))
+#define RZA1DMA_CHCFGM(reqd_v, loen_v, hien_v, lvl_v, am_v, sds_v, dds_v, tm_v)\
+ ((reqd_v << 3) | (loen_v << 4) | (hien_v << 5) | (lvl_v << 6) |\
+ (am_v << 8) | (sds_v << 12) | (dds_v << 16 ) | (tm_v << 22))
 
 #define RZA1DMA_DMARS(rid_v, mid_v) (rid_v | (mid_v << 2))
 
 #define RZA1DMA_SPI0 0x48
 #define RZA1DMA_SPI2 0x4A
+
+#define RZA1DMA_REQD_SOURCE			0
+#define RZA1DMA_REQD_DESTINATION	1
+
+#define RZA1DMA_AMA_BUSCYCLEMODE	2
+#define RZA1DMA_AMA_DMAACK			4
 
 #endif /* __DT_BINDINGS_RZA1_DMA_H__ */

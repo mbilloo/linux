@@ -408,8 +408,8 @@
 		#address-cells = <1>;
 		#size-cells = <0>;
 		status = "disabled";
-		dmas = <&dma0 0xe800C804 RZA1DMA_DMARS(0x1, RZA1DMA_SPI0) RZA1DMA_CHCFGM(0x1, 0x0, 0x1, 0x1, 0x2, RZA1DMA_CHCFG_8BIT, RZA1DMA_CHCFG_8BIT, 0x0)>,
-			<&dma0 0xe800C804 RZA1DMA_DMARS(0x2, RZA1DMA_SPI0) RZA1DMA_CHCFGM(0x0, 0x0, 0x1, 0x1, 0x2, RZA1DMA_CHCFG_8BIT, RZA1DMA_CHCFG_8BIT, 0x0)>;
+		dmas = <&dma0 0xe800C804 RZA1DMA_DMARS(0x1, RZA1DMA_SPI0) RZA1DMA_CHCFGM(RZA1DMA_REQD_DESTINATION, 0x0, 0x1, 0x1, RZA1DMA_AMA_BUSCYCLEMODE, RZA1DMA_CHCFG_8BIT, RZA1DMA_CHCFG_8BIT, 0x0)>,
+			<&dma0 0xe800C804 RZA1DMA_DMARS(0x2, RZA1DMA_SPI0) RZA1DMA_CHCFGM(RZA1DMA_REQD_SOURCE, 0x0, 0x1, 0x1, RZA1DMA_AMA_BUSCYCLEMODE, RZA1DMA_CHCFG_8BIT, RZA1DMA_CHCFG_8BIT, 0x0)>;
 		dma-names = "tx", "rx";
 	};
 
@@ -441,9 +441,9 @@
 		#address-cells = <1>;
 		#size-cells = <0>;
 		status = "disabled";
-		/*dmas = <&dma0 0xe800C804 RZA1DMA_DMARS(0x1, RZA1DMA_SPI2) RZA1DMA_CHCFGM(0x1, 0x0, 0x1, 0x1, 0x2, RZA1DMA_CHCFG_8BIT, RZA1DMA_CHCFG_8BIT, 0x0)>,
-			<&dma0 0xe800C804 RZA1DMA_DMARS(0x2, RZA1DMA_SPI2) RZA1DMA_CHCFGM(0x0, 0x0, 0x1, 0x1, 0x2, RZA1DMA_CHCFG_8BIT, RZA1DMA_CHCFG_8BIT, 0x0)>;
-		dma-names = "tx", "rx";*/
+		dmas = <&dma0 0xe800D804 RZA1DMA_DMARS(0x1, RZA1DMA_SPI2) RZA1DMA_CHCFGM(RZA1DMA_REQD_DESTINATION, 0x0, 0x1, 0x1, RZA1DMA_AMA_BUSCYCLEMODE, RZA1DMA_CHCFG_8BIT, RZA1DMA_CHCFG_8BIT, 0x0)>,
+			<&dma0 0xe800D804 RZA1DMA_DMARS(0x2, RZA1DMA_SPI2) RZA1DMA_CHCFGM(RZA1DMA_REQD_SOURCE, 0x0, 0x1, 0x1, RZA1DMA_AMA_BUSCYCLEMODE, RZA1DMA_CHCFG_8BIT, RZA1DMA_CHCFG_8BIT, 0x0)>;
+		dma-names = "tx", "rx";
 	};
 
 	spi3: spi@e800e000 {
@@ -624,13 +624,14 @@
 		clock-names = "clk";
 	};
 	
-/*	usb1: usb@e8207000 {
+	usb1: usb@e8207000 {
 		compatible = "renesas,r8a66597-hcd";
 		reg = <0xe8207000 0x1a0>;
 		interrupts = <GIC_SPI 42 IRQ_TYPE_LEVEL_HIGH>;
 		clocks = <&mstp7_clks R7S72100_CLK_USB1>;
 		clock-names = "usb-1";
-	};*/
+		status = "disabled";
+	};
 			
 	sdhc: sdhc@e804c800 {
 		compatible = "renesas,sh-mmcif";

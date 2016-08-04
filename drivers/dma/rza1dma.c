@@ -38,16 +38,6 @@
 
 #include "dmaengine.h"
 
-/*
- * Drivers, using this library are expected to embed struct shdma_dev,
- * struct shdma_chan, struct shdma_desc, and struct shdma_slave
- * in their respective device, channel, descriptor and slave objects.
- */
-
-struct rza1dma_slave {
-	int slave_id;
-};
-
 struct rza1_dma_pdata {
 	int channel_num;
 };
@@ -185,6 +175,9 @@ struct rza1dma_channel {
 	u32 slave_addr;
 	u32 slave_dmars;
 	u32 slave_chcfg;
+
+	// irq
+	int irq;
 };
 
 struct rza1dma_engine {
@@ -266,6 +259,24 @@ static void rza1dma_enable_hw(struct rza1dma_desc *d)
 	local_irq_restore(flags);
 }
 
+static void set_dmars_register(struct rza1dma_engine *rza1dma,
+				int channel, u32 dmars)
+{
+	u32 dmars_offset = (channel / 2) * 4;
+	u32 dmars32;
+
+	dmars32 = rza1dma_ext_readl(rza1dma, dmars_offset);
+	if (channel % 2) {
+		dmars32 &= 0x0000ffff;
+		dmars32 |= dmars << 16;
+	} else {
+		dmars32 &= 0xffff0000;
+		dmars32 |= dmars;
+	}
+	rza1dma_ext_writel(rza1dma, dmars32, dmars_offset);
+	dmars32 = rza1dma_ext_readl(rza1dma, dmars_offset);
+}
+
 static void rza1dma_disable_hw(struct rza1dma_channel *rza1dmac)
 {
 	struct rza1dma_engine *rza1dma = rza1dmac->rza1dma;
@@ -276,6 +287,7 @@ static void rza1dma_disable_hw(struct rza1dma_channel *rza1dmac)
 
 	local_irq_save(flags);
 	rza1dma_ch_writel(rza1dmac, CHCTRL_DEFAULT, CHCTRL, 1); /* CHCTRL reg */
+	set_dmars_register(rza1dma, channel, 0); // Stop eatting interrupts
 	local_irq_restore(flags);
 }
 
@@ -309,35 +321,17 @@ schedule:
 static irqreturn_t rza1dma_irq_handler(int irq, void *dev_id)
 {
 	struct rza1dma_engine *rza1dma = dev_id;
-	struct rza1_dma_pdata *pdata = rza1dma->pdata;
-	//int i, channel_num = pdata->channel_num;
-	int i, channel_num = 16;
-
-	dev_dbg(rza1dma->dev, "%s called\n", __func__);
-
-	for (i = 0; i < channel_num; i++)
-		dma_irq_handle_channel(&rza1dma->channel[i]);
-
-	return IRQ_HANDLED;
-}
-
-static void set_dmars_register(struct rza1dma_engine *rza1dma,
-				int channel, u32 dmars)
-{
-	u32 dmars_offset = (channel / 2) * 4;
-	u32 dmars32;
-
-	dmars32 = rza1dma_ext_readl(rza1dma, dmars_offset);
-	if (channel % 2) {
-		dmars32 &= 0x0000ffff;
-		dmars32 |= dmars << 16;
-	} else {
-		dmars32 &= 0xffff0000;
-		dmars32 |= dmars;
+	int i;
+	for(i = 0; i < rza1dma->pdata->channel_num; i++){
+		if(rza1dma->channel[i].irq == irq){
+			dma_irq_handle_channel(&rza1dma->channel[i]);
+			return IRQ_HANDLED;
+		}
 	}
-	rza1dma_ext_writel(rza1dma, dmars32, dmars_offset);
-	dmars32 = rza1dma_ext_readl(rza1dma, dmars_offset);
+
+	return IRQ_NONE;
 }
+
 
 static void prepare_desc_for_memcpy(struct rza1dma_desc *d)
 {
@@ -564,6 +558,10 @@ static void rza1dma_tasklet(unsigned long data)
 		}
 	}
 out:
+	// if there is nothing else queued
+	if(list_empty(&rza1dmac->ld_active))
+		set_dmars_register(rza1dma, rza1dmac->channel, 0); // Stop eatting interrupts
+
 	spin_unlock_irqrestore(&rza1dma->lock, flags);
 }
 
@@ -836,14 +834,16 @@ static int __init rza1dma_probe(struct platform_device *pdev)
 	if (IS_ERR(rza1dma->ext_base))
 		return PTR_ERR(rza1dma->base);
 
+	rza1dma->channel = devm_kzalloc(&pdev->dev,
+				sizeof(struct rza1dma_channel) * pdata->channel_num,
+				GFP_KERNEL);
+
 	/* Register interrupt handler for channels */
 	for (i = 0; i < pdata->channel_num; i++) {
-		dev_info(&pdev->dev, "registering irq for channel %d\n", i);
-
 		cirq_res = platform_get_resource(pdev, IORESOURCE_IRQ, i);
 		if (!cirq_res)
 			goto err;
-
+		rza1dma->channel[i].irq = cirq_res->start;
 		name = devm_kasprintf(&pdev->dev, GFP_KERNEL, "%s:chan%d",
 							  pdev->name, i);
 		ret = devm_request_irq(&pdev->dev, cirq_res->start,
@@ -873,10 +873,6 @@ static int __init rza1dma_probe(struct platform_device *pdev)
 	dma_cap_set(DMA_SLAVE, rza1dma->dma_device.cap_mask);
 	dma_cap_set(DMA_MEMCPY, rza1dma->dma_device.cap_mask);
 	spin_lock_init(&rza1dma->lock);
-
-	rza1dma->channel = devm_kzalloc(&pdev->dev,
-				sizeof(struct rza1dma_channel) * pdata->channel_num,
-				GFP_KERNEL);
 
 	/* Initialize channel parameters */
 	for (i = 0; i < pdata->channel_num; i++) {
