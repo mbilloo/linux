@@ -33,7 +33,10 @@
 #define RZA1DMA_DMARS(rid_v, mid_v) (rid_v | (mid_v << 2))
 
 #define RZA1DMA_SPI0 0x48
+#define RZA1DMA_SPI1 0x49
 #define RZA1DMA_SPI2 0x4A
+#define RZA1DMA_SPI3 0x4B
+#define RZA1DMA_SPI4 0x4C
 
 #define RZA1DMA_REQD_SOURCE			0
 #define RZA1DMA_REQD_DESTINATION	1
