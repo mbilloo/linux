@@ -317,16 +317,13 @@ schedule:
 
 static irqreturn_t rza1dma_irq_handler(int irq, void *dev_id)
 {
-	struct rza1dma_engine *rza1dma = dev_id;
-	int i;
-	for(i = 0; i < rza1dma->channel_num; i++){
-		if(rza1dma->channel[i].irq == irq){
-			dma_irq_handle_channel(&rza1dma->channel[i]);
-			return IRQ_HANDLED;
-		}
+	struct rza1dma_channel *rza1dmac = dev_id;
+	if(rza1dmac->irq == irq){
+		dma_irq_handle_channel(rza1dmac);
+		return IRQ_HANDLED;
 	}
-
-	return IRQ_NONE;
+	else
+		return IRQ_NONE;
 }
 
 
@@ -803,7 +800,9 @@ static int __init rza1dma_probe(struct platform_device *pdev)
 	if (!rza1dma)
 		return -ENOMEM;
 
-	if(of_property_read_u32(pdev->dev.of_node, "dma-channels", &rza1dma->channel_num));
+	if(!of_property_read_u32(pdev->dev.of_node, "dma-channels", &rza1dma->channel_num)){
+		return -ENODEV;
+	}
 
 	/* Get io base address */
 	base_res = platform_get_resource(pdev, IORESOURCE_MEM, 0);
@@ -834,7 +833,7 @@ static int __init rza1dma_probe(struct platform_device *pdev)
 		name = devm_kasprintf(&pdev->dev, GFP_KERNEL, "%s:chan%d",
 							  pdev->name, i);
 		ret = devm_request_irq(&pdev->dev, cirq_res->start,
-				       rza1dma_irq_handler, 0, name, rza1dma);
+				       rza1dma_irq_handler, 0, name, &(rza1dma->channel[i]));
 		if (ret) {
 			dev_warn(&pdev->dev, "Can't register IRQ for DMA: %d\n", ret);
 			goto err;

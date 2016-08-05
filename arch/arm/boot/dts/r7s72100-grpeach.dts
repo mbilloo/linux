@@ -143,13 +143,12 @@
 	status = "okay";
 	pinctrl-names = "default";
 	pinctrl-0 = <&spi0_pins>;
-	/*
 	spidev@0 {
-		spi-max-frequency = <24000000>;
+		spi-max-frequency = <10000000>;
 		reg = <0>;
 		compatible = "linux,spidev";
-	};*/
-	spilcd@0{
+	};
+	/*spilcd@0{
 		compatible = "ilitek,ili9341";
 		reg = <0>;
 		spi-max-frequency = <24000000>;
@@ -158,8 +157,7 @@
 		buswidth = <8>;
 		dc-gpios = <&port8 14 0>;
 		reset-gpios = <&port8 15 0>;
-		debug = <1>;
-	};
+	};*/
 };
 
 &spi2 {
