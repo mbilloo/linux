@@ -152,7 +152,7 @@ struct rza1dma_channel {
 	struct list_head		ld_queue;
 	struct list_head		ld_active;
 	int				descs_allocated;
-	enum dma_slave_buswidth		word_size;
+	//enum dma_slave_buswidth		word_size;
 	dma_addr_t			per_address;
 	struct dma_chan			chan;
 	struct dma_async_tx_descriptor	desc;
@@ -172,6 +172,9 @@ struct rza1dma_channel {
 	u32 slave_dmars;
 	u32 slave_chcfg;
 
+	// other config
+	u32 interval;
+
 	// irq
 	int irq;
 };
@@ -185,7 +188,6 @@ struct rza1dma_engine {
 	spinlock_t			lock;
 	struct rza1dma_channel		*channel;
 	u32 channel_num;
-	struct rza1_dma_pdata		*pdata;
 };
 
 struct rza1dma_filter_data {
@@ -239,18 +241,15 @@ static void rza1dma_enable_hw(struct rza1dma_desc *d)
 	u32 chcfg = rza1dmac->chcfg;
 	u32 chctrl = rza1dmac->chctrl;
 
-	dev_dbg(rza1dma->dev, "%s channel %d\n", __func__, channel);
-
 	local_irq_save(flags);
 
-
-	if(chctrl & CHCTRL_SETEN){			/* When [SETEN]is "0".already before process add Descriptor */
+	if(chctrl & CHCTRL_SETEN){	/* When [SETEN]is "0".already before process add Descriptor */
 								/* Only add Descriptor case.skip write register */
-		rza1dma_ch_writel(rza1dmac, nxla, NXLA, 1);		/* NXLA reg */
-		rza1dma_ch_writel(rza1dmac, chcfg, CHCFG, 1);		/* CHCFG reg */
 
+		rza1dma_ch_writel(rza1dmac, nxla, NXLA, 1);				/* NXLA reg */
+		rza1dma_ch_writel(rza1dmac, chcfg, CHCFG, 1);			/* CHCFG reg */
 		rza1dma_ch_writel(rza1dmac, CHCTRL_SWRST, CHCTRL, 1);	/* CHCTRL reg */
-		rza1dma_ch_writel(rza1dmac, chctrl, CHCTRL, 1);		/* CHCTRL reg */
+		rza1dma_ch_writel(rza1dmac, chctrl, CHCTRL, 1);			/* CHCTRL reg */
 	}
 
 	local_irq_restore(flags);
@@ -372,12 +371,10 @@ static void prepare_descs_for_slave_sg(struct rza1dma_desc *d)
 	
 	int seten_flag = 1, desc_add_flag = 0;
 
-	dev_dbg(rza1dma->dev, "%s called\n", __func__);
-
 	chcfg = (CHCFG_SEL(channel) |
 		rza1dmac->slave_chcfg |
 		CHCFG_DEM |
-		CHCFG_DMS);
+		CHCFG_DMS); // link mode
 
 	if (d->direction == DMA_DEV_TO_MEM)
 		chcfg |= CHCFG_SAD;	/* source address is fixed */
@@ -465,7 +462,7 @@ static void prepare_descs_for_slave_sg(struct rza1dma_desc *d)
 
 		descs[i].trs_byte = sg_dma_len(sg);
 		descs[i].config = chcfg;
-		descs[i].interval = 0x00ff;
+		descs[i].interval = rza1dmac->interval;
 		descs[i].extension = 0;
 		descs[i].next_lk_addr = rza1dmac->desc_base_dma +
 					sizeof(struct format_desc) * (i + 1);
@@ -579,10 +576,10 @@ static int rza1dma_config(struct dma_chan *chan,
 
 	if (dmaengine_cfg->direction == DMA_DEV_TO_MEM) {
 		rza1dmac->per_address = dmaengine_cfg->src_addr;
-		rza1dmac->word_size = dmaengine_cfg->src_addr_width;
+		//rza1dmac->word_size = dmaengine_cfg->src_addr_width;
 	} else {
 		rza1dmac->per_address = dmaengine_cfg->dst_addr;
-		rza1dmac->word_size = dmaengine_cfg->dst_addr_width;
+		//rza1dmac->word_size = dmaengine_cfg->dst_addr_width;
 	}
 	return 0;
 }
@@ -772,7 +769,7 @@ static struct dma_chan *rza1dma_xlate(struct of_phandle_args *dma_spec,
 		.rza1dma = rza1dma,
 	};
 
-	if (count != 3)
+	if (count != 4)
 		return NULL;
 
 	chan = dma_request_channel(rza1dma->dma_device.cap_mask,
@@ -783,6 +780,7 @@ static struct dma_chan *rza1dma_xlate(struct of_phandle_args *dma_spec,
 		rza1dmac->slave_addr = dma_spec->args[0];
 		rza1dmac->slave_dmars = dma_spec->args[1];
 		rza1dmac->slave_chcfg = dma_spec->args[2];
+		rza1dmac->interval = dma_spec->args[3];
 	}
 
 	return chan;
@@ -800,8 +798,10 @@ static int __init rza1dma_probe(struct platform_device *pdev)
 	if (!rza1dma)
 		return -ENOMEM;
 
-	if(!of_property_read_u32(pdev->dev.of_node, "dma-channels", &rza1dma->channel_num)){
-		return -ENODEV;
+	ret = of_property_read_u32(pdev->dev.of_node, "dma-channels", &rza1dma->channel_num);
+	if(ret){
+		dev_err(&pdev->dev,"couldn't get dma-channels propery: %d\n", ret);
+		return ret;
 	}
 
 	/* Get io base address */
