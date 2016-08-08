@@ -180,3 +180,19 @@
 &rtc {
 	status = "okay";
 };
+
+&pinctrl {
+		adc_pins: adc {
+		renesas,pins = <RZA1PFC_PIN(1,8) RZA1PFC_MODE_ALT1 RZA1PFC_DIIO_PBDC_EN>,	/* an0 */
+						<RZA1PFC_PIN(1, 9) RZA1PFC_MODE_ALT1 RZA1PFC_DIIO_PBDC_EN>,	/* an1 */
+						<RZA1PFC_PIN(1,10) RZA1PFC_MODE_ALT1 RZA1PFC_DIIO_PBDC_EN>,	/* an2 */
+						<RZA1PFC_PIN(1,11) RZA1PFC_MODE_ALT1 RZA1PFC_DIIO_PBDC_EN>,	/* an3 */
+						<RZA1PFC_PIN(1,13) RZA1PFC_MODE_ALT1 RZA1PFC_DIIO_PBDC_EN>,	/* an5 */
+						<RZA1PFC_PIN(1,15) RZA1PFC_MODE_ALT1 RZA1PFC_DIIO_PBDC_EN>;	/* an7 */											
+	};
+};
+
+&adc {
+	pinctrl-names = "default";
+	pinctrl-0 = <&adc_pins>;
+};
