@@ -58,7 +58,10 @@
 #define RCR2		RTC_REG(15)	/* Control */
 
 #ifdef CONFIG_ARCH_SHMOBILE
+#define EXTALDIV	104164
 #define RCR5		RTC_REG(19)
+#define RFRH		RTC_REG(21)
+#define RFRL		RTC_REG(22)
 #endif
 
 /*
@@ -453,7 +456,11 @@ static int sh_rtc_set_time(struct device *dev, struct rtc_time *tm)
 	/* Start RTC */
 	tmp = readb(rtc->regbase + RCR2);
 	tmp &= ~RCR2_RESET;
+#ifdef CONFIG_ARCH_SHMOBILE
+	tmp |= RCR2_START;
+#else
 	tmp |= RCR2_RTCEN | RCR2_START;
+#endif
 	writeb(tmp, rtc->regbase + RCR2);
 
 	spin_unlock_irq(&rtc->lock);
@@ -666,12 +673,19 @@ static int sh_rtc_probe(struct platform_device *pdev)
 
 	clk_enable(rtc->clk);
 	/* Start RTC */
+
 #ifdef CONFIG_ARCH_SHMOBILE
 	writeb(1, rtc->regbase + RCR5); // use EXTAL
+	writew(((EXTALDIV >> 16) & 0xffff), rtc->regbase + RFRH);
+	writew((EXTALDIV & 0xffff), rtc->regbase + RFRL);
 #endif
 
 	tmp = readb(rtc->regbase + RCR2);
-	tmp |= RCR2_RTCEN ;				
+#ifdef CONFIG_ARCH_SHMOBILE
+	tmp &= ~RCR2_RTCEN ;
+#else
+	tmp |= RCR2_RTCEN ;
+#endif
 	writeb(tmp, rtc->regbase + RCR2);
 
 	rtc->capabilities = RTC_DEF_CAPABILITIES;
