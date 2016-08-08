@@ -697,6 +697,7 @@
 		interrupts = <GIC_SPI 277 IRQ_TYPE_LEVEL_HIGH>,
 			<GIC_SPI 278 IRQ_TYPE_LEVEL_HIGH>,
 			<GIC_SPI 276 IRQ_TYPE_LEVEL_HIGH>;
+		status = "disabled";
 	};
 	
 	adc: adc@0xe8005800 {

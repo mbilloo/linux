@@ -144,14 +144,14 @@
 	pinctrl-names = "default";
 	pinctrl-0 = <&spi0_pins>;
 	spidev@0 {
-		spi-max-frequency = <10000000>;
+		spi-max-frequency = <40000000>;
 		reg = <0>;
 		compatible = "linux,spidev";
 	};
 	/*spilcd@0{
 		compatible = "ilitek,ili9341";
 		reg = <0>;
-		spi-max-frequency = <24000000>;
+		spi-max-frequency = <40000000>;
 		rotate = <270>;
 		bgr;
 		buswidth = <8>;
@@ -167,12 +167,16 @@
 	mmc-slot@0 {
 		compatible = "renesas, grpeachmmc","mmc-spi-slot";
 		reg = <0>;
-		spi-max-frequency = <24000000>;
+		spi-max-frequency = <40000000>;
 		gpios = <&port7 8 GPIO_ACTIVE_LOW>;
 		voltage-ranges = <3300 3300>;
 	};
 };
 
 &ethernet {
+	status = "okay";
+};
+
+&rtc {
 	status = "okay";
 };
