@@ -234,8 +234,6 @@ static void rza1dma_enable_hw(struct rza1dma_desc *d)
 {
 	struct dma_chan *chan = d->desc.chan;
 	struct rza1dma_channel *rza1dmac = to_rza1dma_chan(chan);
-	struct rza1dma_engine *rza1dma = rza1dmac->rza1dma;
-	int channel = rza1dmac->channel;
 	unsigned long flags;
 	u32 nxla = rza1dmac->desc_base_dma;
 	u32 chcfg = rza1dmac->chcfg;
@@ -824,24 +822,8 @@ static int __init rza1dma_probe(struct platform_device *pdev)
 				sizeof(struct rza1dma_channel) * rza1dma->channel_num,
 				GFP_KERNEL);
 
-	/* Register interrupt handler for channels */
-	for (i = 0; i < rza1dma->channel_num; i++) {
-		cirq_res = platform_get_resource(pdev, IORESOURCE_IRQ, i);
-		if (!cirq_res)
-			goto err;
-		rza1dma->channel[i].irq = cirq_res->start;
-		name = devm_kasprintf(&pdev->dev, GFP_KERNEL, "%s:chan%d",
-							  pdev->name, i);
-		ret = devm_request_irq(&pdev->dev, cirq_res->start,
-				       rza1dma_irq_handler, 0, name, &(rza1dma->channel[i]));
-		if (ret) {
-			dev_warn(&pdev->dev, "Can't register IRQ for DMA: %d\n", ret);
-			goto err;
-		}
-	}
-
 	/* Register interrupt handler for error */
-	eirq_res = platform_get_resource(pdev, IORESOURCE_IRQ, rza1dma->channel_num);
+	eirq_res = platform_get_resource(pdev, IORESOURCE_IRQ, 0);
 	if (!eirq_res)
 		return -ENODEV;
 
@@ -853,6 +835,22 @@ static int __init rza1dma_probe(struct platform_device *pdev)
 	if (ret) {
 		dev_warn(rza1dma->dev, "Can't register ERRIRQ for DMA\n");
 		goto err;
+	}
+
+	/* Register interrupt handler for channels */
+	for (i = 0; i < rza1dma->channel_num; i++) {
+		cirq_res = platform_get_resource(pdev, IORESOURCE_IRQ, i + 1);
+		if (!cirq_res)
+			goto err;
+		rza1dma->channel[i].irq = cirq_res->start;
+		name = devm_kasprintf(&pdev->dev, GFP_KERNEL, "%s:chan%d",
+							  pdev->name, i);
+		ret = devm_request_irq(&pdev->dev, cirq_res->start,
+				       rza1dma_irq_handler, 0, name, &(rza1dma->channel[i]));
+		if (ret) {
+			dev_warn(&pdev->dev, "Can't register IRQ for DMA: %d\n", ret);
+			goto err;
+		}
 	}
 
 	INIT_LIST_HEAD(&rza1dma->dma_device.channels);

@@ -644,25 +644,26 @@
 		compatible = "renesas,rza1-dma";
 		reg = <0xe8200000 0x1000>,
 		 <0xfcfe1000 0x1000>;
-		 interrupts = <GIC_SPI 9 IRQ_TYPE_EDGE_RISING>,
-		 		<GIC_SPI 10 IRQ_TYPE_EDGE_RISING>,
-				<GIC_SPI 11 IRQ_TYPE_EDGE_RISING>,
-				<GIC_SPI 12 IRQ_TYPE_EDGE_RISING>,
-				<GIC_SPI 13 IRQ_TYPE_EDGE_RISING>,
-				<GIC_SPI 14 IRQ_TYPE_EDGE_RISING>,
-				<GIC_SPI 15 IRQ_TYPE_EDGE_RISING>,
-				<GIC_SPI 16 IRQ_TYPE_EDGE_RISING>,
-				<GIC_SPI 17 IRQ_TYPE_EDGE_RISING>,
-				<GIC_SPI 18 IRQ_TYPE_EDGE_RISING>,
-				<GIC_SPI 19 IRQ_TYPE_EDGE_RISING>,
-				<GIC_SPI 20 IRQ_TYPE_EDGE_RISING>,
-				<GIC_SPI 21 IRQ_TYPE_EDGE_RISING>,
-				<GIC_SPI 22 IRQ_TYPE_EDGE_RISING>,
-				<GIC_SPI 23 IRQ_TYPE_EDGE_RISING>,
-				<GIC_SPI 24 IRQ_TYPE_EDGE_RISING>,
-				<GIC_SPI 25 IRQ_TYPE_EDGE_RISING>;							
+		 interrupts =
+		 		<GIC_SPI 25 IRQ_TYPE_EDGE_RISING>,	/* error */
+		 		<GIC_SPI 9 IRQ_TYPE_EDGE_RISING>,	/* chan0 */
+		 		<GIC_SPI 10 IRQ_TYPE_EDGE_RISING>,	/* chan1 */
+				<GIC_SPI 11 IRQ_TYPE_EDGE_RISING>,	/* chan2 */
+				<GIC_SPI 12 IRQ_TYPE_EDGE_RISING>,	/* chan3 */
+				<GIC_SPI 13 IRQ_TYPE_EDGE_RISING>,	/* chan4 */
+				<GIC_SPI 14 IRQ_TYPE_EDGE_RISING>,	/* chan5 */
+				<GIC_SPI 15 IRQ_TYPE_EDGE_RISING>,	/* chan6 */
+				<GIC_SPI 16 IRQ_TYPE_EDGE_RISING>,	/* chan7 */
+				<GIC_SPI 17 IRQ_TYPE_EDGE_RISING>,	/* chan8 */
+				<GIC_SPI 18 IRQ_TYPE_EDGE_RISING>,	/* chan9 */
+				<GIC_SPI 19 IRQ_TYPE_EDGE_RISING>,	/* chan10 */
+				<GIC_SPI 20 IRQ_TYPE_EDGE_RISING>,	/* chan11 */
+				<GIC_SPI 21 IRQ_TYPE_EDGE_RISING>,	/* chan12 */
+				<GIC_SPI 22 IRQ_TYPE_EDGE_RISING>,	/* chan13 */
+				<GIC_SPI 23 IRQ_TYPE_EDGE_RISING>,	/* chan14 */
+				<GIC_SPI 24 IRQ_TYPE_EDGE_RISING>;	/* chan15 */	
 		#dma-cells = <4>; /* registeraddr, dmars, chcfg, interval */
-		dma-channels = <16>;
+		dma-channels = <16>; /* this can be set to the actual amount of interrupts used to save memory */
 	};
 
 	usb0: usb@e8010000 {

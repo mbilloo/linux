@@ -196,3 +196,7 @@
 	pinctrl-names = "default";
 	pinctrl-0 = <&adc_pins>;
 };
+
+&dma0 {
+	dma-channels = <6>;
+};
