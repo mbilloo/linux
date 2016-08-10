@@ -38,42 +38,27 @@
 #include <linux/pm_runtime.h>
 #include <linux/sched_clock.h>
 
-struct rza1_ostm_pdata {
-	struct {
-		char *name;
-		unsigned long rating;
-	} clksrc;
-	struct {
-		char *name;
-		unsigned long rating;
-	} clkevt;
-};
-
 /*
  * [TODO] This driver doesn't support Power Management.
  */
 
-struct rza1_ostm_clksrc {
-	int irq;			/* unused */
+struct rza1_ostm_clk {
+	int irq;
 	struct clk *clk;
 	unsigned long rate;
 	void __iomem *base;
 };
 
 struct rza1_ostm_clkevt {
-	int irq;
-	struct clk *clk;
-	unsigned long rate;
-	void __iomem *base;
 	int mode;
 	unsigned long ticks_per_jiffy;
-	struct irqaction irqaction;
 	struct clock_event_device evt;
+	struct irqaction irqaction;
 };
 
 struct rza1_ostm_priv {
-	struct platform_device *pdev;
-	struct rza1_ostm_clksrc clksrc;
+	struct platform_device* pdev;
+	struct rza1_ostm_clk	clk[2];
 	struct rza1_ostm_clkevt clkevt;
 };
 
@@ -95,75 +80,78 @@ static void __iomem *system_clock;
 #define	CTL_ONESHOT		0x02
 #define	CTL_FREERUN		0x02
 
+static int __init rza1_ostm_init_clk(struct device_node *node, struct rza1_ostm_priv *priv, int index){
+	void *regs;
+	struct clk *clk;
+	int ret;
+
+	regs = of_iomap(node, index);
+	if (IS_ERR(regs)) {
+		dev_err(&priv->pdev->dev, "failed to get I/O memory\n");
+		ret = -ENOMEM;
+		goto err;
+	}
+
+	ret = of_irq_get(node, index);
+	if (ret < 0) {
+		dev_err(&priv->pdev->dev, "failed to get irq\n");
+		goto err;
+	}
+	priv->clk[index].irq = ret;
+
+	clk = of_clk_get(node, index);
+	if (IS_ERR(clk)) {
+		dev_err(&priv->pdev->dev, "failed to get clock\n");
+		ret = -EINVAL;
+		goto err;
+	}
+
+	ret = clk_prepare_enable(clk);
+	if (ret) {
+		dev_err(&priv->pdev->dev, "failed to prepare clock enable %d\n", ret);
+		goto err;
+	}
+
+	ret = clk_enable(clk);
+	if (ret) {
+		dev_err(&priv->pdev->dev, "failed to enable clock %d\n", ret);
+		goto err;
+	}
+
+	priv->clk[index].clk = clk;
+	priv->clk[index].base = regs;
+	priv->clk[index].rate = clk_get_rate(clk);
+
+err:
+	return ret;
+}
+
+
 /*********************************************************************/
 /*
  * Setup clock-source device (which is ostm.0)
  * as free-running mode.
  */
-static int __init rza1_ostm_init_clksrc(struct rza1_ostm_priv *priv)
+static int __init rza1_ostm_init_clksrc(struct device_node *node, struct rza1_ostm_priv *priv)
 {
-	struct rza1_ostm_pdata *pdata;
-	struct rza1_ostm_clksrc *cs;
-	struct resource *res;
-	int ret = -ENXIO;
+	int ret;
+	struct rza1_ostm_clk *cs = &priv->clk[0];
+	unsigned long rating = 300;
+	ret = rza1_ostm_init_clk(node, priv, 0);
+	if(!ret) {
+		if (ioread8(cs->base + OSTM_TE) & TE) {
+			iowrite8(TT, cs->base + OSTM_TT);
+			while (ioread8(cs->base + OSTM_TE) & TE)
+				;
+		}
+		iowrite32(0, cs->base + OSTM_CMP);
+		iowrite8(CTL_FREERUN, cs->base + OSTM_CTL);
+		iowrite8(TS, cs->base + OSTM_TS);
 
-	pdata = priv->pdev->dev.platform_data;
-	cs = &priv->clksrc;
-
-	res = platform_get_resource(priv->pdev, IORESOURCE_MEM, 0);
-	if (!res) {
-		dev_err(&priv->pdev->dev, "failed to get I/O memory\n");
-		goto err;
+		clocksource_mmio_init(cs->base + OSTM_CNT,
+				"ostm_clksrc", cs->rate,
+				rating, 32, clocksource_mmio_readl_up);
 	}
-	cs->base = ioremap_nocache(res->start, resource_size(res));
-	if (!cs->base) {
-		dev_err(&priv->pdev->dev, "failed to remap I/O memory\n");
-		goto err;
-	}
-
-	cs->irq = platform_get_irq(priv->pdev, 0);
-	if (cs->irq < 0) {
-		dev_err(&priv->pdev->dev, "failed to get irq\n");
-		goto err_iounmap;
-	}
-
-	cs->clk = devm_clk_get(&priv->pdev->dev, pdata->clksrc.name);
-	if (IS_ERR(cs->clk)) {
-		dev_err(&priv->pdev->dev, "failed to get clock %s\n", pdata->clksrc.name);
-		goto err_iounmap;
-	}
-	cs->rate = clk_get_rate(cs->clk);
-
-	ret = clk_prepare_enable(cs->clk);
-	if (ret) {
-		dev_err(&priv->pdev->dev, "failed to prepare clock enable %d\n", ret);
-		goto err_iounmap;
-	}
-
-	ret = clk_enable(cs->clk);
-	if (ret) {
-		dev_err(&priv->pdev->dev, "failed to enable clock %d\n", ret);
-		goto err_iounmap;
-	}
-
-	if (ioread8(cs->base + OSTM_TE) & TE) {
-		iowrite8(TT, cs->base + OSTM_TT);
-		while (ioread8(cs->base + OSTM_TE) & TE)
-			;
-	}
-	iowrite32(0, cs->base + OSTM_CMP);
-	iowrite8(CTL_FREERUN, cs->base + OSTM_CTL);
-	iowrite8(TS, cs->base + OSTM_TS);
-
-	clocksource_mmio_init(cs->base + OSTM_CNT,
-			"ostm_clksrc", cs->rate,
-			pdata->clksrc.rating, 32, clocksource_mmio_readl_up);
-
-	return ret;	/* ret == 0 */
-
-err_iounmap:
-	iounmap(cs->base);
-err:
 	return ret;
 }
 
@@ -176,7 +164,7 @@ static u64 notrace rza1_ostm_read_sched_clock(void)
 	return ioread32(system_clock);
 }
 
-static int __init rza1_ostm_init_sched_clock(struct rza1_ostm_clksrc *cs)
+static int __init rza1_ostm_init_sched_clock(struct rza1_ostm_clk *cs)
 {
 	unsigned long flags;
 
@@ -193,11 +181,11 @@ static int __init rza1_ostm_init_sched_clock(struct rza1_ostm_clksrc *cs)
  * Setup clock-event device (which is ostm.1)
  * (interrupt-driven).
  */
-static void rza1_ostm_clkevt_timer_stop(struct rza1_ostm_clkevt *clkevt)
+static void rza1_ostm_clkevt_timer_stop(struct rza1_ostm_clk *clk)
 {
-	if (ioread8(clkevt->base + OSTM_TE) & TE) {
-		iowrite8(TT, clkevt->base + OSTM_TT);
-		while (ioread8(clkevt->base + OSTM_TE) & TE)
+	if (ioread8(clk->base + OSTM_TE) & TE) {
+		iowrite8(TT, clk->base + OSTM_TT);
+		while (ioread8(clk->base + OSTM_TE) & TE)
 			;
 	}
 }
@@ -205,36 +193,39 @@ static void rza1_ostm_clkevt_timer_stop(struct rza1_ostm_clkevt *clkevt)
 static int rza1_ostm_clkevt_set_next_event(unsigned long delta,
 		struct clock_event_device *evt)
 {
-	struct rza1_ostm_clkevt *clkevt = &rza1_ostm_priv->clkevt;
+	struct rza1_ostm_clk *clk = &rza1_ostm_priv->clk[1];
 
-	rza1_ostm_clkevt_timer_stop(clkevt);
+	rza1_ostm_clkevt_timer_stop(clk);
 
-	iowrite32(delta, clkevt->base + OSTM_CMP);
-	iowrite8(CTL_ONESHOT, clkevt->base + OSTM_CTL);
-	iowrite8(TS, clkevt->base + OSTM_TS);
+	iowrite32(delta, clk->base + OSTM_CMP);
+	iowrite8(CTL_ONESHOT, clk->base + OSTM_CTL);
+	iowrite8(TS, clk->base + OSTM_TS);
 
 	return 0;
 }
 
 static int rza1_ostm_set_state_shutdown(struct clock_event_device *evt){
+	struct rza1_ostm_clk *clk = &rza1_ostm_priv->clk[1];
 	struct rza1_ostm_clkevt *clkevt = &rza1_ostm_priv->clkevt;
-	rza1_ostm_clkevt_timer_stop(clkevt);
+	rza1_ostm_clkevt_timer_stop(clk);
 	clkevt->mode = CLOCK_EVT_STATE_SHUTDOWN;
 	return 0;
 }
 
 static int rza1_ostm_set_state_oneshot(struct clock_event_device *evt){
+	struct rza1_ostm_clk *clk = &rza1_ostm_priv->clk[1];
 	struct rza1_ostm_clkevt *clkevt = &rza1_ostm_priv->clkevt;
-	rza1_ostm_clkevt_timer_stop(clkevt);
+	rza1_ostm_clkevt_timer_stop(clk);
 	clkevt->mode = CLOCK_EVT_STATE_ONESHOT;
 	return 0;
 }
 
 static int rza1_ostm_set_state_periodic(struct clock_event_device *evt){
+	struct rza1_ostm_clk *clk = &rza1_ostm_priv->clk[1];
 	struct rza1_ostm_clkevt *clkevt = &rza1_ostm_priv->clkevt;
-	iowrite32(clkevt->ticks_per_jiffy - 1, clkevt->base + OSTM_CMP);
-	iowrite8(CTL_PERIODIC, clkevt->base + OSTM_CTL);
-	iowrite8(TS, clkevt->base + OSTM_TS);
+	iowrite32(clkevt->ticks_per_jiffy - 1, clk->base + OSTM_CMP);
+	iowrite8(CTL_PERIODIC, clk->base + OSTM_CTL);
+	iowrite8(TS, clk->base + OSTM_TS);
 	clkevt->mode = CLOCK_EVT_STATE_PERIODIC;
 	return 0;
 }
@@ -242,10 +233,12 @@ static int rza1_ostm_set_state_periodic(struct clock_event_device *evt){
 static irqreturn_t rza1_ostm_timer_interrupt(int irq, void *dev_id)
 {
 #if 1
-	struct rza1_ostm_clkevt *clkevt = dev_id;
+	struct rza1_ostm_priv *priv = dev_id;
+	struct rza1_ostm_clk *clk = &priv->clk[1];
+	struct rza1_ostm_clkevt *clkevt = &priv->clkevt;
 
 	if (clkevt->mode == CLOCK_EVT_STATE_ONESHOT)
-		rza1_ostm_clkevt_timer_stop(clkevt);
+		rza1_ostm_clkevt_timer_stop(clk);
 
 	if (clkevt->evt.event_handler)
 		clkevt->evt.event_handler(&clkevt->evt);
@@ -264,199 +257,99 @@ static irqreturn_t rza1_ostm_timer_interrupt(int irq, void *dev_id)
 #endif
 }
 
-static int __init rza1_ostm_init_clkevt(struct rza1_ostm_priv *priv)
+static int __init rza1_ostm_init_clkevt(struct device_node *node, struct rza1_ostm_priv *priv)
 {
-	struct rza1_ostm_pdata *pdata;
+	struct rza1_ostm_clk *clk = &priv->clk[1];
 	struct rza1_ostm_clkevt *ce;
-	struct resource *res;
 	struct clock_event_device *evt;
-	int ret = -ENXIO;
+	unsigned long rating = 300;
+	int ret;
 
-	pdata = priv->pdev->dev.platform_data;
-	ce = &priv->clkevt;
+	ret = rza1_ostm_init_clk(node, priv, 1);
+	if(!ret){
+		ce = &priv->clkevt;
 
-	res = platform_get_resource(priv->pdev, IORESOURCE_MEM, 1);
-	if (!res) {
-		dev_err(&priv->pdev->dev, "failed to get I/O memory\n");
-		goto err;
+		ce->ticks_per_jiffy = (clk->rate + HZ / 2) / HZ;
+		ce->mode = CLOCK_EVT_STATE_DETACHED;
+
+		ce->irqaction.name = "ostm.1";
+		ce->irqaction.handler = rza1_ostm_timer_interrupt;
+		ce->irqaction.dev_id = priv;
+		ce->irqaction.irq = clk->irq;
+		ce->irqaction.flags = IRQF_TRIGGER_RISING | IRQF_TIMER;
+		ret = setup_irq(clk->irq, &ce->irqaction);
+
+
+		//ret = devm_request_irq(&priv->pdev->dev, clk->irq,
+		//		rza1_ostm_timer_interrupt, IRQF_TRIGGER_RISING | IRQF_TIMER, "ostm.1", priv);
+
+		if (ret) {
+			dev_err(&priv->pdev->dev, "failed to request irq\n");
+		}
+
+		else {
+			evt = &ce->evt;
+			evt->name = "ostm";
+			evt->features = CLOCK_EVT_FEAT_ONESHOT | CLOCK_EVT_FEAT_PERIODIC;
+
+			evt->set_state_shutdown = rza1_ostm_set_state_shutdown;
+			evt->set_state_oneshot = rza1_ostm_set_state_oneshot;
+			evt->set_state_periodic = rza1_ostm_set_state_periodic;
+
+			evt->set_next_event = rza1_ostm_clkevt_set_next_event;
+			evt->shift = 32;
+			evt->rating = rating;
+			evt->cpumask = cpumask_of(0);
+			clockevents_config_and_register(evt, clk->rate, 0xf, 0xffffffff);
+		}
 	}
-	ce->base = ioremap_nocache(res->start, resource_size(res));
-	if (!ce->base) {
-		dev_err(&priv->pdev->dev, "failed to remap I/O memory\n");
-		goto err;
-	}
-
-	ce->irq = platform_get_irq(priv->pdev, 1);
-	if (ce->irq < 0) {
-		dev_err(&priv->pdev->dev, "failed to get irq\n");
-		goto err_iounmap;
-	}
-
-	ce->clk = devm_clk_get(&priv->pdev->dev, pdata->clkevt.name);
-	if (IS_ERR(ce->clk)) {
-		dev_err(&priv->pdev->dev, "failed to get clock %s\n", pdata->clkevt.name);
-		goto err_iounmap;
-	}
-	ce->rate = clk_get_rate(ce->clk);
-
-	ret = clk_prepare_enable(ce->clk);
-	if (ret) {
-		dev_err(&priv->pdev->dev, "failed to prepare clock enable %d\n", ret);
-		goto err_iounmap;
-	}
-
-	ret = clk_enable(ce->clk);
-	if (ret) {
-		dev_err(&priv->pdev->dev, "failed to enable clock %d\n", ret);
-		goto err_iounmap;
-	}
-
-	ce->ticks_per_jiffy = (ce->rate + HZ / 2) / HZ;
-	ce->mode = CLOCK_EVT_STATE_DETACHED;
-	ce->irqaction.name = "ostm.1";
-	ce->irqaction.handler = rza1_ostm_timer_interrupt;
-#if 1
-	ce->irqaction.dev_id = ce;
-#else
-	ce->irqaction.dev_id = &priv->clkevt.evt;
-#endif
-	ce->irqaction.irq = ce->irq;
-	ce->irqaction.flags = IRQF_TRIGGER_RISING | IRQF_TIMER;
-	ret = setup_irq(ce->irq, &ce->irqaction);
-	if (ret) {
-		dev_err(&priv->pdev->dev, "failed to request irq\n");
-		goto err_iounmap;
-	}
-
-	evt = &ce->evt;
-	evt->name = "ostm";
-	evt->features = CLOCK_EVT_FEAT_ONESHOT | CLOCK_EVT_FEAT_PERIODIC;
-
-	evt->set_state_shutdown = rza1_ostm_set_state_shutdown;
-	evt->set_state_oneshot = rza1_ostm_set_state_oneshot;
-	evt->set_state_periodic = rza1_ostm_set_state_periodic;
-
-	evt->set_next_event = rza1_ostm_clkevt_set_next_event;
-	evt->shift = 32;
-	evt->rating = pdata->clkevt.rating;
-	evt->cpumask = cpumask_of(0);
-	clockevents_config_and_register(evt, ce->rate, 0xf, 0xffffffff);
-
-	ret = 0;
-	return ret;
-
-err_iounmap:
-	iounmap(ce->base);
-err:
 	return ret;
 }
 
-static int rza1_ostm_timer_init_(struct rza1_ostm_priv *priv)
-{
-	int ret = 0;
-
-	ret = rza1_ostm_init_clksrc(priv);
-	if (ret)
-		goto err;
-
-	ret = rza1_ostm_init_sched_clock(&priv->clksrc);
-	if (ret)
-		goto err;
-
-	ret = rza1_ostm_init_clkevt(priv);
-err:
-	return ret;
-}
-
-/***********************************************************************/
-/*
- * The following source code is left only for the compatibiliy
- * with RZLSP-V2.0.0.
- */
-static int __init rza1_ostm_probe(struct platform_device *pdev)
+static int __init rza1_ostm_init(struct device_node *node)
 {
 	struct rza1_ostm_priv *priv;
-	struct rza1_ostm_pdata pdata = {
-			.clksrc.name = "ostm0",
-			.clksrc.rating = 3000,
-			.clkevt.name = "ostm1",
-			.clkevt.rating = 3000,
-		};
+	struct platform_device* pdev = of_find_device_by_node(node);
 	int ret = 0;
-
-	pdev->dev.platform_data = &pdata;
-
-	if (!is_early_platform_device(pdev)) {
-		pm_runtime_set_active(&pdev->dev);
-		pm_runtime_enable(&pdev->dev);
-	}
-
-	priv = platform_get_drvdata(pdev);
-	if (priv) {
-		dev_info(&pdev->dev, "kept as earlytimer\n");
-		goto out;
-	}
 
 	priv = kzalloc(sizeof(*priv), GFP_KERNEL);
 	if (!priv) {
 		dev_info(&pdev->dev, "failed to allocate memory\n");
 		return -ENOMEM;
 	}
-	rza1_ostm_priv = priv;
 
 	priv->pdev = pdev;
-	platform_set_drvdata(priv->pdev, priv);
+	rza1_ostm_priv = priv;
 
-	ret = rza1_ostm_timer_init_(priv);
+
+	ret = rza1_ostm_init_clksrc(node, priv);
+	if (ret)
+		goto err;
+
+	ret = rza1_ostm_init_sched_clock(&priv->clk[0]);
+	if (ret)
+		goto err;
+
+	ret = rza1_ostm_init_clkevt(node, priv);
+
 	if (ret) {
 		kfree(priv);
-		platform_set_drvdata(pdev, NULL);
-		pm_runtime_idle(&pdev->dev);
+		//pm_runtime_idle(&pdev->dev);
 		return ret;
 	}
 
-	if (is_early_platform_device(pdev))
-		return ret;
+err:
+
 
 out:
-	if (pdata.clksrc.rating || pdata.clkevt.rating)
-		pm_runtime_irq_safe(&pdev->dev);
-	else
-		pm_runtime_idle(&pdev->dev);
+	//if (pdata.clksrc.rating || pdata.clkevt.rating)
+	//	pm_runtime_irq_safe(&pdev->dev);
+	//else
+	//	pm_runtime_idle(&pdev->dev);
 
 	return ret;
 }
 
-static int rza1_ostm_remove(struct platform_device *pdev)
-{
-	rza1_ostm_priv = NULL;
-	system_clock = NULL;
+CLOCKSOURCE_OF_DECLARE(ostm, "renesas,sh-ostm",
+		rza1_ostm_init);
 
-	return -EBUSY;	/* cannot unregister */
-}
-
-static const struct of_device_id of_sh_ostm_match[] = {
-	{
-		.compatible = "renesas,sh-ostm",
-	}
-	,
-	{},
-};
-
-MODULE_DEVICE_TABLE(of, of_sh_ostm_match);
-
-static struct platform_driver rza1_ostm_timer = {
-	.probe		= rza1_ostm_probe,
-	.remove		= rza1_ostm_remove,
-	.driver	= {
-		.name	= "ostm",
-		.owner = THIS_MODULE,
-		.of_match_table = of_sh_ostm_match,
-	},
-};
-
-module_platform_driver (rza1_ostm_timer);
-
-MODULE_AUTHOR("Magnus Damm");	/* original author */
-MODULE_DESCRIPTION("RZ/A1 OSTM Timer Driver");
-MODULE_LICENSE("GPL");

@@ -197,8 +197,8 @@
 		reg = <0xfcfec000 0x30>, <0xfcfec400 0x30>;
 		interrupts = <GIC_SPI 102 IRQ_TYPE_EDGE_RISING>, <GIC_SPI 103 IRQ_TYPE_EDGE_RISING>;
 		clocks = <&mstp5_clks R7S72100_CLK_OSTM1>, <&mstp5_clks R7S72100_CLK_OSTM0>;
-		clock-names = "ostm1", "ostm0";
 		status = "okay";
+		renesas,clkratings = <300 300>;
 	};
 
 	scif0: serial@e8007000 {
