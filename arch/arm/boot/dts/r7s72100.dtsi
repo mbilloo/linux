@@ -110,6 +110,17 @@
 			clock-output-names = "scif0", "scif1", "scif2", "scif3", "scif4", "scif5", "scif6", "scif7";
 		};
 		
+		mstp5_clks: mstp5_clks@0xfcfe0428 {
+			#clock-cells = <1>;
+			compatible = "renesas,r7s72100-mstp-clocks", "renesas,cpg-mstp-clocks";
+			reg = <0xfcfe0428 4>;
+			clocks = <&p0_clk>, <&p0_clk>;
+			clock-indices = <
+				R7S72100_CLK_OSTM1 R7S72100_CLK_OSTM0
+			>;
+			clock-output-names = "ostm1", "ostm0";
+		};
+		
 		mstp6_clks: mstp6_clks@fcfe042c {
 			#clock-cells = <1>;
 			compatible = "renesas,r7s72100-mstp-clocks", "renesas,cpg-mstp-clocks";
@@ -166,6 +177,7 @@
 			>;
 			clock-output-names = "spi0", "spi1", "spi2", "spi3", "spi4";
 		};
+		
 	};
 
 	cpus {
@@ -178,6 +190,15 @@
 			reg = <0>;
 			clock-frequency = <400000000>;
 		};
+	};
+	
+	ostm: ostm@0xfcfec000 {
+		compatible = "renesas,sh-ostm";
+		reg = <0xfcfec000 0x30>, <0xfcfec400 0x30>;
+		interrupts = <GIC_SPI 102 IRQ_TYPE_EDGE_RISING>, <GIC_SPI 103 IRQ_TYPE_EDGE_RISING>;
+		clocks = <&mstp5_clks R7S72100_CLK_OSTM1>, <&mstp5_clks R7S72100_CLK_OSTM0>;
+		clock-names = "ostm1", "ostm0";
+		status = "okay";
 	};
 
 	scif0: serial@e8007000 {
