@@ -58,7 +58,7 @@ struct rza1_ostm_clkevt {
 
 struct rza1_ostm_priv {
 	struct platform_device* pdev;
-	struct rza1_ostm_clk	clk[2];
+	struct rza1_ostm_clk	clk;
 	struct rza1_ostm_clkevt clkevt;
 };
 
@@ -80,12 +80,16 @@ static void __iomem *system_clock;
 #define	CTL_ONESHOT		0x02
 #define	CTL_FREERUN		0x02
 
-static int __init rza1_ostm_init_clk(struct device_node *node, struct rza1_ostm_priv *priv, int index){
-	void *regs;
+static int __init rza1_ostm_init_clk(struct device_node *node, struct rza1_ostm_priv *priv, struct rza1_ostm_clk *ostmclk, int index){
+	void* __iomem regs;
 	struct clk *clk;
 	int ret;
+	struct resource res;
 
-	regs = of_iomap(node, index);
+
+	if (of_address_to_resource(node, index, &res))
+		return -ENOMEM;
+	regs = ioremap_nocache(res.start, resource_size(&res));
 	if (IS_ERR(regs)) {
 		dev_err(&priv->pdev->dev, "failed to get I/O memory\n");
 		ret = -ENOMEM;
@@ -97,7 +101,7 @@ static int __init rza1_ostm_init_clk(struct device_node *node, struct rza1_ostm_
 		dev_err(&priv->pdev->dev, "failed to get irq\n");
 		goto err;
 	}
-	priv->clk[index].irq = ret;
+	ostmclk->irq = ret;
 
 	clk = of_clk_get(node, index);
 	if (IS_ERR(clk)) {
@@ -108,19 +112,13 @@ static int __init rza1_ostm_init_clk(struct device_node *node, struct rza1_ostm_
 
 	ret = clk_prepare_enable(clk);
 	if (ret) {
-		dev_err(&priv->pdev->dev, "failed to prepare clock enable %d\n", ret);
-		goto err;
-	}
-
-	ret = clk_enable(clk);
-	if (ret) {
 		dev_err(&priv->pdev->dev, "failed to enable clock %d\n", ret);
 		goto err;
 	}
 
-	priv->clk[index].clk = clk;
-	priv->clk[index].base = regs;
-	priv->clk[index].rate = clk_get_rate(clk);
+	ostmclk->clk = clk;
+	ostmclk->base = regs;
+	ostmclk->rate = clk_get_rate(clk);
 
 err:
 	return ret;
@@ -132,12 +130,11 @@ err:
  * Setup clock-source device (which is ostm.0)
  * as free-running mode.
  */
-static int __init rza1_ostm_init_clksrc(struct device_node *node, struct rza1_ostm_priv *priv)
+static int __init rza1_ostm_init_clksrc(struct device_node *node, struct rza1_ostm_priv *priv, struct rza1_ostm_clk* cs)
 {
 	int ret;
-	struct rza1_ostm_clk *cs = &priv->clk[0];
 	unsigned long rating = 300;
-	ret = rza1_ostm_init_clk(node, priv, 0);
+	ret = rza1_ostm_init_clk(node, priv, cs, 0);
 	if(!ret) {
 		if (ioread8(cs->base + OSTM_TE) & TE) {
 			iowrite8(TT, cs->base + OSTM_TT);
@@ -193,7 +190,7 @@ static void rza1_ostm_clkevt_timer_stop(struct rza1_ostm_clk *clk)
 static int rza1_ostm_clkevt_set_next_event(unsigned long delta,
 		struct clock_event_device *evt)
 {
-	struct rza1_ostm_clk *clk = &rza1_ostm_priv->clk[1];
+	struct rza1_ostm_clk *clk = &rza1_ostm_priv->clk;
 
 	rza1_ostm_clkevt_timer_stop(clk);
 
@@ -205,7 +202,7 @@ static int rza1_ostm_clkevt_set_next_event(unsigned long delta,
 }
 
 static int rza1_ostm_set_state_shutdown(struct clock_event_device *evt){
-	struct rza1_ostm_clk *clk = &rza1_ostm_priv->clk[1];
+	struct rza1_ostm_clk *clk = &rza1_ostm_priv->clk;
 	struct rza1_ostm_clkevt *clkevt = &rza1_ostm_priv->clkevt;
 	rza1_ostm_clkevt_timer_stop(clk);
 	clkevt->mode = CLOCK_EVT_STATE_SHUTDOWN;
@@ -213,7 +210,7 @@ static int rza1_ostm_set_state_shutdown(struct clock_event_device *evt){
 }
 
 static int rza1_ostm_set_state_oneshot(struct clock_event_device *evt){
-	struct rza1_ostm_clk *clk = &rza1_ostm_priv->clk[1];
+	struct rza1_ostm_clk *clk = &rza1_ostm_priv->clk;
 	struct rza1_ostm_clkevt *clkevt = &rza1_ostm_priv->clkevt;
 	rza1_ostm_clkevt_timer_stop(clk);
 	clkevt->mode = CLOCK_EVT_STATE_ONESHOT;
@@ -221,7 +218,7 @@ static int rza1_ostm_set_state_oneshot(struct clock_event_device *evt){
 }
 
 static int rza1_ostm_set_state_periodic(struct clock_event_device *evt){
-	struct rza1_ostm_clk *clk = &rza1_ostm_priv->clk[1];
+	struct rza1_ostm_clk *clk = &rza1_ostm_priv->clk;
 	struct rza1_ostm_clkevt *clkevt = &rza1_ostm_priv->clkevt;
 	iowrite32(clkevt->ticks_per_jiffy - 1, clk->base + OSTM_CMP);
 	iowrite8(CTL_PERIODIC, clk->base + OSTM_CTL);
@@ -234,7 +231,7 @@ static irqreturn_t rza1_ostm_timer_interrupt(int irq, void *dev_id)
 {
 #if 1
 	struct rza1_ostm_priv *priv = dev_id;
-	struct rza1_ostm_clk *clk = &priv->clk[1];
+	struct rza1_ostm_clk *clk = &priv->clk;
 	struct rza1_ostm_clkevt *clkevt = &priv->clkevt;
 
 	if (clkevt->mode == CLOCK_EVT_STATE_ONESHOT)
@@ -259,13 +256,13 @@ static irqreturn_t rza1_ostm_timer_interrupt(int irq, void *dev_id)
 
 static int __init rza1_ostm_init_clkevt(struct device_node *node, struct rza1_ostm_priv *priv)
 {
-	struct rza1_ostm_clk *clk = &priv->clk[1];
+	struct rza1_ostm_clk *clk = &priv->clk;
 	struct rza1_ostm_clkevt *ce;
 	struct clock_event_device *evt;
 	unsigned long rating = 300;
 	int ret;
 
-	ret = rza1_ostm_init_clk(node, priv, 1);
+	ret = rza1_ostm_init_clk(node, priv, clk, 1);
 	if(!ret){
 		ce = &priv->clkevt;
 
@@ -310,6 +307,7 @@ static int __init rza1_ostm_init(struct device_node *node)
 {
 	struct rza1_ostm_priv *priv;
 	struct platform_device* pdev = of_find_device_by_node(node);
+	struct rza1_ostm_clk cs;
 	int ret = 0;
 
 	priv = kzalloc(sizeof(*priv), GFP_KERNEL);
@@ -322,11 +320,11 @@ static int __init rza1_ostm_init(struct device_node *node)
 	rza1_ostm_priv = priv;
 
 
-	ret = rza1_ostm_init_clksrc(node, priv);
+	ret = rza1_ostm_init_clksrc(node, priv, &cs);
 	if (ret)
 		goto err;
 
-	ret = rza1_ostm_init_sched_clock(&priv->clk[0]);
+	ret = rza1_ostm_init_sched_clock(&cs);
 	if (ret)
 		goto err;
 
