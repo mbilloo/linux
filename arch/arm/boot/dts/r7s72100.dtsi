@@ -734,4 +734,10 @@
 			<&mstp3_clks R7S72100_CLK_MTU2>;
 		clock-names = "mtu2_fck", "adc0";
 	};
+	
+	wdt: wdt@fcfe0000 {
+		compatible = "renesas,r7s72100-wdt";
+		reg = <0xfcfe0000 0x6>;
+		clocks = <&p0_clk>;
+	};
 };
