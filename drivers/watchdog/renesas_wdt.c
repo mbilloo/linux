@@ -61,14 +61,14 @@ static void rwdt_write(struct rwdt_priv *priv, u32 val, unsigned int reg)
 		else
 			val |= 0xa5a5a500;
 
-		writel_relaxed(val, priv->base + reg);
+		writel(val, priv->base + reg);
 		break;
 	case 2:
 		if (counter || (reg == priv->data->rstoffset && (val & BIT(priv->data->rstebit))) )
 			val |= 0x5a00;
 		else
 			val |= 0xa500;
-		writew_relaxed(val, priv->base + reg);
+		writew(val, priv->base + reg);
 		break;
 	}
 }
@@ -131,6 +131,10 @@ static const struct watchdog_info rwdt_ident = {
 static int rwdt_restart(struct watchdog_device *wdev, unsigned long x, void *y){
 	struct rwdt_priv *priv = watchdog_get_drvdata(wdev);
 	if(priv->data->rstebit >= 0){
+		rwdt_write(priv, 0, priv->data->tcoffset);
+		readb(priv->base + priv->data->rstoffset);
+		rwdt_write(priv, 0, priv->data->rstoffset);
+
 		rwdt_write(priv, priv->data->countermax, priv->data->cntoffset);
 		rwdt_write(priv, BIT(priv->data->rstebit), priv->data->rstoffset);
 		rwdt_write(priv, (BIT(priv->data->wtitbit) | BIT(priv->data->tmebit)), priv->data->tcoffset);
