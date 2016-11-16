@@ -82,9 +82,9 @@
 		};
 	};
 
-	vdd_cpu: gpio-regulator {
+	vdd_cpu: vdd_cpu {
 		compatible = "regulator-gpio";
-		regulator-name = "cpu-gpio-supply";
+		regulator-name = "cpu-core";
 		regulator-min-microvolt = <1100000>;
 		regulator-max-microvolt = <1300000>;
 		regulator-boot-on;
@@ -97,6 +97,26 @@
 		startup-delay-us = <100000>;
 		enable-active-high;
 	};
+
+	vdd_wifi: vdd_wifi {
+		compatible = "regulator-fixed";
+		regulator-name = "wifi";
+		regulator-min-microvolt = <1800000>;
+		regulator-max-microvolt = <1800000>;
+		gpio = <&pio 0 20 GPIO_ACTIVE_HIGH>;
+		startup-delay-us = <70000>;
+		enable-active-high;
+		regulator-always-on;
+	};
+
+	pwrseq_wifi: pwrseq_wifi@0 {
+		compatible = "mmc-pwrseq-simple";
+		pinctrl-names = "default";
+		pinctrl-0 = <&wifi_rst>;	
+		reset-gpios = <&r_pio 0 7 GPIO_ACTIVE_LOW>;
+		post-power-on-delay-ms = <500>;
+	};
+
 };
 
 &cpu0 {
@@ -113,7 +133,7 @@
 		>;
 	#cooling-cells = <2>;
 	cooling-min-level = <0>;
-	cooling-max-level = <15>;
+	cooling-max-level = <8>;
 	cpu0-supply = <&vdd_cpu>;
 };
 
@@ -121,22 +141,22 @@
 &cpu_thermal {
 	trips {
 		cpu_warm: cpu_warm {
-			temperature = <65000>;
+			temperature = <40000>;
 			hysteresis = <2000>;
 			type = "passive";
 		};
 		cpu_hot: cpu_hot {
-			temperature = <75000>;
+			temperature = <50000>;
 			hysteresis = <2000>;
 			type = "passive";
 		};
 		cpu_very_hot: cpu_very_hot {
-			temperature = <90000>;
+			temperature = <60000>;
 			hysteresis = <2000>;
 			type = "passive";
 		};
 		cpu_crit: cpu_crit {
-			temperature = <105000>;
+			temperature = <70000>;
 			hysteresis = <2000>;
 			type = "critical";
 		};
@@ -145,27 +165,17 @@
 	cooling-maps {
 		cpu_warm_limit_cpu {
 			trip = <&cpu_warm>;
-			cooling-device = <&cpu0 THERMAL_NO_LIMIT 10>;
+			cooling-device = <&cpu0 THERMAL_NO_LIMIT 6>;
 		};
 		cpu_hot_limit_cpu {
 			trip = <&cpu_hot>;
-			cooling-device = <&cpu0 12 12>;
+			cooling-device = <&cpu0 7 7>;
 		};
 		cpu_very_hot_limit_cpu {
 			trip = <&cpu_very_hot>;
-			cooling-device = <&cpu0 14 THERMAL_NO_LIMIT>;
+			cooling-device = <&cpu0 8 THERMAL_NO_LIMIT>;
 		};
 	};
-};
-
-&ehci1 {
-	status = "okay";
-};
-
-&ir {
-	pinctrl-names = "default";
-	pinctrl-0 = <&ir_pins_a>;
-	status = "okay";
 };
 
 &mmc0 {
@@ -178,8 +188,54 @@
 	status = "okay";
 };
 
+&mmc1 {
+	pinctrl-names = "default";
+        pinctrl-0 = <&mmc1_pins_a>;
+        vmmc-supply = <&reg_vcc3v3>;
+        bus-width = <4>;
+        mmc-pwrseq = <&pwrseq_wifi>;
+	broken-cd;
+	status = "okay";
+};
+
+/* usb */
+&usb_otg {
+	dr_mode = "otg";
+	status = "okay";
+};
+
+&ehci0 {
+        status = "okay";
+};
+
+
+&ohci0 {
+        status = "okay";
+};
+
+
+&ehci1 {
+	status = "okay";
+};
+
+
 &ohci1 {
 	status = "okay";
+};
+
+&reg_usb0_vbus {
+        pinctrl-0 = <&usb0_vbus_pin_opiz>;
+        gpio = <&r_pio 0 2 GPIO_ACTIVE_HIGH>; /* PL2 */
+        status = "okay";
+};
+
+&usbphy {
+        /* USB VBUS is always on except for the OTG port */
+        status = "okay";
+        pinctrl-names = "default";
+        pinctrl-0 = <&usb0_id_detect_pin>;
+        usb0_id_det-gpios = <&pio 6 12 GPIO_ACTIVE_HIGH>; /* PG12 */
+        usb0_vbus-supply = <&reg_usb0_vbus>;
 };
 
 &pio {
@@ -189,9 +245,36 @@
 		allwinner,drive = <SUN4I_PINCTRL_10_MA>;
 		allwinner,pull = <SUN4I_PINCTRL_NO_PULL>;
 	};
+
+	usb0_id_detect_pin: usb0_id_detect_pin@0 {
+                allwinner,pins = "PG12";
+                allwinner,function = "gpio_in";
+                allwinner,drive = <SUN4I_PINCTRL_10_MA>;
+                allwinner,pull = <SUN4I_PINCTRL_NO_PULL>;
+        };
+
+	wifi_pins@0 {
+		allwinner,pins = "PG10";
+                allwinner,function = "irq";
+                allwinner,pull = <SUN4I_PINCTRL_PULL_UP>;
+	};
 };
 
 &r_pio {
+	usb0_vbus_pin_opiz: usb0_vbus_pin@0 {
+                allwinner,pins = "PL2";
+                allwinner,function = "gpio_out";
+                allwinner,drive = <SUN4I_PINCTRL_10_MA>;
+                allwinner,pull = <SUN4I_PINCTRL_NO_PULL>;
+        };
+
+	wifi_rst: wifi_rst@0 {
+		allwinner,pins = "PL7";
+                allwinner,function = "gpio_out";
+                allwinner,drive = <SUN4I_PINCTRL_10_MA>;
+                allwinner,pull = <SUN4I_PINCTRL_NO_PULL>;
+	};
+
 	leds_r_opc: led_pins@0 {
 		allwinner,pins = "PL10";
 		allwinner,function = "gpio_out";
@@ -203,11 +286,6 @@
 &uart0 {
 	pinctrl-names = "default";
 	pinctrl-0 = <&uart0_pins_a>;
-	status = "okay";
-};
-
-&usbphy {
-	/* USB VBUS is always on */
 	status = "okay";
 };
 
