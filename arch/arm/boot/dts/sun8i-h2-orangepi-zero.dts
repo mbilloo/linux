@@ -82,15 +82,28 @@
 		};
 	};
 
+	vdd_io: vdd_io {
+		compatible = "regulator-fixed";
+		regulator-name = "io";
+		regulator-min-microvolt = <3300000>;
+		regulator-max-microvolt = <3300000>;
+		gpio = <&r_pio 0 5 GPIO_ACTIVE_LOW>;
+		enable-active-low;
+		regulator-boot-on;
+		regulator-always-on;
+        };
+
 	vdd_cpu: vdd_cpu {
 		compatible = "regulator-gpio";
+		pinctrl-names = "default";
+		pinctrl-0 = <&vdd_cpu_pins>;
 		regulator-name = "cpu-core";
 		regulator-min-microvolt = <1100000>;
 		regulator-max-microvolt = <1300000>;
 		regulator-boot-on;
 		regulator-always-on;		
-
 		gpios = <&r_pio 0 6 GPIO_ACTIVE_HIGH>;
+		enable-gpio = <&r_pio 0 8 GPIO_ACTIVE_HIGH>;
 		states = <1300000 0x1
 			1100000 0x0>;
 
@@ -98,16 +111,29 @@
 		enable-active-high;
 	};
 
-	vdd_wifi: vdd_wifi {
+	vdd_dram: vdd_dram {
 		compatible = "regulator-fixed";
-		regulator-name = "wifi";
-		regulator-min-microvolt = <1800000>;
-		regulator-max-microvolt = <1800000>;
-		gpio = <&pio 0 20 GPIO_ACTIVE_HIGH>;
-		startup-delay-us = <70000>;
+		pinctrl-names = "default";
+		pinctrl-0 = <&vdd_dram_en>;
+		regulator-name = "dram";
+		regulator-min-microvolt = <1500000>;
+		regulator-max-microvolt = <1500000>;
+		gpio = <&r_pio 0 9 GPIO_ACTIVE_HIGH>;
 		enable-active-high;
+		regulator-boot-on;
 		regulator-always-on;
 	};
+
+	vdd_wifi: vdd_wifi {   
+                compatible = "regulator-fixed";
+                regulator-name = "wifi";
+                regulator-min-microvolt = <1800000>;
+                regulator-max-microvolt = <1800000>;
+                gpio = <&pio 0 20 GPIO_ACTIVE_HIGH>;
+                startup-delay-us = <70000>;
+                enable-active-high;
+                regulator-always-on;
+        };
 
 	pwrseq_wifi: pwrseq_wifi@0 {
 		compatible = "mmc-pwrseq-simple";
@@ -116,6 +142,20 @@
 		reset-gpios = <&r_pio 0 7 GPIO_ACTIVE_LOW>;
 		post-power-on-delay-ms = <500>;
 	};
+
+
+/*	gpio-keys {
+		compatible = "gpio-keys";
+		pinctrl-names = "default";
+                pinctrl-0 = <&wifi_wake>;
+		xr {
+			linux,code = <108>;
+			label = "GPIO Key DOWN";
+			interrupt-parent = <&pio>;
+			interrupts = <6 10 IRQ_TYPE_EDGE_FALLING>;
+		};
+	};*/
+
 
 };
 
@@ -190,12 +230,22 @@
 
 &mmc1 {
 	pinctrl-names = "default";
-        pinctrl-0 = <&mmc1_pins_a>;
-        vmmc-supply = <&reg_vcc3v3>;
-        bus-width = <4>;
-        mmc-pwrseq = <&pwrseq_wifi>;
+	pinctrl-0 = <&mmc1_pins_a>;
+	vmmc-supply = <&reg_vcc3v3>;
+	bus-width = <4>;
+	mmc-pwrseq = <&pwrseq_wifi>;
 	broken-cd;
 	status = "okay";
+
+	xr819wifi: xr819wifi@1 {
+                reg = <1>;
+                compatible = "xradio,xr819";
+		pinctrl-names = "default";
+                pinctrl-0 = <&wifi_wake>;
+                interrupt-parent = <&pio>;
+		interrupts = <6 10 IRQ_TYPE_EDGE_RISING>;
+		interrupt-names = "host-wake";
+        };
 };
 
 /* usb */
@@ -253,10 +303,10 @@
                 allwinner,pull = <SUN4I_PINCTRL_NO_PULL>;
         };
 
-	wifi_pins@0 {
+	wifi_wake: wifi_wake@0 {
 		allwinner,pins = "PG10";
                 allwinner,function = "irq";
-                allwinner,pull = <SUN4I_PINCTRL_PULL_UP>;
+                allwinner,pull = <SUN4I_PINCTRL_NO_PULL>;
 	};
 };
 
@@ -268,11 +318,25 @@
                 allwinner,pull = <SUN4I_PINCTRL_NO_PULL>;
         };
 
+	vdd_cpu_pins: vdd_cpu_pins@0 {
+		allwinner,pins = "PL6";
+                allwinner,function = "gpio_out";
+                allwinner,drive = <SUN4I_PINCTRL_10_MA>;
+                allwinner,pull = <SUN4I_PINCTRL_NO_PULL>;
+	};
+
 	wifi_rst: wifi_rst@0 {
 		allwinner,pins = "PL7";
                 allwinner,function = "gpio_out";
                 allwinner,drive = <SUN4I_PINCTRL_10_MA>;
                 allwinner,pull = <SUN4I_PINCTRL_NO_PULL>;
+	};
+
+	vdd_dram_en: vdd_dram_en@0 {
+		allwinner,pins = "PL9";
+		allwinner,function = "gpio_out";
+		allwinner,drive = <SUN4I_PINCTRL_10_MA>;
+		allwinner,pull = <SUN4I_PINCTRL_NO_PULL>;
 	};
 
 	leds_r_opc: led_pins@0 {
