@@ -82,6 +82,7 @@
 		};
 	};
 
+/*
 	vdd_io: vdd_io {
 		compatible = "regulator-fixed";
 		regulator-name = "io";
@@ -92,7 +93,7 @@
 		regulator-boot-on;
 		regulator-always-on;
         };
-
+*/
 	vdd_cpu: vdd_cpu {
 		compatible = "regulator-gpio";
 		pinctrl-names = "default";
@@ -103,7 +104,7 @@
 		regulator-boot-on;
 		regulator-always-on;		
 		gpios = <&r_pio 0 6 GPIO_ACTIVE_HIGH>;
-		enable-gpio = <&r_pio 0 8 GPIO_ACTIVE_HIGH>;
+//		enable-gpio = <&r_pio 0 8 GPIO_ACTIVE_HIGH>;
 		states = <1300000 0x1
 			1100000 0x0>;
 
@@ -111,7 +112,7 @@
 		enable-active-high;
 	};
 
-	vdd_dram: vdd_dram {
+/*	vdd_dram: vdd_dram {
 		compatible = "regulator-fixed";
 		pinctrl-names = "default";
 		pinctrl-0 = <&vdd_dram_en>;
@@ -122,7 +123,7 @@
 		enable-active-high;
 		regulator-boot-on;
 		regulator-always-on;
-	};
+	};*/
 
 	vdd_wifi: vdd_wifi {   
                 compatible = "regulator-fixed";
@@ -132,7 +133,7 @@
                 gpio = <&pio 0 20 GPIO_ACTIVE_HIGH>;
                 startup-delay-us = <70000>;
                 enable-active-high;
-                regulator-always-on;
+		regulator-always-on;
         };
 
 	pwrseq_wifi: pwrseq_wifi@0 {
@@ -142,20 +143,6 @@
 		reset-gpios = <&r_pio 0 7 GPIO_ACTIVE_LOW>;
 		post-power-on-delay-ms = <500>;
 	};
-
-
-/*	gpio-keys {
-		compatible = "gpio-keys";
-		pinctrl-names = "default";
-                pinctrl-0 = <&wifi_wake>;
-		xr {
-			linux,code = <108>;
-			label = "GPIO Key DOWN";
-			interrupt-parent = <&pio>;
-			interrupts = <6 10 IRQ_TYPE_EDGE_FALLING>;
-		};
-	};*/
-
 
 };
 
@@ -234,8 +221,8 @@
 	vmmc-supply = <&reg_vcc3v3>;
 	bus-width = <4>;
 	mmc-pwrseq = <&pwrseq_wifi>;
-	broken-cd;
 	status = "okay";
+	broken-cd;
 
 	xr819wifi: xr819wifi@1 {
                 reg = <1>;
