@@ -133,7 +133,6 @@
                 gpio = <&pio 0 20 GPIO_ACTIVE_HIGH>;
                 startup-delay-us = <70000>;
                 enable-active-high;
-		regulator-always-on;
         };
 
 	pwrseq_wifi: pwrseq_wifi@0 {
@@ -141,7 +140,7 @@
 		pinctrl-names = "default";
 		pinctrl-0 = <&wifi_rst>;	
 		reset-gpios = <&r_pio 0 7 GPIO_ACTIVE_LOW>;
-		post-power-on-delay-ms = <500>;
+		post-power-on-delay-ms = <50>;
 	};
 
 };
@@ -218,6 +217,7 @@
 &mmc1 {
 	pinctrl-names = "default";
 	pinctrl-0 = <&mmc1_pins_a>;
+	vqmmc-supply = <&vdd_wifi>;
 	vmmc-supply = <&reg_vcc3v3>;
 	bus-width = <4>;
 	mmc-pwrseq = <&pwrseq_wifi>;
