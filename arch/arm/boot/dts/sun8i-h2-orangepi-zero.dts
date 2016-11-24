@@ -221,8 +221,8 @@
 	vmmc-supply = <&reg_vcc3v3>;
 	bus-width = <4>;
 	mmc-pwrseq = <&pwrseq_wifi>;
+	non-removable;
 	status = "okay";
-	broken-cd;
 
 	xr819wifi: xr819wifi@1 {
                 reg = <1>;
