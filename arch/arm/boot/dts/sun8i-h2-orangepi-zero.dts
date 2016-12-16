@@ -56,6 +56,7 @@
 	aliases {
 		serial0 = &uart0;
 		ethernet0 = &emac;
+		ethernet1 = &xr819wifi;
 	};
 
 	chosen {
@@ -346,4 +347,61 @@
 	phy-mode = "mii";
 	allwinner,leds-active-low;
 	status = "okay";
+};
+
+&spi0 {
+	status = "okay";
+	flash: w25q128@0 {
+		#address-cells = <1>;
+		#size-cells = <1>;
+		compatible = "winbond,w25q128";
+		reg = <0>;
+		spi-max-frequency = <40000000>;
+
+		partitions {
+			compatible = "fixed-partitions";
+			#address-cells = <1>;
+			#size-cells = <1>;
+			partition@0 {
+				label = "u-boot";
+				reg = <0x0000000 0x80000>;
+			};
+
+			partition@1 {
+				label = "env";
+				reg = <0x80000 0x8000>;
+			};
+
+			partition@2 {
+                                label = "ro";
+                                reg = <0x88000 0x38000>;
+                        };
+
+			partition@3 {
+                                label = "rw";
+                                reg = <0xc0000 0x140000>;
+                        };
+
+			/* fit 0 */
+			partition@4 {
+				label = "fit0";
+				reg = <0x200000 0x700000>;
+			};
+
+			/* fit 1 */
+			partition@5 {
+                                label = "fit1";
+                                reg = <0x900000 0x700000>;
+                        };
+		};
+	};
+};
+
+&spi1 {
+	status = "okay";
+	spidev@0 {
+		compatible = "spidev";
+		spi-max-frequency = <100000>;
+		reg = <0>;
+	};
 };
