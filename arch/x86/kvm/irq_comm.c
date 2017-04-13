@@ -23,6 +23,8 @@
 #include <linux/kvm_host.h>
 #include <linux/slab.h>
 #include <linux/export.h>
+#include <linux/rculist.h>
+
 #include <trace/events/kvm.h>
 
 #include <asm/msidef.h>
@@ -284,16 +286,20 @@ int kvm_set_routing_entry(struct kvm *kvm,
 	case KVM_IRQ_ROUTING_IRQCHIP:
 		delta = 0;
 		switch (ue->u.irqchip.irqchip) {
-		case KVM_IRQCHIP_PIC_MASTER:
-			e->set = kvm_set_pic_irq;
-			max_pin = PIC_NUM_PINS;
-			break;
 		case KVM_IRQCHIP_PIC_SLAVE:
+			delta = 8;
+			/* fall through */
+		case KVM_IRQCHIP_PIC_MASTER:
+			if (!pic_in_kernel(kvm))
+				goto out;
+
 			e->set = kvm_set_pic_irq;
 			max_pin = PIC_NUM_PINS;
-			delta = 8;
 			break;
 		case KVM_IRQCHIP_IOAPIC:
+			if (!ioapic_in_kernel(kvm))
+				goto out;
+
 			max_pin = KVM_IOAPIC_NUM_PINS;
 			e->set = kvm_set_ioapic_irq;
 			break;
@@ -396,7 +402,7 @@ int kvm_setup_empty_irq_routing(struct kvm *kvm)
 
 void kvm_arch_post_irq_routing_update(struct kvm *kvm)
 {
-	if (ioapic_in_kernel(kvm) || !irqchip_in_kernel(kvm))
+	if (!irqchip_split(kvm))
 		return;
 	kvm_make_scan_ioapic_request(kvm);
 }

@@ -7,8 +7,8 @@ They support audio and video.
 Required properties:
  - #address-cells : should be <1>
  - #size-cells : should be <0>
- - compatible : should be
-		"allwinner,sun8i-a83t-hdmi" or
+ - compatible : should be one of
+		"allwinner,sun8i-a83t-hdmi"
 		"allwinner,sun8i-h3-hdmi"
  - clocks : phandles to the HDMI clocks as described in
 	Documentation/devicetree/bindings/clock/clock-bindings.txt
@@ -17,12 +17,13 @@ Required properties:
 		"clock" : streaming clock
 		"ddc-clock" : DDC clock
  - resets : One or two phandles to the HDMI resets
- - reset-names : must be
+ - reset-names : when 2 phandles, must be
 		"hdmi0" and "hdmi1"
 
 Required nodes:
  - port: Audio and video input port nodes with endpoint definitions
 	as defined in Documentation/devicetree/bindings/graph.txt.
+	port@0 is video and port@1 is audio.
 
 Example:
 

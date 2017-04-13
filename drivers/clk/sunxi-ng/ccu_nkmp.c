@@ -9,7 +9,6 @@
  */
 
 #include <linux/clk-provider.h>
-#include <linux/rational.h>
 
 #include "ccu_gate.h"
 #include "ccu_nkmp.h"
@@ -364,26 +363,49 @@ static const struct nkmp_factors nkmp_factors_freq_map[] = {
 #define N_FACTORS (sizeof(nkmp_factors_freq_map) / sizeof(nkmp_factors_freq_map[0]))
 
 struct _ccu_nkmp {
-	unsigned long	n, max_n;
-	unsigned long	k, max_k;
-	unsigned long	m, max_m;
-	unsigned long	p, max_p;
+	unsigned long	n, min_n, max_n;
+	unsigned long	k, min_k, max_k;
+	unsigned long	m, min_m, max_m;
+	unsigned long	p, min_p, max_p;
 };
 
 static void ccu_nkmp_find_best(unsigned long parent, unsigned long rate,
-			       struct _ccu_nkmp *nkmp)
+			       struct _ccu_nkmp *nkmp, struct ccu_nkmp *_nkmp)
 {
-	const struct nkmp_factors* factors;
-	unsigned int idx = rate / 6000000;
+	unsigned long best_rate = 0;
+	unsigned long best_n = 0, best_k = 0, best_m = 0, best_p = 0;
+	unsigned long _n, _k, _m, _p, _max_p;
 
-	if (idx >= N_FACTORS)
-		idx = N_FACTORS - 1;
+	_max_p = (_nkmp->max_rate_for_p == 0 || rate <= _nkmp->max_rate_for_p) ?
+		nkmp->max_p : nkmp->min_p;
 
-	factors = nkmp_factors_freq_map + idx;
-	nkmp->n = factors->n + 1;
-	nkmp->k = factors->k + 1;
-	nkmp->m = factors->m + 1;
-	nkmp->p = 1 << factors->p;
+	for (_k = nkmp->min_k; _k <= nkmp->max_k; _k++) {
+		for (_n = nkmp->min_n; _n <= nkmp->max_n; _n++) {
+			for (_m = nkmp->min_m; _m <= nkmp->max_m; _m++) {
+				for (_p = nkmp->min_p; _p <= _max_p; _p <<= 1) {
+					unsigned long tmp_rate;
+
+					tmp_rate = parent * _n * _k / (_m * _p);
+
+					if (tmp_rate > rate)
+						continue;
+
+					if ((rate - tmp_rate) < (rate - best_rate)) {
+						best_rate = tmp_rate;
+						best_n = _n;
+						best_k = _k;
+						best_m = _m;
+						best_p = _p;
+					}
+				}
+			}
+		}
+	}
+
+	nkmp->n = best_n;
+	nkmp->k = best_k;
+	nkmp->m = best_m;
+	nkmp->p = best_p;
 }
 
 static void ccu_nkmp_disable(struct clk_hw *hw)
@@ -418,17 +440,26 @@ static unsigned long ccu_nkmp_recalc_rate(struct clk_hw *hw,
 
 	n = reg >> nkmp->n.shift;
 	n &= (1 << nkmp->n.width) - 1;
+	n += nkmp->n.offset;
+	if (!n)
+		n++;
 
 	k = reg >> nkmp->k.shift;
 	k &= (1 << nkmp->k.width) - 1;
+	k += nkmp->k.offset;
+	if (!k)
+		k++;
 
 	m = reg >> nkmp->m.shift;
 	m &= (1 << nkmp->m.width) - 1;
+	m += nkmp->m.offset;
+	if (!m)
+		m++;
 
 	p = reg >> nkmp->p.shift;
 	p &= (1 << nkmp->p.width) - 1;
 
-	return (parent_rate * (n + 1) * (k + 1) >> p) / (m + 1);
+	return (parent_rate * n * k >> p) / m;
 }
 
 static long ccu_nkmp_round_rate(struct clk_hw *hw, unsigned long rate,
@@ -437,12 +468,16 @@ static long ccu_nkmp_round_rate(struct clk_hw *hw, unsigned long rate,
 	struct ccu_nkmp *nkmp = hw_to_ccu_nkmp(hw);
 	struct _ccu_nkmp _nkmp;
 
-	_nkmp.max_n = 1 << nkmp->n.width;
-	_nkmp.max_k = 1 << nkmp->k.width;
+	_nkmp.min_n = nkmp->n.min ?: 1;
+	_nkmp.max_n = nkmp->n.max ?: 1 << nkmp->n.width;
+	_nkmp.min_k = nkmp->k.min ?: 1;
+	_nkmp.max_k = nkmp->k.max ?: 1 << nkmp->k.width;
+	_nkmp.min_m = 1;
 	_nkmp.max_m = nkmp->m.max ?: 1 << nkmp->m.width;
+	_nkmp.min_p = 1;
 	_nkmp.max_p = nkmp->p.max ?: 1 << ((1 << nkmp->p.width) - 1);
 
-	ccu_nkmp_find_best(*parent_rate, rate, &_nkmp);
+	ccu_nkmp_find_best(*parent_rate, rate, &_nkmp, nkmp);
 
 	return *parent_rate * _nkmp.n * _nkmp.k / (_nkmp.m * _nkmp.p);
 }
@@ -455,12 +490,16 @@ static int ccu_nkmp_set_rate(struct clk_hw *hw, unsigned long rate,
 	unsigned long flags;
 	u32 reg;
 
-	_nkmp.max_n = 1 << nkmp->n.width;
-	_nkmp.max_k = 1 << nkmp->k.width;
+	_nkmp.min_n = nkmp->n.min ?: 1;
+	_nkmp.max_n = nkmp->n.max ?: 1 << nkmp->n.width;
+	_nkmp.min_k = nkmp->k.min ?: 1;
+	_nkmp.max_k = nkmp->k.max ?: 1 << nkmp->k.width;
+	_nkmp.min_m = 1;
 	_nkmp.max_m = nkmp->m.max ?: 1 << nkmp->m.width;
+	_nkmp.min_p = 1;
 	_nkmp.max_p = nkmp->p.max ?: 1 << ((1 << nkmp->p.width) - 1);
 
-	ccu_nkmp_find_best(parent_rate, rate, &_nkmp);
+	ccu_nkmp_find_best(parent_rate, rate, &_nkmp, nkmp);
 
 	spin_lock_irqsave(nkmp->common.lock, flags);
 
@@ -470,9 +509,9 @@ static int ccu_nkmp_set_rate(struct clk_hw *hw, unsigned long rate,
 	reg &= ~GENMASK(nkmp->m.width + nkmp->m.shift - 1, nkmp->m.shift);
 	reg &= ~GENMASK(nkmp->p.width + nkmp->p.shift - 1, nkmp->p.shift);
 
-	reg |= (_nkmp.n - 1) << nkmp->n.shift;
-	reg |= (_nkmp.k - 1) << nkmp->k.shift;
-	reg |= (_nkmp.m - 1) << nkmp->m.shift;
+	reg |= (_nkmp.n - nkmp->n.offset) << nkmp->n.shift;
+	reg |= (_nkmp.k - nkmp->k.offset) << nkmp->k.shift;
+	reg |= (_nkmp.m - nkmp->m.offset) << nkmp->m.shift;
 	reg |= ilog2(_nkmp.p) << nkmp->p.shift;
 
 	writel(reg, nkmp->common.base + nkmp->common.reg);

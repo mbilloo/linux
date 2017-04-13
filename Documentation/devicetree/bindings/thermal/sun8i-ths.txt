@@ -2,8 +2,7 @@
 
 Required properties:
 - compatible : "allwinner,sun8i-h3-ths"
-- reg : Address range of the thermal sensor registers and of the calibration
-  data
+- reg : Address range of the thermal sensor registers
 - resets : Must contain phandles to reset controls matching the entries
   of the names
 - reset-names : Must include the name "ahb"
@@ -16,8 +15,7 @@ Example:
 ths: ths@01c25000 {
 	#thermal-sensor-cells = <0>;
 	compatible = "allwinner,sun8i-h3-ths";
-	reg = <0x01c25000 0x400>,
-	      <0x01c14234 0x4>;
+	reg = <0x01c25000 0x400>;
 	interrupts = <GIC_SPI 63 IRQ_TYPE_LEVEL_HIGH>;
 	resets = <&bus_rst 136>;
 	reset-names = "ahb";

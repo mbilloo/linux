@@ -131,8 +131,9 @@
 #define EMAC_DSC_RX_LAST		BIT(8)
 #define EMAC_DSC_RX_FIRST		BIT(9)
 #define EMAC_DSC_RX_OVERFLOW_ERR	BIT(11)
-#define EMAC_DSC_RX_SAF_ERR		BIT(13)
+#define EMAC_DSC_RX_SAF_FAIL		BIT(13)
 #define EMAC_DSC_RX_NO_ENOUGTH_BUF_ERR	BIT(14)
+#define EMAC_DSC_RX_DAF_FAIL		BIT(30)
 
 /* Bits used in frame TX ctl */
 #define EMAC_MAGIC_TX_BIT		LE32_BIT(24)
@@ -265,7 +266,7 @@ struct sun8i_emac_stats {
 	u64 napi_underflow;
 };
 
-/* The datasheet said that each descriptor can transfers up to 4096bytes
+/* The datasheet said that each descriptor can transfer up to 4096bytes
  * But latter, a register documentation reduce that value to 2048
  * Anyway using 2048 cause strange behaviours and even BSP driver use 2047
  */
@@ -632,11 +633,17 @@ static int sun8i_emac_rx_from_ddesc(struct net_device *ndev, int i)
 		goto discard_frame;
 	}
 
+	if ((dstatus & EMAC_DSC_RX_SAF_FAIL))
+		priv->estats.rx_saf_fail++;
+
 	if ((dstatus & EMAC_DSC_RX_NO_ENOUGTH_BUF_ERR)) {
 		priv->ndev->stats.rx_errors++;
 		priv->estats.rx_buf_error++;
 		goto discard_frame;
 	}
+
+	if ((dstatus & EMAC_DSC_RX_DAF_FAIL))
+		priv->estats.rx_daf_fail++;
 
 	/* EMAC_DSC_RX_FIRST is for the first frame, not having it is bad
 	 * since we do not handle Jumbo frame
@@ -2277,8 +2284,12 @@ probe_err:
 static int sun8i_emac_remove(struct platform_device *pdev)
 {
 	struct net_device *ndev = platform_get_drvdata(pdev);
+	struct sun8i_emac_priv *priv = netdev_priv(ndev);
 
 	unregister_netdev(ndev);
+
+	reset_control_put(priv->rst_ephy);
+
 	platform_set_drvdata(pdev, NULL);
 	free_netdev(ndev);
 
