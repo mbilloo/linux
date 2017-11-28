@@ -1590,10 +1590,13 @@ F:	drivers/rtc/rtc-armada38x.c
 
 ARM/Mediatek RTC DRIVER
 M:	Eddie Huang <eddie.huang@mediatek.com>
+M:	Sean Wang <sean.wang@mediatek.com>
 L:	linux-arm-kernel@lists.infradead.org (moderated for non-subscribers)
 L:	linux-mediatek@lists.infradead.org (moderated for non-subscribers)
 S:	Maintained
+F:	Documentation/devicetree/bindings/rtc/rtc-mt7622.txt
 F:	drivers/rtc/rtc-mt6397.c
+F:	drivers/rtc/rtc-mt7622.c
 
 ARM/Mediatek SoC support
 M:	Matthias Brugger <matthias.bgg@gmail.com>
@@ -7473,7 +7476,7 @@ JFS FILESYSTEM
 M:	Dave Kleikamp <shaggy@kernel.org>
 L:	jfs-discussion@lists.sourceforge.net
 W:	http://jfs.sourceforge.net/
-T:	git git://git.kernel.org/pub/scm/linux/kernel/git/shaggy/jfs-2.6.git
+T:	git git://github.com/kleikamp/linux-shaggy.git
 S:	Maintained
 F:	Documentation/filesystems/jfs.txt
 F:	fs/jfs/
@@ -9726,12 +9729,11 @@ S:	Supported
 F:	drivers/ntb/hw/idt/
 
 NTB INTEL DRIVER
-M:	Jon Mason <jdmason@kudzu.us>
 M:	Dave Jiang <dave.jiang@intel.com>
 L:	linux-ntb@googlegroups.com
 S:	Supported
-W:	https://github.com/jonmason/ntb/wiki
-T:	git git://github.com/jonmason/ntb.git
+W:	https://github.com/davejiang/linux/wiki
+T:	git https://github.com/davejiang/linux.git
 F:	drivers/ntb/hw/intel/
 
 NTFS FILESYSTEM
@@ -10443,6 +10445,8 @@ F:	Documentation/switchtec.txt
 F:	Documentation/ABI/testing/sysfs-class-switchtec
 F:	drivers/pci/switch/switchtec*
 F:	include/uapi/linux/switchtec_ioctl.h
+F:	include/linux/switchtec.h
+F:	drivers/ntb/hw/mscc/
 
 PCI DRIVER FOR MVEBU (Marvell Armada 370 and Armada XP SOC support)
 M:	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
