@@ -122,12 +122,14 @@ struct x86_init_pci {
  * @guest_late_init:		guest late init
  * @x2apic_available:		X2APIC detection
  * @init_mem_mapping:		setup early mappings during init_mem_mapping()
+ * @init_after_bootmem:		guest init after boot allocator is finished
  */
 struct x86_hyper_init {
 	void (*init_platform)(void);
 	void (*guest_late_init)(void);
 	bool (*x2apic_available)(void);
 	void (*init_mem_mapping)(void);
+	void (*init_after_bootmem)(void);
 };
 
 /**
@@ -168,7 +170,7 @@ struct x86_cpuinit_ops {
 	void (*fixup_cpu_id)(struct cpuinfo_x86 *c, int node);
 };
 
-struct timespec;
+struct timespec64;
 
 /**
  * struct x86_legacy_devices - legacy x86 devices
@@ -262,8 +264,8 @@ struct x86_hyper_runtime {
 struct x86_platform_ops {
 	unsigned long (*calibrate_cpu)(void);
 	unsigned long (*calibrate_tsc)(void);
-	void (*get_wallclock)(struct timespec *ts);
-	int (*set_wallclock)(const struct timespec *ts);
+	void (*get_wallclock)(struct timespec64 *ts);
+	int (*set_wallclock)(const struct timespec64 *ts);
 	void (*iommu_shutdown)(void);
 	bool (*is_untracked_pat_range)(u64 start, u64 end);
 	void (*nmi_init)(void);
@@ -299,5 +301,6 @@ extern struct x86_apic_ops x86_apic_ops;
 extern void x86_early_init_platform_quirks(void);
 extern void x86_init_noop(void);
 extern void x86_init_uint_noop(unsigned int unused);
+extern bool x86_pnpbios_disabled(void);
 
 #endif

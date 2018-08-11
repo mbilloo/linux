@@ -480,10 +480,6 @@ vti6_xmit(struct sk_buff *skb, struct net_device *dev, struct flowi *fl)
 		goto tx_err_dst_release;
 	}
 
-	skb_scrub_packet(skb, !net_eq(t->net, dev_net(dev)));
-	skb_dst_set(skb, dst);
-	skb->dev = skb_dst(skb)->dev;
-
 	mtu = dst_mtu(dst);
 	if (!skb->ignore_df && skb->len > mtu) {
 		skb_dst_update_pmtu(skb, mtu);
@@ -498,8 +494,13 @@ vti6_xmit(struct sk_buff *skb, struct net_device *dev, struct flowi *fl)
 				  htonl(mtu));
 		}
 
-		return -EMSGSIZE;
+		err = -EMSGSIZE;
+		goto tx_err_dst_release;
 	}
+
+	skb_scrub_packet(skb, !net_eq(t->net, dev_net(dev)));
+	skb_dst_set(skb, dst);
+	skb->dev = skb_dst(skb)->dev;
 
 	err = dst_output(t->net, skb->sk, skb);
 	if (net_xmit_eval(err) == 0) {
@@ -669,7 +670,7 @@ static void vti6_link_config(struct ip6_tnl *t, bool keep_mtu)
 	else
 		mtu = ETH_DATA_LEN - LL_MAX_HEADER - sizeof(struct ipv6hdr);
 
-	dev->mtu = max_t(int, mtu, IPV6_MIN_MTU);
+	dev->mtu = max_t(int, mtu, IPV4_MIN_MTU);
 }
 
 /**
@@ -743,7 +744,7 @@ vti6_parm_to_user(struct ip6_tnl_parm2 *u, const struct __ip6_tnl_parm *p)
 }
 
 /**
- * vti6_tnl_ioctl - configure vti6 tunnels from userspace
+ * vti6_ioctl - configure vti6 tunnels from userspace
  *   @dev: virtual device associated with tunnel
  *   @ifr: parameters passed from userspace
  *   @cmd: command to be performed
@@ -881,7 +882,7 @@ static void vti6_dev_setup(struct net_device *dev)
 	dev->priv_destructor = vti6_dev_free;
 
 	dev->type = ARPHRD_TUNNEL6;
-	dev->min_mtu = IPV6_MIN_MTU;
+	dev->min_mtu = IPV4_MIN_MTU;
 	dev->max_mtu = IP_MAX_MTU - sizeof(struct ipv6hdr);
 	dev->flags |= IFF_NOARP;
 	dev->addr_len = sizeof(struct in6_addr);

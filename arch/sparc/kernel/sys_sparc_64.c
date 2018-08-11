@@ -276,7 +276,7 @@ static unsigned long mmap_rnd(void)
 	return rnd << PAGE_SHIFT;
 }
 
-void arch_pick_mmap_layout(struct mm_struct *mm)
+void arch_pick_mmap_layout(struct mm_struct *mm, struct rlimit *rlim_stack)
 {
 	unsigned long random_factor = mmap_rnd();
 	unsigned long gap;
@@ -285,7 +285,7 @@ void arch_pick_mmap_layout(struct mm_struct *mm)
 	 * Fall back to the standard layout if the personality
 	 * bit is set, or if the expected stack growth is unlimited:
 	 */
-	gap = rlimit(RLIMIT_STACK);
+	gap = rlim_stack->rlim_cur;
 	if (!test_thread_flag(TIF_32BIT) ||
 	    (current->personality & ADDR_COMPAT_LAYOUT) ||
 	    gap == RLIM_INFINITY ||
@@ -502,7 +502,6 @@ SYSCALL_DEFINE0(nis_syscall)
 asmlinkage void sparc_breakpoint(struct pt_regs *regs)
 {
 	enum ctx_state prev_state = exception_enter();
-	siginfo_t info;
 
 	if (test_thread_flag(TIF_32BIT)) {
 		regs->tpc &= 0xffffffff;
@@ -511,12 +510,7 @@ asmlinkage void sparc_breakpoint(struct pt_regs *regs)
 #ifdef DEBUG_SPARC_BREAKPOINT
         printk ("TRAP: Entering kernel PC=%lx, nPC=%lx\n", regs->tpc, regs->tnpc);
 #endif
-	info.si_signo = SIGTRAP;
-	info.si_errno = 0;
-	info.si_code = TRAP_BRKPT;
-	info.si_addr = (void __user *)regs->tpc;
-	info.si_trapno = 0;
-	force_sig_info(SIGTRAP, &info, current);
+	force_sig_fault(SIGTRAP, TRAP_BRKPT, (void __user *)regs->tpc, 0, current);
 #ifdef DEBUG_SPARC_BREAKPOINT
 	printk ("TRAP: Returning to space: PC=%lx nPC=%lx\n", regs->tpc, regs->tnpc);
 #endif
@@ -571,7 +565,8 @@ SYSCALL_DEFINE5(utrap_install, utrap_entry_t, type,
 	}
 	if (!current_thread_info()->utraps) {
 		current_thread_info()->utraps =
-			kzalloc((UT_TRAP_INSTRUCTION_31+1)*sizeof(long), GFP_KERNEL);
+			kcalloc(UT_TRAP_INSTRUCTION_31 + 1, sizeof(long),
+				GFP_KERNEL);
 		if (!current_thread_info()->utraps)
 			return -ENOMEM;
 		current_thread_info()->utraps[0] = 1;
@@ -581,8 +576,9 @@ SYSCALL_DEFINE5(utrap_install, utrap_entry_t, type,
 			unsigned long *p = current_thread_info()->utraps;
 
 			current_thread_info()->utraps =
-				kmalloc((UT_TRAP_INSTRUCTION_31+1)*sizeof(long),
-					GFP_KERNEL);
+				kmalloc_array(UT_TRAP_INSTRUCTION_31 + 1,
+					      sizeof(long),
+					      GFP_KERNEL);
 			if (!current_thread_info()->utraps) {
 				current_thread_info()->utraps = p;
 				return -ENOMEM;

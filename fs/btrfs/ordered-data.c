@@ -1,19 +1,6 @@
+// SPDX-License-Identifier: GPL-2.0
 /*
  * Copyright (C) 2007 Oracle.  All rights reserved.
- *
- * This program is free software; you can redistribute it and/or
- * modify it under the terms of the GNU General Public
- * License v2 as published by the Free Software Foundation.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * General Public License for more details.
- *
- * You should have received a copy of the GNU General Public
- * License along with this program; if not, write to the
- * Free Software Foundation, Inc., 59 Temple Place - Suite 330,
- * Boston, MA 021110-1307, USA.
  */
 
 #include <linux/slab.h>
@@ -356,11 +343,8 @@ int btrfs_dec_test_first_ordered_pending(struct inode *inode,
 
 	if (entry->bytes_left == 0) {
 		ret = test_and_set_bit(BTRFS_ORDERED_IO_DONE, &entry->flags);
-		/*
-		 * Implicit memory barrier after test_and_set_bit
-		 */
-		if (waitqueue_active(&entry->wait))
-			wake_up(&entry->wait);
+		/* test_and_set_bit implies a barrier */
+		cond_wake_up_nomb(&entry->wait);
 	} else {
 		ret = 1;
 	}
@@ -423,11 +407,8 @@ have_entry:
 
 	if (entry->bytes_left == 0) {
 		ret = test_and_set_bit(BTRFS_ORDERED_IO_DONE, &entry->flags);
-		/*
-		 * Implicit memory barrier after test_and_set_bit
-		 */
-		if (waitqueue_active(&entry->wait))
-			wake_up(&entry->wait);
+		/* test_and_set_bit implies a barrier */
+		cond_wake_up_nomb(&entry->wait);
 	} else {
 		ret = 1;
 	}

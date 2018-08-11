@@ -1,21 +1,7 @@
+// SPDX-License-Identifier: GPL-2.0+
 /*
  * Copyright (C) 2016 Oracle.  All Rights Reserved.
- *
  * Author: Darrick J. Wong <darrick.wong@oracle.com>
- *
- * This program is free software; you can redistribute it and/or
- * modify it under the terms of the GNU General Public License
- * as published by the Free Software Foundation; either version 2
- * of the License, or (at your option) any later version.
- *
- * This program is distributed in the hope that it would be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program; if not, write the Free Software Foundation,
- * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 #include "xfs.h"
 #include "xfs_fs.h"
@@ -192,7 +178,6 @@ xfs_refcountbt_init_ptr_from_cur(
 	struct xfs_agf		*agf = XFS_BUF_TO_AGF(cur->bc_private.a.agbp);
 
 	ASSERT(cur->bc_private.a.agno == be32_to_cpu(agf->agf_seqno));
-	ASSERT(agf->agf_refcount_root != 0);
 
 	ptr->s = agf->agf_refcount_root;
 }
@@ -373,7 +358,6 @@ xfs_refcountbt_init_cursor(
  */
 int
 xfs_refcountbt_maxrecs(
-	struct xfs_mount	*mp,
 	int			blocklen,
 	bool			leaf)
 {
@@ -390,7 +374,7 @@ void
 xfs_refcountbt_compute_maxlevels(
 	struct xfs_mount		*mp)
 {
-	mp->m_refc_maxlevels = xfs_btree_compute_maxlevels(mp,
+	mp->m_refc_maxlevels = xfs_btree_compute_maxlevels(
 			mp->m_refc_mnr, mp->m_sb.sb_agblocks);
 }
 
@@ -400,7 +384,7 @@ xfs_refcountbt_calc_size(
 	struct xfs_mount	*mp,
 	unsigned long long	len)
 {
-	return xfs_btree_calc_size(mp, mp->m_refc_mnr, len);
+	return xfs_btree_calc_size(mp->m_refc_mnr, len);
 }
 
 /*

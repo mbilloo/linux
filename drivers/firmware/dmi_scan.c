@@ -187,7 +187,7 @@ static void __init dmi_save_uuid(const struct dmi_header *dm, int slot,
 	char *s;
 	int is_ff = 1, is_00 = 1, i;
 
-	if (dmi_ident[slot] || dm->length <= index + 16)
+	if (dmi_ident[slot] || dm->length < index + 16)
 		return;
 
 	d = (u8 *) dm + index;
@@ -211,9 +211,9 @@ static void __init dmi_save_uuid(const struct dmi_header *dm, int slot,
 	 * says that this is the defacto standard.
 	 */
 	if (dmi_ver >= 0x020600)
-		sprintf(s, "%pUL", d);
+		sprintf(s, "%pUl", d);
 	else
-		sprintf(s, "%pUB", d);
+		sprintf(s, "%pUb", d);
 
 	dmi_ident[slot] = s;
 }
@@ -447,6 +447,7 @@ static void __init dmi_decode(const struct dmi_header *dm, void *dummy)
 		dmi_save_ident(dm, DMI_PRODUCT_VERSION, 6);
 		dmi_save_ident(dm, DMI_PRODUCT_SERIAL, 7);
 		dmi_save_uuid(dm, DMI_PRODUCT_UUID, 8);
+		dmi_save_ident(dm, DMI_PRODUCT_SKU, 25);
 		dmi_save_ident(dm, DMI_PRODUCT_FAMILY, 26);
 		break;
 	case 2:		/* Base Board Information */
@@ -792,7 +793,15 @@ static bool dmi_matches(const struct dmi_system_id *dmi)
 		int s = dmi->matches[i].slot;
 		if (s == DMI_NONE)
 			break;
-		if (dmi_ident[s]) {
+		if (s == DMI_OEM_STRING) {
+			/* DMI_OEM_STRING must be exact match */
+			const struct dmi_device *valid;
+
+			valid = dmi_find_device(DMI_DEV_TYPE_OEM_STRING,
+						dmi->matches[i].substr, NULL);
+			if (valid)
+				continue;
+		} else if (dmi_ident[s]) {
 			if (dmi->matches[i].exact_match) {
 				if (!strcmp(dmi_ident[s],
 					    dmi->matches[i].substr))

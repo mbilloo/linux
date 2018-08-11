@@ -35,14 +35,12 @@ dh_generic-y := dh.o
 dh_generic-y += dh_helper.o
 obj-$(CONFIG_CRYPTO_DH) += dh_generic.o
 
-$(obj)/rsapubkey-asn1.o: $(obj)/rsapubkey-asn1.c $(obj)/rsapubkey-asn1.h
-$(obj)/rsaprivkey-asn1.o: $(obj)/rsaprivkey-asn1.c $(obj)/rsaprivkey-asn1.h
-$(obj)/rsa_helper.o: $(obj)/rsapubkey-asn1.h $(obj)/rsaprivkey-asn1.h
-clean-files += rsapubkey-asn1.c rsapubkey-asn1.h
-clean-files += rsaprivkey-asn1.c rsaprivkey-asn1.h
+$(obj)/rsapubkey.asn1.o: $(obj)/rsapubkey.asn1.c $(obj)/rsapubkey.asn1.h
+$(obj)/rsaprivkey.asn1.o: $(obj)/rsaprivkey.asn1.c $(obj)/rsaprivkey.asn1.h
+$(obj)/rsa_helper.o: $(obj)/rsapubkey.asn1.h $(obj)/rsaprivkey.asn1.h
 
-rsa_generic-y := rsapubkey-asn1.o
-rsa_generic-y += rsaprivkey-asn1.o
+rsa_generic-y := rsapubkey.asn1.o
+rsa_generic-y += rsaprivkey.asn1.o
 rsa_generic-y += rsa.o
 rsa_generic-y += rsa_helper.o
 rsa_generic-y += rsa-pkcs1pad.o
@@ -88,6 +86,11 @@ obj-$(CONFIG_CRYPTO_KEYWRAP) += keywrap.o
 obj-$(CONFIG_CRYPTO_GCM) += gcm.o
 obj-$(CONFIG_CRYPTO_CCM) += ccm.o
 obj-$(CONFIG_CRYPTO_CHACHA20POLY1305) += chacha20poly1305.o
+obj-$(CONFIG_CRYPTO_AEGIS128) += aegis128.o
+obj-$(CONFIG_CRYPTO_AEGIS128L) += aegis128l.o
+obj-$(CONFIG_CRYPTO_AEGIS256) += aegis256.o
+obj-$(CONFIG_CRYPTO_MORUS640) += morus640.o
+obj-$(CONFIG_CRYPTO_MORUS1280) += morus1280.o
 obj-$(CONFIG_CRYPTO_PCRYPT) += pcrypt.o
 obj-$(CONFIG_CRYPTO_CRYPTD) += cryptd.o
 obj-$(CONFIG_CRYPTO_MCRYPTD) += mcryptd.o
@@ -139,6 +142,7 @@ obj-$(CONFIG_CRYPTO_USER_API_HASH) += algif_hash.o
 obj-$(CONFIG_CRYPTO_USER_API_SKCIPHER) += algif_skcipher.o
 obj-$(CONFIG_CRYPTO_USER_API_RNG) += algif_rng.o
 obj-$(CONFIG_CRYPTO_USER_API_AEAD) += algif_aead.o
+obj-$(CONFIG_CRYPTO_ZSTD) += zstd.o
 
 ecdh_generic-y := ecc.o
 ecdh_generic-y += ecdh.o

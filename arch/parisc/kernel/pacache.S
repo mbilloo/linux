@@ -38,9 +38,10 @@
 #include <asm/cache.h>
 #include <asm/ldcw.h>
 #include <linux/linkage.h>
+#include <linux/init.h>
 
-	.text
-	.align	128
+	.section .text.hot
+	.align	16
 
 ENTRY_CFI(flush_tlb_all_local)
 	.proc
@@ -328,8 +329,6 @@ fdsync:
 	.procend
 ENDPROC_CFI(flush_data_cache_local)
 
-	.align	16
-
 /* Macros to serialize TLB purge operations on SMP.  */
 
 	.macro	tlb_lock	la,flags,tmp
@@ -354,6 +353,7 @@ ENDPROC_CFI(flush_data_cache_local)
 	.macro	tlb_unlock	la,flags,tmp
 #ifdef CONFIG_SMP
 	ldi		1,\tmp
+	sync
 	stw		\tmp,0(\la)
 	mtsm		\flags
 #endif
@@ -1215,6 +1215,8 @@ ENTRY_CFI(flush_kernel_icache_range_asm)
 	.exit
 	.procend
 ENDPROC_CFI(flush_kernel_icache_range_asm)
+
+	__INIT
 
 	/* align should cover use of rfi in disable_sr_hashing_asm and
 	 * srdis_done.

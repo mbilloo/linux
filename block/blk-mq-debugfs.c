@@ -235,7 +235,6 @@ static const char *const hctx_state_name[] = {
 	HCTX_STATE_NAME(STOPPED),
 	HCTX_STATE_NAME(TAG_ACTIVE),
 	HCTX_STATE_NAME(SCHED_RESTART),
-	HCTX_STATE_NAME(START_ON_RUN),
 };
 #undef HCTX_STATE_NAME
 
@@ -345,7 +344,6 @@ static const char *const rqf_name[] = {
 	RQF_NAME(STATS),
 	RQF_NAME(SPECIAL_PAYLOAD),
 	RQF_NAME(ZONE_WRITE_LOCKED),
-	RQF_NAME(MQ_TIMEOUT_EXPIRED),
 	RQF_NAME(MQ_POLL_SLEPT),
 };
 #undef RQF_NAME
@@ -358,7 +356,7 @@ static const char *const blk_mq_rq_state_name_array[] = {
 
 static const char *blk_mq_rq_state_name(enum mq_rq_state rq_state)
 {
-	if (WARN_ON_ONCE((unsigned int)rq_state >
+	if (WARN_ON_ONCE((unsigned int)rq_state >=
 			 ARRAY_SIZE(blk_mq_rq_state_name_array)))
 		return "(?)";
 	return blk_mq_rq_state_name_array[rq_state];

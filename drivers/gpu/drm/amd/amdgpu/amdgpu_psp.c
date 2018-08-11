@@ -52,6 +52,7 @@ static int psp_sw_init(void *handle)
 	switch (adev->asic_type) {
 	case CHIP_VEGA10:
 	case CHIP_VEGA12:
+	case CHIP_VEGA20:
 		psp_v3_1_set_psp_funcs(psp);
 		break;
 	case CHIP_RAVEN:
@@ -505,6 +506,9 @@ failed:
 
 int psp_gpu_reset(struct amdgpu_device *adev)
 {
+	if (adev->firmware.load_type != AMDGPU_FW_LOAD_PSP)
+		return 0;
+
 	return psp_mode1_reset(&adev->psp);
 }
 

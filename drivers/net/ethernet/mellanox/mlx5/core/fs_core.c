@@ -32,6 +32,7 @@
 
 #include <linux/mutex.h>
 #include <linux/mlx5/driver.h>
+#include <linux/mlx5/eswitch.h>
 
 #include "mlx5_core.h"
 #include "fs_core.h"
@@ -187,6 +188,7 @@ static void del_sw_ns(struct fs_node *node);
 static void del_sw_hw_rule(struct fs_node *node);
 static bool mlx5_flow_dests_cmp(struct mlx5_flow_destination *d1,
 				struct mlx5_flow_destination *d2);
+static void cleanup_root_ns(struct mlx5_flow_root_namespace *root_ns);
 static struct mlx5_flow_rule *
 find_flow_rule(struct fs_fte *fte,
 	       struct mlx5_flow_destination *dest);
@@ -324,7 +326,8 @@ static bool check_valid_mask(u8 match_criteria_enable, const u32 *match_criteria
 	if (match_criteria_enable & ~(
 		(1 << MLX5_CREATE_FLOW_GROUP_IN_MATCH_CRITERIA_ENABLE_OUTER_HEADERS)   |
 		(1 << MLX5_CREATE_FLOW_GROUP_IN_MATCH_CRITERIA_ENABLE_MISC_PARAMETERS) |
-		(1 << MLX5_CREATE_FLOW_GROUP_IN_MATCH_CRITERIA_ENABLE_INNER_HEADERS)))
+		(1 << MLX5_CREATE_FLOW_GROUP_IN_MATCH_CRITERIA_ENABLE_INNER_HEADERS) |
+		(1 << MLX5_CREATE_FLOW_GROUP_IN_MATCH_CRITERIA_ENABLE_MISC_PARAMETERS_2)))
 		return false;
 
 	if (!(match_criteria_enable &
@@ -357,6 +360,17 @@ static bool check_valid_mask(u8 match_criteria_enable, const u32 *match_criteria
 		if (fg_type_mask[0] ||
 		    memcmp(fg_type_mask, fg_type_mask + 1,
 			   MLX5_ST_SZ_BYTES(fte_match_set_lyr_2_4) - 1))
+			return false;
+	}
+
+	if (!(match_criteria_enable &
+	      1 << MLX5_CREATE_FLOW_GROUP_IN_MATCH_CRITERIA_ENABLE_MISC_PARAMETERS_2)) {
+		char *fg_type_mask = MLX5_ADDR_OF(fte_match_param,
+						  match_criteria, misc_parameters_2);
+
+		if (fg_type_mask[0] ||
+		    memcmp(fg_type_mask, fg_type_mask + 1,
+			   MLX5_ST_SZ_BYTES(fte_match_set_misc2) - 1))
 			return false;
 	}
 
@@ -481,7 +495,8 @@ static void del_sw_hw_rule(struct fs_node *node)
 
 	if (rule->dest_attr.type == MLX5_FLOW_DESTINATION_TYPE_COUNTER  &&
 	    --fte->dests_size) {
-		modify_mask = BIT(MLX5_SET_FTE_MODIFY_ENABLE_MASK_ACTION);
+		modify_mask = BIT(MLX5_SET_FTE_MODIFY_ENABLE_MASK_ACTION) |
+			      BIT(MLX5_SET_FTE_MODIFY_ENABLE_MASK_FLOW_COUNTERS);
 		fte->action.action &= ~MLX5_FLOW_CONTEXT_ACTION_COUNT;
 		update_fte = true;
 		goto out;
@@ -1189,8 +1204,7 @@ static struct mlx5_flow_handle *alloc_handle(int num_rules)
 {
 	struct mlx5_flow_handle *handle;
 
-	handle = kzalloc(sizeof(*handle) + sizeof(handle->rule[0]) *
-			  num_rules, GFP_KERNEL);
+	handle = kzalloc(struct_size(handle, rule, num_rules), GFP_KERNEL);
 	if (!handle)
 		return NULL;
 
@@ -1372,6 +1386,8 @@ static int create_auto_flow_group(struct mlx5_flow_table *ft,
 	struct mlx5_core_dev *dev = get_dev(&ft->node);
 	int inlen = MLX5_ST_SZ_BYTES(create_flow_group_in);
 	void *match_criteria_addr;
+	u8 src_esw_owner_mask_on;
+	void *misc;
 	int err;
 	u32 *in;
 
@@ -1384,6 +1400,14 @@ static int create_auto_flow_group(struct mlx5_flow_table *ft,
 	MLX5_SET(create_flow_group_in, in, start_flow_index, fg->start_index);
 	MLX5_SET(create_flow_group_in, in, end_flow_index,   fg->start_index +
 		 fg->max_ftes - 1);
+
+	misc = MLX5_ADDR_OF(fte_match_param, fg->mask.match_criteria,
+			    misc_parameters);
+	src_esw_owner_mask_on = !!MLX5_GET(fte_match_set_misc, misc,
+					 source_eswitch_owner_vhca_id);
+	MLX5_SET(create_flow_group_in, in,
+		 source_eswitch_owner_vhca_id_valid, src_esw_owner_mask_on);
+
 	match_criteria_addr = MLX5_ADDR_OF(create_flow_group_in,
 					   in, match_criteria);
 	memcpy(match_criteria_addr, fg->mask.match_criteria,
@@ -1404,7 +1428,7 @@ static bool mlx5_flow_dests_cmp(struct mlx5_flow_destination *d1,
 {
 	if (d1->type == d2->type) {
 		if ((d1->type == MLX5_FLOW_DESTINATION_TYPE_VPORT &&
-		     d1->vport_num == d2->vport_num) ||
+		     d1->vport.num == d2->vport.num) ||
 		    (d1->type == MLX5_FLOW_DESTINATION_TYPE_FLOW_TABLE &&
 		     d1->ft == d2->ft) ||
 		    (d1->type == MLX5_FLOW_DESTINATION_TYPE_TIR &&
@@ -1863,7 +1887,7 @@ mlx5_add_flow_rules(struct mlx5_flow_table *ft,
 	if (flow_act->action == MLX5_FLOW_CONTEXT_ACTION_FWD_NEXT_PRIO) {
 		if (!fwd_next_prio_supported(ft))
 			return ERR_PTR(-EOPNOTSUPP);
-		if (dest)
+		if (dest_num)
 			return ERR_PTR(-EINVAL);
 		mutex_lock(&root->chain_lock);
 		next_ft = find_next_chained_ft(prio);
@@ -2351,23 +2375,27 @@ static int create_anchor_flow_table(struct mlx5_flow_steering *steering)
 
 static int init_root_ns(struct mlx5_flow_steering *steering)
 {
+	int err;
+
 	steering->root_ns = create_root_ns(steering, FS_FT_NIC_RX);
 	if (!steering->root_ns)
-		goto cleanup;
+		return -ENOMEM;
 
-	if (init_root_tree(steering, &root_fs, &steering->root_ns->ns.node))
-		goto cleanup;
+	err = init_root_tree(steering, &root_fs, &steering->root_ns->ns.node);
+	if (err)
+		goto out_err;
 
 	set_prio_attrs(steering->root_ns);
-
-	if (create_anchor_flow_table(steering))
-		goto cleanup;
+	err = create_anchor_flow_table(steering);
+	if (err)
+		goto out_err;
 
 	return 0;
 
-cleanup:
-	mlx5_cleanup_fs(steering->dev);
-	return -ENOMEM;
+out_err:
+	cleanup_root_ns(steering->root_ns);
+	steering->root_ns = NULL;
+	return err;
 }
 
 static void clean_tree(struct fs_node *node)
@@ -2479,7 +2507,7 @@ static int init_fdb_root_ns(struct mlx5_flow_steering *steering)
 	if (!steering->fdb_root_ns)
 		return -ENOMEM;
 
-	prio = fs_create_prio(&steering->fdb_root_ns->ns, 0, 1);
+	prio = fs_create_prio(&steering->fdb_root_ns->ns, 0, 2);
 	if (IS_ERR(prio))
 		goto out_err;
 
@@ -2625,7 +2653,7 @@ int mlx5_init_fs(struct mlx5_core_dev *dev)
 			goto err;
 	}
 
-	if (MLX5_CAP_GEN(dev, eswitch_flow_table)) {
+	if (MLX5_ESWITCH_MANAGER(dev)) {
 		if (MLX5_CAP_ESW_FLOWTABLE_FDB(dev, ft_support)) {
 			err = init_fdb_root_ns(steering);
 			if (err)

@@ -1,6 +1,7 @@
 /* SPDX-License-Identifier: GPL-2.0 */
-#ifndef __EXTENTMAP__
-#define __EXTENTMAP__
+
+#ifndef BTRFS_EXTENT_MAP_H
+#define BTRFS_EXTENT_MAP_H
 
 #include <linux/rbtree.h>
 #include <linux/refcount.h>
@@ -91,6 +92,8 @@ int unpin_extent_cache(struct extent_map_tree *tree, u64 start, u64 len, u64 gen
 void clear_em_logging(struct extent_map_tree *tree, struct extent_map *em);
 struct extent_map *search_extent_mapping(struct extent_map_tree *tree,
 					 u64 start, u64 len);
-int btrfs_add_extent_mapping(struct extent_map_tree *em_tree,
+int btrfs_add_extent_mapping(struct btrfs_fs_info *fs_info,
+			     struct extent_map_tree *em_tree,
 			     struct extent_map **em_in, u64 start, u64 len);
+
 #endif

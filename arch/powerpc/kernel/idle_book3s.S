@@ -144,7 +144,9 @@ power9_restore_additional_sprs:
 	mtspr	SPRN_MMCR1, r4
 
 	ld	r3, STOP_MMCR2(r13)
+	ld	r4, PACA_SPRG_VDSO(r13)
 	mtspr	SPRN_MMCR2, r3
+	mtspr	SPRN_SPRG3, r4
 	blr
 
 /*
@@ -553,12 +555,12 @@ ALT_FTR_SECTION_END_IFSET(CPU_FTR_ARCH_300)
 #ifdef CONFIG_KVM_BOOK3S_HV_POSSIBLE
 	lbz	r0,HSTATE_HWTHREAD_STATE(r13)
 	cmpwi	r0,KVM_HWTHREAD_IN_KERNEL
-	beq	1f
+	beq	0f
 	li	r0,KVM_HWTHREAD_IN_KERNEL
 	stb	r0,HSTATE_HWTHREAD_STATE(r13)
 	/* Order setting hwthread_state vs. testing hwthread_req */
 	sync
-	lbz	r0,HSTATE_HWTHREAD_REQ(r13)
+0:	lbz	r0,HSTATE_HWTHREAD_REQ(r13)
 	cmpwi	r0,0
 	beq	1f
 	b	kvm_start_guest

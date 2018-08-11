@@ -408,9 +408,11 @@ static int alloc_bts_buffer(int cpu)
 	ds->bts_buffer_base = (unsigned long) cea;
 	ds_update_cea(cea, buffer, BTS_BUFFER_SIZE, PAGE_KERNEL);
 	ds->bts_index = ds->bts_buffer_base;
-	max = BTS_RECORD_SIZE * (BTS_BUFFER_SIZE / BTS_RECORD_SIZE);
-	ds->bts_absolute_maximum = ds->bts_buffer_base + max;
-	ds->bts_interrupt_threshold = ds->bts_absolute_maximum - (max / 16);
+	max = BTS_BUFFER_SIZE / BTS_RECORD_SIZE;
+	ds->bts_absolute_maximum = ds->bts_buffer_base +
+					max * BTS_RECORD_SIZE;
+	ds->bts_interrupt_threshold = ds->bts_absolute_maximum -
+					(max / 16) * BTS_RECORD_SIZE;
 	return 0;
 }
 
@@ -1153,7 +1155,6 @@ static void setup_pebs_sample_data(struct perf_event *event,
 	if (pebs == NULL)
 		return;
 
-	regs->flags &= ~PERF_EFLAGS_EXACT;
 	sample_type = event->attr.sample_type;
 	dsrc = sample_type & PERF_SAMPLE_DATA_SRC;
 
@@ -1185,19 +1186,29 @@ static void setup_pebs_sample_data(struct perf_event *event,
 	}
 
 	/*
+	 * We must however always use iregs for the unwinder to stay sane; the
+	 * record BP,SP,IP can point into thin air when the record is from a
+	 * previous PMI context or an (I)RET happend between the record and
+	 * PMI.
+	 */
+	if (sample_type & PERF_SAMPLE_CALLCHAIN)
+		data->callchain = perf_callchain(event, iregs);
+
+	/*
 	 * We use the interrupt regs as a base because the PEBS record does not
 	 * contain a full regs set, specifically it seems to lack segment
 	 * descriptors, which get used by things like user_mode().
 	 *
 	 * In the simple case fix up only the IP for PERF_SAMPLE_IP.
-	 *
-	 * We must however always use BP,SP from iregs for the unwinder to stay
-	 * sane; the record BP,SP can point into thin air when the record is
-	 * from a previous PMI context or an (I)RET happend between the record
-	 * and PMI.
 	 */
 	*regs = *iregs;
-	regs->flags = pebs->flags;
+
+	/*
+	 * Initialize regs_>flags from PEBS,
+	 * Clear exact bit (which uses x86 EFLAGS Reserved bit 3),
+	 * i.e., do not rely on it being zero:
+	 */
+	regs->flags = pebs->flags & ~PERF_EFLAGS_EXACT;
 
 	if (sample_type & PERF_SAMPLE_REGS_INTR) {
 		regs->ax = pebs->ax;
@@ -1207,20 +1218,9 @@ static void setup_pebs_sample_data(struct perf_event *event,
 		regs->si = pebs->si;
 		regs->di = pebs->di;
 
-		/*
-		 * Per the above; only set BP,SP if we don't need callchains.
-		 *
-		 * XXX: does this make sense?
-		 */
-		if (!(sample_type & PERF_SAMPLE_CALLCHAIN)) {
-			regs->bp = pebs->bp;
-			regs->sp = pebs->sp;
-		}
+		regs->bp = pebs->bp;
+		regs->sp = pebs->sp;
 
-		/*
-		 * Preserve PERF_EFLAGS_VM from set_linear_ip().
-		 */
-		regs->flags = pebs->flags | (regs->flags & PERF_EFLAGS_VM);
 #ifndef CONFIG_X86_32
 		regs->r8 = pebs->r8;
 		regs->r9 = pebs->r9;
@@ -1234,20 +1234,33 @@ static void setup_pebs_sample_data(struct perf_event *event,
 	}
 
 	if (event->attr.precise_ip > 1) {
-		/* Haswell and later have the eventing IP, so use it: */
+		/*
+		 * Haswell and later processors have an 'eventing IP'
+		 * (real IP) which fixes the off-by-1 skid in hardware.
+		 * Use it when precise_ip >= 2 :
+		 */
 		if (x86_pmu.intel_cap.pebs_format >= 2) {
 			set_linear_ip(regs, pebs->real_ip);
 			regs->flags |= PERF_EFLAGS_EXACT;
 		} else {
-			/* Otherwise use PEBS off-by-1 IP: */
+			/* Otherwise, use PEBS off-by-1 IP: */
 			set_linear_ip(regs, pebs->ip);
 
-			/* ... and try to fix it up using the LBR entries: */
+			/*
+			 * With precise_ip >= 2, try to fix up the off-by-1 IP
+			 * using the LBR. If successful, the fixup function
+			 * corrects regs->ip and calls set_linear_ip() on regs:
+			 */
 			if (intel_pmu_pebs_fixup_ip(regs))
 				regs->flags |= PERF_EFLAGS_EXACT;
 		}
-	} else
+	} else {
+		/*
+		 * When precise_ip == 1, return the PEBS off-by-1 IP,
+		 * no fixup attempted:
+		 */
 		set_linear_ip(regs, pebs->ip);
+	}
 
 
 	if ((sample_type & (PERF_SAMPLE_ADDR | PERF_SAMPLE_PHYS_ADDR)) &&

@@ -5,6 +5,11 @@
 
 #include <asm/unistd.h>
 
+#ifdef CONFIG_ARCH_HAS_SYSCALL_WRAPPER
+/* Architectures may override COND_SYSCALL and COND_SYSCALL_COMPAT */
+#include <asm/syscall_wrapper.h>
+#endif /* CONFIG_ARCH_HAS_SYSCALL_WRAPPER */
+
 /*  we can't #include <linux/syscalls.h> here,
     but tell gcc to not warn with -Wmissing-prototypes  */
 asmlinkage long sys_ni_syscall(void);
@@ -17,8 +22,13 @@ asmlinkage long sys_ni_syscall(void)
 	return -ENOSYS;
 }
 
+#ifndef COND_SYSCALL
 #define COND_SYSCALL(name) cond_syscall(sys_##name)
+#endif /* COND_SYSCALL */
+
+#ifndef COND_SYSCALL_COMPAT
 #define COND_SYSCALL_COMPAT(name) cond_syscall(compat_sys_##name)
+#endif /* COND_SYSCALL_COMPAT */
 
 /*
  * This list is kept in the same order as include/uapi/asm-generic/unistd.h.
@@ -33,7 +43,9 @@ COND_SYSCALL(io_submit);
 COND_SYSCALL_COMPAT(io_submit);
 COND_SYSCALL(io_cancel);
 COND_SYSCALL(io_getevents);
+COND_SYSCALL(io_pgetevents);
 COND_SYSCALL_COMPAT(io_getevents);
+COND_SYSCALL_COMPAT(io_pgetevents);
 
 /* fs/xattr.c */
 
@@ -355,7 +367,7 @@ COND_SYSCALL(s390_pci_mmio_write);
 COND_SYSCALL_COMPAT(s390_ipc);
 
 /* powerpc */
-cond_syscall(ppc_rtas);
+COND_SYSCALL(rtas);
 COND_SYSCALL(spu_run);
 COND_SYSCALL(spu_create);
 COND_SYSCALL(subpage_prot);
@@ -420,3 +432,6 @@ COND_SYSCALL(setresgid16);
 COND_SYSCALL(setresuid16);
 COND_SYSCALL(setreuid16);
 COND_SYSCALL(setuid16);
+
+/* restartable sequence */
+COND_SYSCALL(rseq);

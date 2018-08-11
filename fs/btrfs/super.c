@@ -1,19 +1,6 @@
+// SPDX-License-Identifier: GPL-2.0
 /*
  * Copyright (C) 2007 Oracle.  All rights reserved.
- *
- * This program is free software; you can redistribute it and/or
- * modify it under the terms of the GNU General Public
- * License v2 as published by the Free Software Foundation.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * General Public License for more details.
- *
- * You should have received a copy of the GNU General Public
- * License along with this program; if not, write to the
- * Free Software Foundation, Inc., 59 Temple Place - Suite 330,
- * Boston, MA 021110-1307, USA.
  */
 
 #include <linux/blkdev.h>
@@ -336,6 +323,7 @@ enum {
 	Opt_ssd, Opt_nossd,
 	Opt_ssd_spread, Opt_nossd_spread,
 	Opt_subvol,
+	Opt_subvol_empty,
 	Opt_subvolid,
 	Opt_thread_pool,
 	Opt_treelog, Opt_notreelog,
@@ -401,6 +389,7 @@ static const match_table_t tokens = {
 	{Opt_ssd_spread, "ssd_spread"},
 	{Opt_nossd_spread, "nossd_spread"},
 	{Opt_subvol, "subvol=%s"},
+	{Opt_subvol_empty, "subvol="},
 	{Opt_subvolid, "subvolid=%s"},
 	{Opt_thread_pool, "thread_pool=%u"},
 	{Opt_treelog, "treelog"},
@@ -474,6 +463,7 @@ int btrfs_parse_options(struct btrfs_fs_info *info, char *options,
 			btrfs_set_opt(info->mount_opt, DEGRADED);
 			break;
 		case Opt_subvol:
+		case Opt_subvol_empty:
 		case Opt_subvolid:
 		case Opt_subvolrootid:
 		case Opt_device:
@@ -1795,10 +1785,8 @@ static int btrfs_remount(struct super_block *sb, int *flags, char *data)
 	}
 
 	ret = btrfs_parse_options(fs_info, data, *flags);
-	if (ret) {
-		ret = -EINVAL;
+	if (ret)
 		goto restore;
-	}
 
 	btrfs_remount_begin(fs_info, old_opts, *flags);
 	btrfs_resize_thread_pool(fs_info,
