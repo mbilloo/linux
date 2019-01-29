@@ -1,0 +1,8 @@
+#ifndef __DTS_MSC313E_IRQ_H
+#define __DTS_MSC313E_IRQ_H
+
+#define GIC_SPI_ARM_INTERNAL_NR    32
+#define GIC_SPI_MS_IRQ_START       GIC_SPI_ARM_INTERNAL_NR
+#define INT_IRQ_UART_0            (GIC_SPI_MS_IRQ_START + 34)
+
+#endif

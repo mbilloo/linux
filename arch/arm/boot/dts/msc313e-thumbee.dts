@@ -1,0 +1,22 @@
+/*
+ */
+
+/dts-v1/;
+#include "msc313e.dtsi"
+
+/ {
+	model = "thingy.jp thumbee";
+	compatible = "thingyjp,thumbee", "mstar,msc313e";
+
+	chosen {
+		bootargs = "console=ttyS0,115200n8r";
+	};
+
+	aliases {
+		console = &uart0;
+	};
+};
+
+&uart0 {
+	status = "okay";
+};

@@ -1,0 +1,1 @@
+obj-y			+= mstar.o
