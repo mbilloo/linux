@@ -27,23 +27,6 @@ static const char * const mstar_board_dt_compat[] = {
 	NULL,
 };
 
-#define MS_IO_OFFSET			0xDE000000
-#define IO_PHYS                 0x1F000000
-#define IO_VIRT                 (IO_PHYS+IO_OFFSET)
-#define IO_OFFSET               (MS_IO_OFFSET)
-#define IO_SIZE                 0x00400000
-
-static struct map_desc mstar_io_desc[] __initdata =
-{
-		{IO_VIRT,   __phys_to_pfn(IO_PHYS),     IO_SIZE,        MT_DEVICE},
-};
-
-static void __init mstar_map_io(void)
-{
-	iotable_init(mstar_io_desc, ARRAY_SIZE(mstar_io_desc));
-}
-
 DT_MACHINE_START(MSTAR_DT, "MStar Cortex-A7 (Device Tree)")
 	.dt_compat	= mstar_board_dt_compat,
-	.map_io = mstar_map_io,
 MACHINE_END

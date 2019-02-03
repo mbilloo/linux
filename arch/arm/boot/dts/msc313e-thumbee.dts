@@ -9,7 +9,7 @@
 	compatible = "thingyjp,thumbee", "mstar,msc313e";
 
 	chosen {
-		bootargs = "console=ttyS0,115200n8r";
+		stdout-path = "serial0:115200n8";
 	};
 
 	aliases {
