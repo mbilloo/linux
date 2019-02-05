@@ -2,6 +2,7 @@ menuconfig ARCH_MSTAR
 	bool "MStar SoC Support"
 	depends on ARCH_MULTI_V7
 	select ARM_GIC
+	select PINCTRL_MSTAR
 	help
 	  Support for MStar SoCs
 
