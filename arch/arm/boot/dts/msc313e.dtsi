@@ -91,6 +91,15 @@
 			status = "disabled";
 		};
 
+		uart1: uart@1f221200 {
+			compatible = "ns16550";
+			reg = <0x1f221200 0x200>;
+			/*interrupts = <GIC_SPI 67 IRQ_TYPE_LEVEL_HIGH>;*/
+			reg-shift = <3>;
+			clock-frequency = <172800000>;
+			status = "disabled";
+		};
+
 		pmu {
 			compatible = "arm,cortex-a7-pmu";
 			interrupts = <GIC_SPI 10 IRQ_TYPE_LEVEL_HIGH>,
