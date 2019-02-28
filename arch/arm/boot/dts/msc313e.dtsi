@@ -70,6 +70,11 @@
 			compatible = "fixed-clock";
 			clock-frequency = <24000000>;
 		};
+		
+		emac_clk: emac_clk {
+			#clock-cells = <0>;
+			compatible = "fixed-clock";
+		};
 	};
 
 	arch_timer {
@@ -146,6 +151,16 @@
 		wdt: wdt@1f006000 {
 			compatible = "mstar,msc313e-wdt";
 			reg = <0x1f006000 0x1F>;
+		};
+		
+		emac: emac@1f2a2000 {
+			compatible = "cdns,at91rm9200-emac";
+			interrupts = <GIC_SPI 26 IRQ_TYPE_LEVEL_HIGH>;
+			reg = <0x1f2a2000 0x4000>;
+			phy-mode = "rmii";
+			clock-names = "ether_clk";
+			clocks = <&emac_clk>;
+			local-mac-address = [3a 0e 03 04 05 06];
 		};
 
 	};
