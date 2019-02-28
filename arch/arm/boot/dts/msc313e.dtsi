@@ -70,11 +70,18 @@
 			compatible = "fixed-clock";
 			clock-frequency = <24000000>;
 		};
-		
+
+		/* pll tap from the clkgen */
+		clk_mpll_172m: clk_mpll_172m {
+			#clock-cells = <0>;
+			compatible = "fixed-clock";
+			clock-frequency = <172000000>;
+		};
+
 		emac_clk: emac_clk {
 			#clock-cells = <0>;
 			compatible = "fixed-clock";
-			clock-frequency = <24000000>;
+			clock-frequency = <25000000>;
 		};
 	};
 
@@ -131,7 +138,7 @@
 			reg = <0x1f221200 0x200>;
 			/*interrupts = <GIC_SPI 99 IRQ_TYPE_LEVEL_HIGH>;*/
 			reg-shift = <3>;
-			clock-frequency = <172800000>;
+			clocks = <&clk_mpll_172m>;
 			status = "disabled";
 		};
 
