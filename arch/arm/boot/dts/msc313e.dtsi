@@ -137,11 +137,16 @@
 						<GIC_SPI 28 IRQ_TYPE_LEVEL_HIGH>;
 		};
 		
-		cpuclk: cpuclk {
+		cpuclk: cpuclk@1f206500 {
 			compatible = "mstar,msc313e-cpuclk";
 			reg = <0x1f206500 0x100>;
 			#clock-cells = <1>;
 		};
 		
+		wdt: wdt@1f006000 {
+			compatible = "mstar,msc313e-wdt";
+			reg = <0x1f006000 0x1F>;
+		};
+
 	};
 };
