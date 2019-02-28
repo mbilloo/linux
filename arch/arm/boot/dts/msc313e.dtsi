@@ -74,6 +74,7 @@
 		emac_clk: emac_clk {
 			#clock-cells = <0>;
 			compatible = "fixed-clock";
+			clock-frequency = <24000000>;
 		};
 	};
 
@@ -117,9 +118,9 @@
 
 		/* This uart is hardwired and cannot be muxd out */
 		pm_uart: uart@1f221000 {
-			compatible = "ns16550";
+			compatible = "ns16550a";
 			reg = <0x1f221000 0x200>;
-			/*interrupts = <GIC_SPI INT_IRQ_UART_0 IRQ_TYPE_LEVEL_HIGH>;*/
+			/*interrupts = <GIC_SPI 34 IRQ_TYPE_LEVEL_HIGH>;*/
 			reg-shift = <3>;
 			clock-frequency = <172800000>;
 			status = "disabled";
@@ -128,7 +129,7 @@
 		uart0: uart@1f221200 {
 			compatible = "ns16550";
 			reg = <0x1f221200 0x200>;
-			/*interrupts = <GIC_SPI 67 IRQ_TYPE_LEVEL_HIGH>;*/
+			/*interrupts = <GIC_SPI 99 IRQ_TYPE_LEVEL_HIGH>;*/
 			reg-shift = <3>;
 			clock-frequency = <172800000>;
 			status = "disabled";
@@ -152,15 +153,15 @@
 			compatible = "mstar,msc313e-wdt";
 			reg = <0x1f006000 0x1F>;
 		};
-		
+				
 		emac: emac@1f2a2000 {
-			compatible = "cdns,at91rm9200-emac";
+			compatible = "cdns,emac";
 			interrupts = <GIC_SPI 26 IRQ_TYPE_LEVEL_HIGH>;
 			reg = <0x1f2a2000 0x4000>;
-			phy-mode = "rmii";
+			phy-mode = "mii";
+			clocks = <&emac_clk 0>;
 			clock-names = "ether_clk";
-			clocks = <&emac_clk>;
-			local-mac-address = [3a 0e 03 04 05 06];
+			/*status = "disabled";*/
 		};
 
 	};

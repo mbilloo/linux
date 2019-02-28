@@ -222,12 +222,21 @@ static void hw_writel_native(struct macb *bp, int offset, u32 value)
 
 static u32 hw_readl(struct macb *bp, int offset)
 {
-	return readl_relaxed(bp->regs + offset);
+	u32 lower, higher;
+	offset *= 2;
+	lower = readl_relaxed(bp->regs + offset) & 0xffff;
+	higher = readl_relaxed(bp->regs + (offset + 4)) & 0xffff;
+	return lower | (higher << 16);
 }
 
 static void hw_writel(struct macb *bp, int offset, u32 value)
 {
-	writel_relaxed(value, bp->regs + offset);
+	u32 lower, higher;
+	offset *= 2;
+	lower = value & 0xffff;
+	higher = (value >> 16) & 0xffff;
+	writel_relaxed(lower, bp->regs + offset);
+	writel_relaxed(higher, bp->regs + (offset + 4));
 }
 
 /* Find the CPU endianness by using the loopback bit of NCR register. When the
