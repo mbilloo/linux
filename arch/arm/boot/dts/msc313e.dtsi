@@ -116,7 +116,7 @@
 			reg = <0x1f221000 0x200>;
 			/*interrupts = <GIC_SPI 34 IRQ_TYPE_LEVEL_HIGH>;*/
 			reg-shift = <3>;
-			clock-frequency = <172800000>;
+			clocks = <&clkgen_mux_uart 0>;
 			status = "disabled";
 		};
 
@@ -125,7 +125,7 @@
 			reg = <0x1f221200 0x200>;
 			/*interrupts = <GIC_SPI 99 IRQ_TYPE_LEVEL_HIGH>;*/
 			reg-shift = <3>;
-			clocks = <&clkgen_mux_uart 0>;
+			clocks = <&clkgen_mux_uart 1>;
 			status = "disabled";
 		};
 
@@ -187,7 +187,7 @@
 			phy-mode = "mii";
 			clocks = <&clkgen_mux_emac 0>;
 			clock-names = "ether_clk";
-			/*status = "disabled";*/
+			status = "disabled";
 		};
 
 	};
