@@ -93,9 +93,32 @@
 			#address-cells = <1>;
 			#size-cells = <1>;
 			interrupt-controller;
+			interrupt-parent = <&gic>;
 			reg = <0x16001000 0x1000>,
 			      <0x16002000 0x1000>;
 		};
+
+		intcfiq: intc@1f201310 {
+			compatible = "mstar,msc313e-intc";
+			interrupt-controller;
+			reg = <0x1f201310 0x20>;
+			#interrupt-cells = <3>;
+			interrupt-parent = <&gic>;
+			gic-offset = <96>;
+			nr-interrupts = <16>;
+		};
+
+		intc: intc@1f201350 {
+			compatible = "mstar,msc313e-intc";
+			interrupt-controller;
+			reg = <0x1f201350 0x20>;
+			#interrupt-cells = <3>;
+			interrupt-parent = <&gic>;
+			gic-offset = <32>;
+			nr-interrupts = <64>;
+		};
+		
+
 
 		pinctrl: pinctrl {
 			compatible = "mstar,msc313e-pinctrl";
@@ -114,16 +137,17 @@
 		pm_uart: uart@1f221000 {
 			compatible = "ns16550a";
 			reg = <0x1f221000 0x200>;
-			/*interrupts = <GIC_SPI 34 IRQ_TYPE_LEVEL_HIGH>;*/
+			/*interrupts = <GIC_SPI 66 IRQ_TYPE_LEVEL_HIGH>;*/
 			reg-shift = <3>;
 			clocks = <&clkgen_mux_uart 0>;
 			status = "disabled";
 		};
 
 		uart0: uart@1f221200 {
-			compatible = "ns16550";
+			compatible = "ns16550a";
 			reg = <0x1f221200 0x200>;
-			/*interrupts = <GIC_SPI 99 IRQ_TYPE_LEVEL_HIGH>;*/
+			interrupt-parent = <&intc>;
+			interrupts = <GIC_SPI 67 IRQ_TYPE_LEVEL_HIGH>;
 			reg-shift = <3>;
 			clocks = <&clkgen_mux_uart 1>;
 			status = "disabled";
@@ -192,7 +216,8 @@
 				
 		emac: emac@1f2a2000 {
 			compatible = "cdns,emac";
-			interrupts = <GIC_SPI 26 IRQ_TYPE_LEVEL_HIGH>;
+			interrupt-parent = <&intc>;
+			interrupts = <GIC_SPI 58 IRQ_TYPE_LEVEL_HIGH>;
 			reg = <0x1f2a2000 0x4000>;
 			phy-mode = "mii";
 			clocks = <&clkgen_mux_emac 0>;
@@ -200,10 +225,10 @@
 			status = "disabled";
 		};
 
-		/*ehci0: usb@fd284800 {
+		/*ehci0: usb@01f284800 {
 			compatible = "generic-ehci";
-			reg = <0xfd284800 0x100>;
-			interrupts = <GIC_SPI 31 IRQ_TYPE_LEVEL_HIGH>;
+			reg = <0x1f284800 0x100>;
+			interrupts = <GIC_SPI 66 IRQ_TYPE_LEVEL_HIGH>;
 		};*/
 	};
 };
