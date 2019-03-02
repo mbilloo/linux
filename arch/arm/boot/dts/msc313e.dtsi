@@ -156,6 +156,16 @@
 			              <288000000>, <216000000>, <172000000>, <144000000>,
 			              <123000000>, <124000000>, <86000000>, <0>;
 		};
+		
+		/* for notes for now 
+		 starts at 0x1F226600
+		*/
+		clkgen_special_emac_rx: clkgen_special@0x1f226688 {
+		
+		};
+		clkgen_special_emac_tx: clkgen_special@0x1f22668c {
+		
+		};
 		 
 		clkgen_mux_uart: clkgen_mux@1f2070c4 {
 			compatible = "mstar,msc313e-clkgen-mux";
@@ -190,5 +200,10 @@
 			status = "disabled";
 		};
 
+		/*ehci0: usb@fd284800 {
+			compatible = "generic-ehci";
+			reg = <0xfd284800 0x100>;
+			interrupts = <GIC_SPI 31 IRQ_TYPE_LEVEL_HIGH>;
+		};*/
 	};
 };
