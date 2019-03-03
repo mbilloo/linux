@@ -93,7 +93,6 @@
 			#address-cells = <1>;
 			#size-cells = <1>;
 			interrupt-controller;
-			interrupt-parent = <&gic>;
 			reg = <0x16001000 0x1000>,
 			      <0x16002000 0x1000>;
 		};
@@ -123,6 +122,7 @@
 			interrupt-parent = <&intc>;
 			interrupts = <GIC_SPI 34 IRQ_TYPE_LEVEL_HIGH>;
 			interrupt-controller;
+			#interrupt-cells = <2>;
 			reg = <0x1f001c10 0x8>;
 		};
 
@@ -132,11 +132,17 @@
 			reg = <0x1f203C00 0x200>,
 			/* this seems to be a dedicated gpio block that is mux'd with the peripherals*/
 				<0x1f207800 0x200>,
-			/* these are pins that are part of the pm block? */
-				<0x1f001E00 0x200>,
 			/* this is the SAR block */
 				<0x1f001C00 0x200>;
 			gpio-num = <2>;
+		};
+
+		pm_pinctrl: pinctrl@1f001E00 {
+			compatible = "mstar,msc313e-pm-pinctrl";
+			reg = <0x1f001E00 0x200>;
+			interrupt-parent = <&sleepintc>;
+			interrupt-controller;
+			#interrupt-cells = <2>;
 		};
 
 		/* This uart is hardwired and cannot be muxd out */
