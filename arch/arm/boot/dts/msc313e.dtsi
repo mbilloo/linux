@@ -117,8 +117,14 @@
 			gic-offset = <32>;
 			nr-interrupts = <64>;
 		};
-		
 
+		sleepintc: sleepintc@1f001c10 {
+			compatible = "mstar,msc313e-sleep-intc";
+			interrupt-parent = <&intc>;
+			interrupts = <GIC_SPI 34 IRQ_TYPE_LEVEL_HIGH>;
+			interrupt-controller;
+			reg = <0x1f001c10 0x8>;
+		};
 
 		pinctrl: pinctrl {
 			compatible = "mstar,msc313e-pinctrl";
