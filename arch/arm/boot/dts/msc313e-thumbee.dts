@@ -13,11 +13,11 @@
 	};
 
 	aliases {
-		console = &uart0;
+		console = &pm_uart;
 	};
 };
 
-&uart0 {
+&pm_uart {
 	status = "okay";
 };
 
