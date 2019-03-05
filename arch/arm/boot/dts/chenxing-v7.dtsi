@@ -20,6 +20,8 @@
 			device_type = "cpu";
 			compatible = "arm,cortex-a7";
 			reg = <0x0>;
+			clocks = <&cpuclk>;
+			clock-names = "cpuclk";
 		};
 	};
 
@@ -42,6 +44,97 @@
 			     <GIC_SPI 16 IRQ_TYPE_LEVEL_HIGH>,
 			     <GIC_SPI 22 IRQ_TYPE_LEVEL_HIGH>,
 			     <GIC_SPI 28 IRQ_TYPE_LEVEL_HIGH>;
+	};
+
+	clocks: clocks {
+		/*
+		 * For the msc313e there is only a 24mhz clock input so everything else must come
+		 * from this base clock unless there are some on-die oscillators that aren't mentioned
+		 * anywhere.
+		 */
+		xtal24: xtal24 {
+			#clock-cells = <0>;
+			compatible = "fixed-clock";
+			clock-frequency = <24000000>;
+		};
+
+		xtal12: xtal12 {
+			#clock-cells = <0>;
+			compatible = "fixed-factor-clock";
+			clocks = <&xtal24>;
+			clock-div = <2>;
+			clock-mult = <1>;
+		};
+
+		rtc_32k: rtc_32k {
+			#clock-cells = <0>;
+			compatible = "fixed-clock";
+			clock-frequency = <32768>;
+		};
+
+		rtc32k_div4: rtc32k_div4 {
+			compatible = "fixed-factor-clock";
+			#clock-cells = <0>;
+			clocks = <&rtc_32k>;
+			clock-div = <4>;
+			clock-mult = <1>;
+		};
+
+		xtal12_div2: xtal12_div2 {
+			compatible = "fixed-factor-clock";
+			#clock-cells = <0>;
+			clocks = <&xtal12>;
+			clock-div = <2>;
+			clock-mult = <1>;
+		};
+
+		xtal12_div4: xtal12_div4 {
+			compatible = "fixed-factor-clock";
+			#clock-cells = <0>;
+			clocks = <&xtal12>;
+			clock-div = <4>;
+			clock-mult = <1>;
+		};
+
+		xtal12_div8: xtal12_div8 {
+			compatible = "fixed-factor-clock";
+			#clock-cells = <0>;
+			clocks = <&xtal12>;
+			clock-div = <8>;
+			clock-mult = <1>;
+		};
+
+		xtal12_div12: xtal12_div12 {
+			compatible = "fixed-factor-clock";
+			#clock-cells = <0>;
+			clocks = <&xtal12>;
+			clock-div = <12>;
+			clock-mult = <1>;
+		};
+
+		xtal12_div16: xtal12_div16 {
+			compatible = "fixed-factor-clock";
+			#clock-cells = <0>;
+			clocks = <&xtal12>;
+			clock-div = <16>;
+			clock-mult = <1>;
+		};
+
+		xtal12_div40: xtal12_div40 {
+			compatible = "fixed-factor-clock";
+			#clock-cells = <0>;
+			clocks = <&xtal12>;
+			clock-div = <40>;
+			clock-mult = <1>;
+		};
+
+		clk_mpll_288_div2: clk_mpll_288_div2 {
+			compatible = "fixed-factor-clock";
+			#clock-cells = <0>;
+			clocks = <&clkgen_pll 8>;
+			clock-div = <2>;
+			clock-mult = <1>;
+		};
 	};
 
 	soc: soc {
@@ -94,12 +187,60 @@
 			      <0x16002000 0x1000>;
 		};
 
+		cpuclk: cpuclk@1f206500 {
+			compatible = "mstar,msc313e-cpuclk";
+			reg = <0x1f206500 0x100>;
+			#clock-cells = <0>;
+			clocks = <&clkgen_pll 6>;
+		};
+
+		clkgen_mux_uart: clkgen_mux@1f2070c4 {
+			compatible = "mstar,msc313e-clkgen-mux";
+			reg = <0x1f2070c4 0x4>;
+			#clock-cells = <1>;
+			clock-output-names = "uart0", "uart1";
+			shifts = <0>, <8>;
+			mux-shifts = <2>, <10>;
+			mux-widths = <2>, <2>;
+			clocks = <&clkgen_pll 10>,
+				 <&clk_mpll_288_div2>,
+				 <&xtal12>;
+		};
+
+		/* this should be renamed to clk gates or something */
+		clkgen_pll: clkgen_pll@1f2071c0 {
+			compatible = "mstar,msc313e-clkgen-pll";
+			reg = <0x1f2071c0 0x10>;
+			#clock-cells = <1>;
+			clock-output-names = "upll_384", "upll_320", "utmi_160", "utmi_192",
+					     "utmi_240", "utmi_480", "mpll_432", "mpll_345",
+					     "mpll_288", "mpll_216", "mpll_172", "mpll_144",
+					     "mpll_123", "mpll_124", "mpll_86", "pll_rv1";
+			clock-rates = <384000000>, <320000000>, <160000000>, <192000000>,
+			              <240000000>, <480000000>, <432000000>, <345000000>,
+			              <288000000>, <216000000>, <172000000>, <144000000>,
+			              <123000000>, <124000000>, <86000000>, <0>;
+			clock-upstreams = <1>, <1>, <0>, <0>,
+					  <0>, <0>, <0>, <0>,
+					  <0>, <0>, <0>, <0>,
+					  <0>, <0>, <0>, <0>;
+			clocks = <&xtal24>, <&upll0>; /*<&utmi>;*/
+		};
+
 		pm_uart: uart@1f221000 {
 			compatible = "ns16550a";
 			reg = <0x1f221000 0x100>;
 			reg-shift = <3>;
-			clock-frequency = <172000000>;
+			clocks = <&clkgen_mux_uart 0>;
+			interrupts-extended = <&intc_irq 34 IRQ_TYPE_LEVEL_HIGH>;
 			status = "disabled";
+		};
+
+		upll0: upll@1f284000 {
+			#clock-cells = <0>;
+			compatible = "mstar,msc313-upll";
+			reg = <0x1f284000 0x20>;
+			clocks = <&xtal12>;
 		};
 
 		sram: sram@a0000000 {
