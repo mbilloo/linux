@@ -256,5 +256,11 @@
 
 		ehci0: usb@1f284800 {
 		};
+
+		spi_nor: spi_nor@1f001000 {
+			compatible = "mstar,msc313e-spinor";
+			reg = <0x1f001000 0x400>, <0x14000000 0x2000000>;
+			/*status = "disabled";*/
+		};
 	};
 };
