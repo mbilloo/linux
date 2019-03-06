@@ -249,10 +249,12 @@
 			status = "disabled";
 		};
 
-		/*ehci0: usb@01f284800 {
-			compatible = "generic-ehci";
-			reg = <0x1f284800 0x100>;
-			interrupts = <GIC_SPI 66 IRQ_TYPE_LEVEL_HIGH>;
-		};*/
+		/* musb? usb controller */
+
+		usb: usb@1f284600 {
+		};
+
+		ehci0: usb@1f284800 {
+		};
 	};
 };
