@@ -3,6 +3,7 @@
 
 /dts-v1/;
 #include "msc313e.dtsi"
+#include <dt-bindings/gpio/gpio.h>
 
 / {
 	model = "thingy.jp thumbee";
@@ -14,6 +15,14 @@
 
 	aliases {
 		console = &pm_uart;
+	};
+	
+	leds {
+		compatible = "gpio-leds";
+		heartbeat {
+			gpios = <&pinctrl 0 GPIO_ACTIVE_HIGH>;
+			linux,default-trigger = "heartbeat";
+		};
 	};
 };
 
@@ -27,4 +36,17 @@
 
 &emac {
 	status = "okay";
+};
+
+&spi_nor {
+	partitions {
+		compatible = "fixed-partitions";
+		#address-cells = <1>;
+		#size-cells = <1>;
+		
+		rootfs@800000 {
+			label = "rootfs";
+			reg = <0x800000 0x800000>;
+		};
+	};
 };
