@@ -654,6 +654,13 @@ config GPIO_LOONGSON1
 	help
 	  Say Y or M here to support GPIO on Loongson1 SoCs.
 
+config GPIO_MSC313E
+	tristate "MSC313E GPIO support"
+	depends on ARCH_MSTAR
+	select GPIO_GENERIC
+	help
+	  Say Y or M here to support GPIO on MStar MSC313E SoCs.
+
 endmenu
 
 menu "Port-mapped I/O GPIO drivers"
