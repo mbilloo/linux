@@ -1,14 +1,18 @@
 /*
  *
+ * There are channels at
+ * 0x1f001da0
+ * 0x1f001dac
+ * 0x1f001de0
+ * 0x1f001dec
+ *
  * Each channel has 3 16 bit registers
  *
  * 0x0 - ctrl/div
- *       12       |  10  |    8     |    7 - 0
- * double buffer  |  ?   | polarity | clock divider
+ *       12       |    8     |    7 - 0
+ * double buffer  | polarity | clock divider
  *
  * polarity = 1 gives a low to high transition.
- * vendor code suggests bit 10 does something but
- * doesn't say what.
  *
  * 0x4 - duty cycle
  * 0x8 - period
