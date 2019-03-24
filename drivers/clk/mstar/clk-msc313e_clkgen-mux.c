@@ -12,6 +12,7 @@
 
 /*
  * The clkgen block controls a bunch of clock gates and muxes
+ *
  * 0x1f207000
  * - 0xc4(0x31) - uarts
  *    11 - 10  |      8     |   3 - 2   |      0
@@ -19,6 +20,10 @@
  * - 0x108(0x42) - emac
  *      0
  *  emac gate
+ *  - 0x1a8(0x6a) -jpe
+ *      0
+ *   jpe gate
+ *
  */
 
 struct msc313e_clkgen_mux {
@@ -50,6 +55,7 @@ static int msc313e_clkgen_mux_probe(struct platform_device *pdev)
 	const char* name;
 	const char *parents[16];
 	u32 shift;
+	u16 regval;
 
 	if (!pdev->dev.of_node)
 		return -ENODEV;
@@ -116,6 +122,13 @@ static int msc313e_clkgen_mux_probe(struct platform_device *pdev)
 		of_property_read_u32_index(pdev->dev.of_node, "shifts", muxindex, &shift);
 		gate->bit_idx = shift;
 		gate->flags = CLK_GATE_SET_TO_DISABLE;
+
+		/*regval = ioread16(gate->reg);
+		if(!(regval & ~BIT(shift))){
+			dev_info(&pdev->dev, "bootloader left clk on, disabling");
+			regval |= BIT(shift);
+			iowrite16(regval, gate->reg);
+		}*/
 
 		dev_info(&pdev->dev, "registering mux %s\n", name);
 		clk = clk_register_composite(NULL, name,

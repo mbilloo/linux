@@ -152,7 +152,7 @@ static int msc313e_cpuclk_probe(struct platform_device *pdev)
 		return -ENOMEM;
 	}
 
-	msc313_cpuclk_setfreq(cpuclk, &oneghz);
+	msc313_cpuclk_setfreq(cpuclk, &fourhundredmhz);
 
 	return of_clk_add_provider(pdev->dev.of_node, of_clk_src_simple_get, clk);
 }
