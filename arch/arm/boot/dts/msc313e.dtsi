@@ -134,10 +134,11 @@
 
 		pinctrl: pinctrl {
 			compatible = "mstar,msc313e-pinctrl";
-			reg = <0x1f203C00 0x200>,
-				  <0x1f207800 0x200>;
-			#gpio-cells = <2>;
-			gpio-num = <2>;
+			reg = <0x1f203C00 0x200>;
+			pm_uart_pins: pm_uart {
+				function = "pm_uart";
+				groups = "pm_uart";
+			};
 			pm_spi_pins: pm_spi {
 				function = "pm_spi";
 				groups = "pm_spi";
@@ -162,6 +163,29 @@
 				function = "sd";
 				groups = "sd";
 			};
+			pwm0_pins: pwm0 {
+				function = "pwm0";
+				groups = "pwm0";
+			};
+			pwm1_pins: pwm1 {
+				function = "pwm1";
+				groups = "pwm1";
+			};
+			pwm2_pins: pwm2 {
+				function = "pwm2";
+				groups = "pwm2";
+			};
+			pwm3_pins: pwm3 {
+				function = "pwm3";
+				groups = "pwm3";
+			};
+		};
+		
+		gpio: gpio@1f207800 {
+			compatible = "mstar,msc313e-gpio";
+			reg = <0x1f207800 0x200>;
+			#gpio-cells = <2>;
+			gpio-num = <2>;
 		};
 		
 		pm_pinctrl: pinctrl@1f001e00 {
@@ -173,16 +197,6 @@
 			#gpio-cells = <2>;
 		};
 		
-		gpio-keys {
-			compatible = "gpio-keys";
-			interrupt-parent = <&pm_pinctrl>;
-			test {
-				label = "test";
-				linux,code = <103>;
-				gpios = <&pm_pinctrl 0 IRQ_TYPE_LEVEL_HIGH>;
-			};
-		};
-
 		/* This uart is hardwired and cannot be muxd out */
 		pm_uart: uart@1f221000 {
 			compatible = "ns16550a";
@@ -191,6 +205,8 @@
 			interrupts = <34 IRQ_TYPE_LEVEL_HIGH>;
 			reg-shift = <3>;
 			clocks = <&clkgen_mux_uart 0>;
+			pinctrl-names = "default";
+			pinctrl-0 = <&pm_uart_pins>;
 			status = "disabled";
 		};
 
@@ -336,8 +352,9 @@
 			phy-mode = "mii";
 			clocks = <&clkgen_mux_emac 0>;
 			clock-names = "ether_clk";
-			status = "disabled";
+			pinctrl-names = "default";
 			pinctrl-0 = <&emac_pins>;
+			status = "disabled";
 		};
 
 		/* musb? usb controller */
@@ -371,6 +388,13 @@
 			interrupt-parent = <&intc>;
 			interrupts = <45 IRQ_TYPE_LEVEL_HIGH>;
 			#gpio-cells = <2>;
+			status = "disabled";
+		};
+		
+		pwm: pwm@1f001da0 {
+			compatible = "mstar,msc313e-pwm";
+			reg = <0x1f001da0 0x30>;
+			#pwm-cells = <2>;
 			status = "disabled";
 		};
 	};

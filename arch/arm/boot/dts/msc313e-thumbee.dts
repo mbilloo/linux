@@ -20,8 +20,26 @@
 	leds {
 		compatible = "gpio-leds";
 		heartbeat {
-			gpios = <&pinctrl 0 GPIO_ACTIVE_HIGH>;
+			gpios = <&gpio 0 GPIO_ACTIVE_HIGH>;
 			linux,default-trigger = "heartbeat";
+		};
+	};
+	
+	pwmleds {
+		compatible = "pwm-leds";
+		test {
+			pwms = <&pwm 3 0>;
+			max-brightness = <127>;
+		};
+	};
+	
+	gpio-keys {
+		compatible = "gpio-keys";
+		interrupt-parent = <&pm_pinctrl>;
+		test {
+			label = "test";
+			linux,code = <103>;
+			gpios = <&pm_pinctrl 0 IRQ_TYPE_LEVEL_HIGH>;
 		};
 	};
 };
@@ -48,5 +66,11 @@
 };
 
 &sar {
+	status = "okay";
+};
+
+&pwm {
+	pinctrl-names = "default";
+	pinctrl-0 = <&pwm1_pins>;
 	status = "okay";
 };
