@@ -128,14 +128,39 @@
 
 		pinctrl: pinctrl {
 			compatible = "mstar,msc313e-pinctrl";
-			/* this seems to be the pin mux */
 			reg = <0x1f203C00 0x200>,
-			/* this seems to be a dedicated gpio block that is mux'd with the peripherals*/
-				<0x1f207800 0x200>,
-			/* this is the SAR block */
-				<0x1f001C00 0x200>;
+				  <0x1f207800 0x200>;
+			#gpio-cells = <2>;
 			gpio-num = <2>;
+			pm_spi_pins: pm_spi {
+				function = "pm_spi";
+				groups = "pm_spi";
+			};
+			emac_pins: eth {
+				function = "eth";
+				groups = "eth";
+			};
+			fuart_pins: fuart {
+				function = "fuart";
+				groups = "fuart";
+			};
+			i2c1_pins: i2c1 {
+				function = "i2c1";
+				groups = "i2c1";
+			};
+			spi0_pins: spi0 {
+				function = "spi0";
+				groups = "spi0";
+			};
+			sd_pins: sd {
+				function = "sd";
+				groups = "sd";
+			};
 		};
+		
+		//sar
+		//	/* this is the SAR block */
+		// /*<0x1f001C00 0x200>;*/
 
 		pm_pinctrl: pinctrl@1f001e00 {
 			compatible = "mstar,msc313e-pm-pinctrl";
@@ -247,6 +272,7 @@
 			clocks = <&clkgen_mux_emac 0>;
 			clock-names = "ether_clk";
 			status = "disabled";
+			pinctrl-0 = <&emac_pins>;
 		};
 
 		/* musb? usb controller */
