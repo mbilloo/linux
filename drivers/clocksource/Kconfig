@@ -634,4 +634,11 @@ config GX6605S_TIMER
 	help
 	  This option enables support for gx6605s SOC's timer.
 
+config MSC313E_TIMER
+        bool "MSC313E timer driver"
+        select CLKSRC_MMIO
+        select TIMER_OF
+        help
+          Enables support for the MStar MSC313E timer.
+
 endmenu
