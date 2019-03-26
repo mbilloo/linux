@@ -696,4 +696,11 @@ config INGENIC_TIMER
 	help
 	  Support for the timer/counter unit of the Ingenic JZ SoCs.
 
+config MSC313E_TIMER
+        bool "MSC313E timer driver"
+        select CLKSRC_MMIO
+        select TIMER_OF
+        help
+          Enables support for the MStar MSC313E timer.
+
 endmenu
