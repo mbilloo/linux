@@ -13,7 +13,28 @@
 /*
  * The clkgen block controls a bunch of clock gates and muxes
  *
+ * 0x1f001c00
+ *
+ * 0x84
+ *
+ * can write 0xffff
+ *
+ * 0x88
+ * 7 - 6 | 5   | 4 - 1 | 0
+ *   ?   | SAR |   ?   | RTC
+ *
+ * can write 0x7fff
+ *
  * 0x1f207000
+ *
+ * 0x0 - xtali
+ *
+ * 0x4 - mcu
+ *  0
+ * mcu
+ *
+ * 0x8 - bist
+ *
  * - 0xc4(0x31) - uarts
  *    11 - 10  |      8     |   3 - 2   |      0
  *   uart1 mux | uart1 gate | uart0 mux | uart0 gate
