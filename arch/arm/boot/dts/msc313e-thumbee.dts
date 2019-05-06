@@ -53,6 +53,7 @@
 };
 
 &spi_nor {
+	status = "okay";
 	partitions {
 		compatible = "fixed-partitions";
 		#address-cells = <1>;

@@ -8,10 +8,10 @@
 #include "msc313.dtsi"
 
 / {
-	compatible = "mstar,msc313", "mstar,msc313e";
+	compatible = "mstar,msc313", "mstar,msc313d";
 
 	memory {
 		device_type = "memory";
-		reg = <0x20000000 0x4000000>;
+		reg = <0x20000000 0x8000000>;
 	};
 };

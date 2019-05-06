@@ -1233,7 +1233,8 @@ dtb-$(CONFIG_ARCH_MEDIATEK) += \
 	mt7623n-bananapi-bpi-r2.dtb \
 	mt8127-moose.dtb \
 	mt8135-evbp1.dtb
-dtb-$(CONFIG_ARCH_MSTAR) += msc313e-thumbee.dtb
+dtb-$(CONFIG_ARCH_MSTAR) += msc313e-thumbee.dtb \
+	msc313d-mc400l.dtb
 dtb-$(CONFIG_ARCH_ZX) += zx296702-ad1.dtb
 dtb-$(CONFIG_ARCH_ASPEED) += \
 	aspeed-ast2500-evb.dtb \

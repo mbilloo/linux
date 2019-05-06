@@ -1,0 +1,468 @@
+// SPDX-License-Identifier: GPL-2.0
+/*
+ * Copyright (c) 2019 thingy.jp.
+ * Author: Daniel Palmer <daniel@0x0f.com>
+ *
+ */
+
+#include <dt-bindings/interrupt-controller/irq.h>
+#include <dt-bindings/interrupt-controller/arm-gic.h>
+#include <dt-bindings/msc313e-irq.h>
+
+/ {
+	#address-cells = <1>;
+	#size-cells = <1>;
+	interrupt-parent = <&gic>;
+
+	compatible = "mstar,msc313";
+
+	memory {
+		device_type = "memory";
+		reg = <0x20000000 0x4000000>;
+	};
+
+	cpus {
+		#address-cells = <1>;
+		#size-cells = <0>;
+
+		cpu@0 {
+			device_type = "cpu";
+			compatible = "arm,cortex-a7";
+			reg = <0x0>;
+			clocks = <&cpuclk 0>;
+			clock-names = "cpuclk";
+			operating-points-v2 = <&cpu0_opp_table>;
+		};
+	};
+
+	cpu0_opp_table: opp_table0 {
+		compatible = "operating-points-v2";
+		opp-shared;
+
+		opp-400000000 {
+			opp-hz = /bits/ 64 <400000000>;
+			clock-latency-ns = <300000>;
+		};
+		opp-600000000 {
+			opp-hz = /bits/ 64 <600000000>;
+			clock-latency-ns = <300000>;
+		};
+
+		opp-800000000 {
+			opp-hz = /bits/ 64 <800000000>;
+			clock-latency-ns = <300000>;
+		};
+
+		opp-1000000000 {
+			opp-hz = /bits/ 64 <1000000000>;
+			clock-latency-ns = <300000>;
+			turbo-mode;
+		};
+	};
+
+	clks: clocks {
+		#include "msc313e-clocks.dtsi"
+	};
+
+	arch_timer {
+		compatible = "arm,armv7-timer";
+		interrupts = <GIC_PPI 13 (GIC_CPU_MASK_SIMPLE(2) | IRQ_TYPE_LEVEL_LOW)>,
+			     <GIC_PPI 14 (GIC_CPU_MASK_SIMPLE(2) | IRQ_TYPE_LEVEL_LOW)>,
+			     <GIC_PPI 11 (GIC_CPU_MASK_SIMPLE(2) | IRQ_TYPE_LEVEL_LOW)>,
+			     <GIC_PPI 10 (GIC_CPU_MASK_SIMPLE(2) | IRQ_TYPE_LEVEL_LOW)>;
+		clock-frequency = <6000000>;
+	};
+
+	soc {
+		compatible = "simple-bus";
+		#address-cells = <1>;
+		#size-cells = <1>;
+		ranges;
+
+		gic: interrupt-controller@16000000 {
+			compatible = "arm,cortex-a7-gic";
+			#interrupt-cells = <3>;
+			#address-cells = <1>;
+			#size-cells = <1>;
+			interrupt-controller;
+			reg = <0x16001000 0x1000>,
+			      <0x16002000 0x1000>;
+		};
+
+		intc_fiq: intc@1f201310 {
+			compatible = "mstar,msc313e-intc-fiq";
+			interrupt-controller;
+			reg = <0x1f201310 0x20>;
+			#interrupt-cells = <2>;
+			interrupt-parent = <&gic>;
+			gic-offset = <96>;
+			nr-interrupts = <16>;
+		};
+
+		intc_spi: intc@1f201350 {
+			compatible = "mstar,msc313e-intc-spi";
+			interrupt-controller;
+			reg = <0x1f201350 0x20>;
+			#interrupt-cells = <2>;
+			interrupt-parent = <&gic>;
+			gic-offset = <32>;
+			nr-interrupts = <64>;
+		};
+
+		sleepintc: sleepintc@1f001c10 {
+			compatible = "mstar,msc313e-sleep-intc";
+			interrupt-parent = <&intc_spi>;
+			interrupts = <2 IRQ_TYPE_LEVEL_HIGH>;
+			interrupt-controller;
+			#interrupt-cells = <2>;
+			reg = <0x1f001c10 0x8>;
+		};
+
+		pinctrl: pinctrl {
+			compatible = "mstar,msc313e-pinctrl";
+			reg = <0x1f203C00 0x200>;
+			pm_uart_pins: pm_uart {
+				function = "pm_uart";
+				groups = "pm_uart";
+			};
+			pm_spi_pins: pm_spi {
+				function = "pm_spi";
+				groups = "pm_spi";
+			};
+			emac_pins: eth {
+				function = "eth";
+				groups = "eth";
+			};
+			fuart_pins: fuart {
+				function = "fuart";
+				groups = "fuart";
+			};
+			i2c1_pins: i2c1 {
+				function = "i2c1";
+				groups = "i2c1";
+			};
+			spi0_pins: spi0 {
+				function = "spi0";
+				groups = "spi0";
+			};
+			sd_pins: sd {
+				function = "sd";
+				groups = "sd";
+			};
+			pwm0_pins: pwm0 {
+				function = "pwm0";
+				groups = "pwm0";
+			};
+			pwm1_pins: pwm1 {
+				function = "pwm1";
+				groups = "pwm1";
+			};
+			pwm2_pins: pwm2 {
+				function = "pwm2";
+				groups = "pwm2";
+			};
+			pwm3_pins: pwm3 {
+				function = "pwm3";
+				groups = "pwm3";
+			};
+		};
+		
+		gpio: gpio@1f207800 {
+			compatible = "mstar,msc313e-gpio";
+			reg = <0x1f207800 0x200>;
+			#gpio-cells = <2>;
+			gpio-num = <2>;
+		};
+		
+		pm_pinctrl: pinctrl@1f001e00 {
+			compatible = "mstar,msc313e-pm-pinctrl";
+			reg = <0x1f001e00 0x200>;
+			interrupt-parent = <&sleepintc>;
+			interrupt-controller;
+			#interrupt-cells = <2>;
+			#gpio-cells = <2>;
+		};
+		
+		/* This uart is hardwired and cannot be muxd out */
+		pm_uart: uart@1f221000 {
+			compatible = "ns16550a";
+			reg = <0x1f221000 0x200>;
+			interrupt-parent = <&intc_spi>;
+			interrupts = <34 IRQ_TYPE_LEVEL_HIGH>;
+			reg-shift = <3>;
+			clocks = <&clkgen_mux_uart 0>;
+			pinctrl-names = "default";
+			pinctrl-0 = <&pm_uart_pins>;
+			status = "disabled";
+		};
+
+		uart0: uart@1f221200 {
+			compatible = "ns16550a";
+			reg = <0x1f221200 0x200>;
+			interrupt-parent = <&intc_spi>;
+			interrupts = <35 IRQ_TYPE_LEVEL_HIGH>;
+			reg-shift = <3>;
+			clocks = <&clkgen_mux_uart 1>;
+			status = "disabled";
+		};
+
+		pmu {
+			compatible = "arm,cortex-a7-pmu";
+			interrupts = <GIC_SPI 10 IRQ_TYPE_LEVEL_HIGH>,
+						<GIC_SPI 16 IRQ_TYPE_LEVEL_HIGH>,
+						<GIC_SPI 22 IRQ_TYPE_LEVEL_HIGH>,
+						<GIC_SPI 28 IRQ_TYPE_LEVEL_HIGH>;
+		};
+		
+		cpuclk: cpuclk@1f206500 {
+			compatible = "mstar,msc313e-cpuclk";
+			reg = <0x1f206500 0x100>;
+			#clock-cells = <0>;
+			clocks = <&clkgen_pll 6>;
+		};
+
+		clkgen_pll: clkgen_pll@1f2071c4 {
+			compatible = "mstar,msc313e-clkgen-pll";
+			reg = <0x1f2071c4 0xc>;
+			#clock-cells = <1>;
+			clock-output-names = "upll_384", "upll_320", "utmi_160", "utmi_192",
+						         "utmi_240", "utmi_480", "mpll_432", "mpll_345",
+						         "mpll_288", "mpll_216", "mpll_172", "mpll_144",
+						         "mpll_123", "mpll_124", "mpll_86", "pll_rv1";
+			clock-rates = <384000000>, <320000000>, <160000000>, <192000000>,
+			              <240000000>, <480000000>, <432000000>, <345000000>,
+			              <288000000>, <216000000>, <172000000>, <144000000>,
+			              <123000000>, <124000000>, <86000000>, <0>;
+		};
+		
+		clk_mpll_288_div4: clk_mpll_288_div4 {
+			compatible = "fixed-factor-clock";
+			#clock-cells = <0>;
+			clocks = <&clkgen_pll 8>;
+			clock-div = <4>;
+			clock-mult = <1>;
+		};
+		
+		/* for notes for now 
+		 starts at 0x1F226600
+		*/
+		clkgen_special_emac_rx: clkgen_special@0x1f226688 {
+		
+		};
+		clkgen_special_emac_tx: clkgen_special@0x1f22668c {
+		
+		};
+		
+		clkgen_mux_xtali: clkgen_mux@1f207000 {
+			compatible = "mstar,msc313e-clkgen-mux";
+			reg = <0x1f207000 0x4>;
+			#clock-cells = <1>;
+			clock-output-names = "xtali";
+			shifts = <0>;
+			clocks = <&xtal12>;
+		};
+		 
+		clkgen_mux_uart: clkgen_mux@1f2070c4 {
+			compatible = "mstar,msc313e-clkgen-mux";
+			reg = <0x1f2070c4 0x4>;
+			#clock-cells = <1>;
+			clock-output-names = "uart0", "uart1";
+			shifts = <0>, <8>;
+			clocks = <&clkgen_pll 10>;
+		};
+		
+		clkgen_mux_spi: clkgen_mux@1f2070c8 {
+			compatible = "mstar,msc313e-clkgen-mux";
+			reg = <0x1f2070c8 0x4>;
+			#clock-cells = <1>;
+			clock-output-names = "spi";
+			shifts = <0>;
+			clocks = <&clkgen_pll 10>; /* this is wrong */
+		};
+
+		clkgen_mux_fuart: clkgen_mux@1f2070d0 {
+			compatible = "mstar,msc313e-clkgen-mux";
+			reg = <0x1f2070d0 0x4>;
+			#clock-cells = <1>;
+			clock-output-names = "fuart";
+			shifts = <0>;
+			clocks = <&clkgen_pll 10>; /* this is wrong */
+		};
+		
+		clkgen_mux_miic: clkgen_mux@1f2070dc {
+			compatible = "mstar,msc313e-clkgen-mux";
+			reg = <0x1f2070dc 0x4>;
+			#clock-cells = <1>;
+			clock-output-names = "miic0", "miic1";
+			shifts = <0>, <8>;
+			clocks = <&clk_mpll_288_div4>;
+		};
+		
+		clkgen_mux_emac: clkgen_mux@1f207108 {
+			compatible = "mstar,msc313e-clkgen-mux";
+			reg = <0x1f207108 0x4>;
+			#clock-cells = <1>;
+			clock-output-names = "emac";
+			shifts = <0>;
+			clocks = <&clkgen_pll 10>; /* this is wrong */
+		};
+		
+		ddr_scl: ddr_scl@1F206580 {
+			reg = <0x1f206580 0x8>;
+		};
+		
+		clkgen_mux_bdma: clkgen_mux@1f207180 {
+			compatible = "mstar,msc313e-clkgen-mux";
+			reg = <0x1f207180 0x4>;
+			#clock-cells = <1>;
+			clock-output-names = "bdma";
+			shifts = <0>;
+			clocks = <&clkgen_pll 10>; /* this is wrong */
+		};
+				
+		clkgen_mux_aesdma_sr: clkgen_mux@1f207184 {
+			compatible = "mstar,msc313e-clkgen-mux";
+			reg = <0x1f207184 0x4>;
+			#clock-cells = <1>;
+			clock-output-names = "aesdma", "sr";
+			shifts = <0>, <8>;
+			clocks = <&clkgen_pll 10>; /* this is wrong */
+		};
+		
+		clkgen_mux_imi_nm: clkgen_mux@1f001c80 {
+			compatible = "mstar,msc313e-clkgen-mux";
+			reg = <0x1f001c80 0x4>;
+			#clock-cells = <1>;
+			clock-output-names = "imi", "nlm";
+			shifts = <0>, <8>;
+			clocks = <&clkgen_pll 10>; /* this is wrong */
+		};
+		
+		clkgen_mux_rtc_sar: clkgen_mux@1f001c88 {
+			compatible = "mstar,msc313e-clkgen-mux";
+			reg = <0x1f001c88 0x4>;
+			#clock-cells = <1>;
+			clock-output-names = "rtc", "sar";
+			shifts = <0>, <5>;
+			clocks = <&clkgen_mux_xtali 0>;
+		};
+		
+		wdt: wdt@1f006000 {
+			compatible = "mstar,msc313e-wdt";
+			reg = <0x1f006000 0x1F>;
+			clocks = <&xtal12>;
+			interrupt-parent = <&intc_fiq>;
+			interrupts = <2 IRQ_TYPE_LEVEL_HIGH>;
+		};
+		
+		timer0: timer@1f006040 {
+			compatible = "mstar,msc313e-timer";
+			reg = <0x1f006040 0x40>;
+			clocks = <&xtal12>;
+			interrupt-parent = <&intc_fiq>;
+			interrupts = <0 IRQ_TYPE_LEVEL_HIGH>;
+        };
+        
+        timer1: timer@1f006080 {
+			compatible = "mstar,msc313e-timer";
+			reg = <0x1f006080 0x40>;
+			clocks = <&xtal12>;
+			interrupt-parent = <&intc_fiq>;
+			interrupts = <1 IRQ_TYPE_LEVEL_HIGH>;
+        };
+        
+        timer2: timer@1f0060c0 {
+			compatible = "mstar,msc313e-timer";
+			reg = <0x1f0060c0 0x40>;
+			clocks = <&xtal12>;
+			interrupt-parent = <&intc_fiq>;
+			interrupts = <12 IRQ_TYPE_LEVEL_HIGH>;
+        };
+				
+		emac: emac@1f2a2000 {
+			compatible = "cdns,emac";
+			interrupt-parent = <&intc_spi>;
+			interrupts = <26 IRQ_TYPE_LEVEL_HIGH>;
+			reg = <0x1f2a2000 0x4000>;
+			phy-mode = "mii";
+			clocks = <&clkgen_mux_emac 0>;
+			clock-names = "ether_clk";
+			pinctrl-names = "default";
+			pinctrl-0 = <&emac_pins>;
+			status = "disabled";
+		};
+
+		/* musb? usb controller */
+		/* upll0 0x508000 
+		 * utmi0 0x508400
+		 * usb0  0x508c00
+		 */
+
+		/*usb: usb@1f284600 {
+		};
+
+		ehci0: usb@1f284800 {
+		};*/
+
+		spi_nor: spi_nor@1f001000 {
+			compatible = "mstar,msc313e-spinor";
+			reg = <0x1f001000 0x400>, <0x14000000 0x2000000>;
+			status = "disabled";
+		};
+		
+		rtc: rtc@1f002400 {
+			compatible = "mstar,msc313e-rtc";
+            reg = <0x1f002400 0x40>;
+        	interrupt-parent = <&intc_spi>;
+			interrupts = <44 IRQ_TYPE_LEVEL_HIGH>;
+			clocks = <&clkgen_mux_rtc_sar 0>;
+        };
+		
+		
+		sar: sar@1f002800 {
+			compatible = "mstar,msc313e-sar";
+			reg = <0x1f002800 0x200>;
+			clocks = <&clkgen_mux_rtc_sar 1>;
+			clock-names = "sar_clk";
+			interrupt-parent = <&intc_spi>;
+			interrupts = <45 IRQ_TYPE_LEVEL_HIGH>;
+			#gpio-cells = <2>;
+			status = "disabled";
+		};
+		
+		pwm: pwm@1f001da0 {
+			compatible = "mstar,msc313e-pwm";
+			reg = <0x1f001da0 0x30>;
+			#pwm-cells = <2>;
+			clocks = <&xtal12>;
+			status = "disabled";
+		};
+				
+		spi0: spi@0 {
+		};
+		
+		spi1: spi@1 {
+		};
+		
+		i2c1: i2c@1f223200 {
+			compatible = "mstar,msc313e-i2c";
+			reg = <0x1f223200 200>;
+			clocks = <&clkgen_mux_miic 1>;
+			clock-names = "i2c_clk";
+			pinctrl-names = "default";
+			pinctrl-0 = <&i2c1_pins>;
+			interrupt-parent = <&intc_spi>;
+			interrupts = <37 IRQ_TYPE_LEVEL_HIGH>;
+			#address-cells = <1>;
+			#size-cells = <0>;
+		};
+		
+		sramgates: gates@0x1F226640 {
+		};
+		
+		sram: sram@0xa0000000 {
+			compatible = "mmio-sram";
+			reg = <0xa0000000 0x10000>;
+		};
+	};
+};
