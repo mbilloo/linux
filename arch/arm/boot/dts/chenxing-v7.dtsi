@@ -317,11 +317,51 @@
 			nr-interrupts = <64>;
 		};
 
+		miu: miu@1f202200 {
+			compatible = "mstar,msc313-miu";
+			reg = <0x1f202000 100>,
+			      <0x1f202200 100>,
+			      <0x1f202400 100>;
+
+			/*1f204414 - cache flush*/
+			/*1f204440 - status */
+			interrupt-parent = <&intc_irq>;
+			interrupts = <49 IRQ_TYPE_LEVEL_HIGH>;
+			clock-names = "miu", "ddr";
+			clocks = <&clkgen_mux_miu 0>, <&clkgen_mux_ddrsyn 0>;
+		};
+
 		cpuclk: cpuclk@1f206500 {
 			compatible = "mstar,msc313e-cpuclk";
 			reg = <0x1f206500 0x100>;
 			#clock-cells = <0>;
 			clocks = <&clkgen_pll 6>;
+		};
+
+		clkgen_mux_miu: clkgen_mux@1f20705c {
+			compatible = "mstar,msc313e-clkgen-mux";
+			reg = <0x1f20705c 0x4>;
+			#clock-cells = <1>;
+			clock-output-names = "miu";
+			output-flags = <0x800>;
+			shifts = <0>;
+			mux-shifts = <2>;
+			mux-widths = <2>;
+			clocks = <&clkgen_mux_ddrsyn 0>;
+		};
+
+		clkgen_mux_ddrsyn: clkgen_mux@1f207064 {
+			compatible = "mstar,msc313e-clkgen-mux";
+			reg = <0x1f207064 0x4>;
+			#clock-cells = <1>;
+			clock-output-names = "ddrsyn";
+			output-flags = <0x800>;
+			shifts = <0>;
+			mux-shifts = <2>;
+			mux-widths = <2>;
+			clocks = <&clkgen_pll 6>,
+				 <&clkgen_pll 9>,
+				 <&xtal12>;
 		};
 
 		clkgen_mux_uart: clkgen_mux@1f2070c4 {
