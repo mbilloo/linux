@@ -143,6 +143,14 @@
 		#size-cells = <1>;
 		ranges;
 
+		sleepintc: sleepintc@1f001c10 {
+			compatible = "mstar,msc313e-sleep-intc";
+			reg = <0x1f001c10 0x8>;
+			interrupts-extended = <&intc_irq 2 IRQ_TYPE_LEVEL_HIGH>;
+			interrupt-controller;
+			#interrupt-cells = <2>;
+		};
+
 		pmsleep: syscon@0x1f001cb8 {
 			/* msc313e notes */
 			/* 0x1f001c00 - wake up source */
