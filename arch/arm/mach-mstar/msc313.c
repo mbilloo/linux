@@ -84,9 +84,17 @@ static void __init msc313_barriers_init(void)
 	soc_mb = msc313_mb;
 }
 
+#ifdef CONFIG_SUSPEND
+int __init msc313_pm_init(void);
+#endif
+
 static void __init msc313_init(void)
 {
 	msc313_barriers_init();
+#ifdef CONFIG_SUSPEND
+        msc313_pm_init();
+#endif
+
 }
 
 DT_MACHINE_START(MSTAR_DT, "MStar MSC313 (Device Tree)")
