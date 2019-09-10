@@ -1,0 +1,14 @@
+menuconfig ARCH_MSTAR
+	bool "MStar SoC Support"
+	depends on ARCH_MULTI_V7
+	select ARM_GIC
+	help
+	  Support for MStar ARMv7 SoCs
+
+if ARCH_MSTAR
+
+config MACH_MSC313
+	bool "MStar MSC313(d/e) SoC support"
+	default ARCH_MSTAR
+
+endif

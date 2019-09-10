@@ -1,0 +1,1 @@
+obj-$(CONFIG_MACH_MSC313) += msc313.o
