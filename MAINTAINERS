@@ -2056,6 +2056,7 @@ ARM/MStar SoC support
 M:	Daniel Palmer <daniel@thingy.jp>
 L:	linux-arm-kernel@lists.infradead.org (moderated for non-subscribers)
 F:	Documentation/devicetree/bindings/arm/mstar.yaml
+F:	arch/arm/mach-mstar/
 S:	Maintained
 
 ARM/NEC MOBILEPRO 900/c MACHINE SUPPORT
