@@ -1,19 +1,17 @@
-// SPDX-License-Identifier: GPL-2.0
 /*
- * Copyright (c) 2019 thingy.jp.
- * Author: Daniel Palmer <daniel@thingy.jp>
  */
 
 /dts-v1/;
-#include "msc313e.dtsi"
+#include "msc313.dtsi"
+#include <dt-bindings/gpio/gpio.h>
 
 / {
 	model = "thingy.jp breadbee";
-	compatible = "thingyjp,breadbee", "mstar,msc313e", "mstar,msc313";
+	compatible = "thingyjp,breadbee", "mstar,msc313";
 
 	chosen {
 		stdout-path = "serial0:115200n8";
-		bootargs = "console=ttyS0,115200 root=/dev/mtdblock3 clk_ignore_unused quiet";
+		bootargs = "console=ttyS0,115200 root=/dev/mtdblock3 clk_ignore_unused earlyprintk=serial,ttyS0,115200";
 	};
 
 	aliases {
