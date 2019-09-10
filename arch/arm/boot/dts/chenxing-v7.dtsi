@@ -143,6 +143,19 @@
 		#size-cells = <1>;
 		ranges;
 
+		isp: isp@1f001000 {
+			compatible = "mstar,msc313-isp";
+			reg = <0x1f001000 0x400>,
+			      <0x1f002c00 0x200>,
+			      <0x1f002e00 0x200>,
+			      <0x14000000 0x1000000>;
+			clocks = <&clkgen_mux_aesdma_isp 1>;
+			interrupts-extended = <&intc_irq 5 IRQ_TYPE_LEVEL_HIGH>;
+			dmas = <&bdma 0>, <&bdma 1>;
+			dma-names = "qspi", "qspi";
+			status = "disabled";
+		};
+
 		sleepintc: sleepintc@1f001c10 {
 			compatible = "mstar,msc313e-sleep-intc";
 			reg = <0x1f001c10 0x8>;
@@ -250,6 +263,25 @@
 			clocks = <&clkgen_pll 10>,
 				 <&clk_mpll_288_div2>,
 				 <&xtal12>;
+		};
+
+		clkgen_mux_aesdma_isp: clkgen_mux@1f207184 {
+			compatible = "mstar,msc313e-clkgen-mux";
+			reg = <0x1f207184 0x4>;
+			#clock-cells = <1>;
+			clock-output-names = "aesdma", "isp";
+			shifts = <0>, <8>;
+			mux-shifts = <2>, <10>;
+			mux-widths = <2>, <2>;
+			mux-ranges = <0 2>, <2 4>;
+			clocks = /* aesdma */
+				<&clkgen_pll 14>,
+				<&clkgen_pll 10>,
+				/* isp */
+				<&clkgen_pll 12>,
+				<&clkgen_pll 14>,
+				<&clk_mpll_288_div4>,
+				<&clk_mpll_216_div4>;
 		};
 
 		/* this should be renamed to clk gates or something */
