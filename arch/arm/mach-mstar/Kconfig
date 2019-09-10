@@ -1,0 +1,16 @@
+menuconfig ARCH_MSTAR
+	bool "MStar SoC Support"
+	depends on ARCH_MULTI_V7
+	select ARM_GIC
+	select ARM_HEAVY_MB
+	help
+	  Support for MStar ARMv7 SoCs
+
+if ARCH_MSTAR
+
+config MACH_INFINITY
+	bool "MStar infinity SoC support"
+	default ARCH_INFINITY
+	help
+	  Support for MStar infinity(1/3) IP camera SoCs
+endif
