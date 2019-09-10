@@ -710,3 +710,9 @@
 			      <&intc_fiq 23 IRQ_TYPE_LEVEL_HIGH>;
 	status = "okay";
 };
+
+&sar {
+	clocks = <&clkgen_mux_rtc_sar 1>;
+	clock-names = "sar_clk";
+};
+
