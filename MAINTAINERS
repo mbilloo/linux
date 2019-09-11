@@ -2057,6 +2057,7 @@ M:	Daniel Palmer <daniel@thingy.jp>
 L:	linux-arm-kernel@lists.infradead.org (moderated for non-subscribers)
 F:	Documentation/devicetree/bindings/arm/mstar.yaml
 F:	arch/arm/mach-mstar/
+F:	arch/arm/boot/dts/infinity*.dtsi
 S:	Maintained
 
 ARM/NEC MOBILEPRO 900/c MACHINE SUPPORT
