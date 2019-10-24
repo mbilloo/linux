@@ -18,4 +18,8 @@ properties:
         items:
           - const: thingyjp,breadbee
           - const: mstar,infinity3
-
+      
+      - description: thingy.jp BreadBee Crust
+        items:
+          - const: thingyjp,breadbee-crust
+          - const: mstar,infinity
