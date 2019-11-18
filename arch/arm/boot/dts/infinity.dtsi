@@ -454,25 +454,6 @@
 		fcie {
 			interrupts = <18 IRQ_TYPE_LEVEL_HIGH>;
 		};
-		
-		sdio: sdio@1f282000 {
-			compatible = "mstar,msc313-sdio";
-			interrupt-parent = <&intc_irq>;
-			interrupts = <19 IRQ_TYPE_LEVEL_HIGH>;
-			clocks = <&clkgen_mux_sdio 0>;
-			reg = <0x1f282000 200>;
-			pinctrl-names = "default";
-			pinctrl-0 = <&sdio_pins>;
-			cd-gpios = <&gpio_pm 1 GPIO_ACTIVE_LOW>;
-			vmmc-supply = <&vcc_io>;
-			vqmmc-supply = <&vcc_io>;
-			no-1-8-v;
-			cap-sd-highspeed;
-			bus-width = <4>;
-			status = "disabled";
-		};
-
-
 
 		/* not present on the msc313? */
 		uhc1: uhc@0x1f286400 {
@@ -556,6 +537,23 @@
 	fakephy0: fakephy@0 {
 		compatible = "usb-nop-xceiv";
 		#phy-cells = <0>;
+	};
+
+	sdio: sdio@1f282000 {
+		compatible = "mstar,msc313-sdio";
+		interrupt-parent = <&intc_irq>;
+		interrupts = <19 IRQ_TYPE_LEVEL_HIGH>;
+		clocks = <&clkgen_mux_sdio 0>;
+		reg = <0x1f282000 0x200>;
+		no-1-8-v;
+		cap-sd-highspeed;
+		bus-width = <4>;
+		pinctrl-names = "default";
+		pinctrl-0 = <&sdio_pins>;
+		cd-gpios = <&gpio_pm 1 GPIO_ACTIVE_LOW>;
+		vmmc-supply = <&vcc_io>;
+		vqmmc-supply = <&vcc_io>;
+		status = "disabled";
 	};
 
 	otg0: otg@1f284a00 {
