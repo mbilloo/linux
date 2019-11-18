@@ -135,6 +135,102 @@
 			clock-div = <2>;
 			clock-mult = <1>;
 		};
+
+		clk_mpll_288_div4: clk_mpll_288_div4 {
+			compatible = "fixed-factor-clock";
+			#clock-cells = <0>;
+			clocks = <&clkgen_pll 8>;
+			clock-div = <4>;
+			clock-mult = <1>;
+		};
+
+		clk_mpll_288_div8: clk_mpll_288_div8 {
+			compatible = "fixed-factor-clock";
+			#clock-cells = <0>;
+			clocks = <&clkgen_pll 8>;
+			clock-div = <8>;
+			clock-mult = <1>;
+		};
+
+		clk_mpll_216_div2: clk_mpll_216_div2 {
+			compatible = "fixed-factor-clock";
+			#clock-cells = <0>;
+			clocks = <&clkgen_pll 9>;
+			clock-div = <2>;
+			clock-mult = <1>;
+		};
+
+		clk_mpll_216_div4: clk_mpll_216_div4 {
+			compatible = "fixed-factor-clock";
+			#clock-cells = <0>;
+			clocks = <&clkgen_pll 9>;
+			clock-div = <4>;
+			clock-mult = <1>;
+		};
+
+		clk_mpll_216_div8: clk_mpll_216_div8 {
+			compatible = "fixed-factor-clock";
+			#clock-cells = <0>;
+			clocks = <&clkgen_pll 9>;
+			clock-div = <8>;
+			clock-mult = <1>;
+		};
+
+		clk_mpll_144_div2: clk_mpll_144_div2 {
+			compatible = "fixed-factor-clock";
+			#clock-cells = <0>;
+			clocks = <&clkgen_pll 11>;
+			clock-div = <2>;
+			clock-mult = <1>;
+		};
+
+		clk_mpll_144_div4: clk_mpll_144_div4 {
+			compatible = "fixed-factor-clock";
+			#clock-cells = <0>;
+			clocks = <&clkgen_pll 11>;
+			clock-div = <4>;
+			clock-mult = <1>;
+		};
+
+		clk_mpll_86_div2: clk_mpll_86_div2 {
+			compatible = "fixed-factor-clock";
+			#clock-cells = <0>;
+			clocks = <&clkgen_pll 14>;
+			clock-div = <2>;
+			clock-mult = <1>;
+		};
+
+		clk_utmi_192_div4: clk_utmi_192_div4 {
+			compatible = "fixed-factor-clock";
+			#clock-cells = <0>;
+			clocks = <&clkgen_pll 3>;
+			clock-div = <4>;
+			clock-mult = <1>;
+		};
+
+		clk_utmi_160_div4: clk_utmi_160_div4 {
+			compatible = "fixed-factor-clock";
+			#clock-cells = <0>;
+			clocks = <&clkgen_pll 2>;
+			clock-div = <4>;
+			clock-mult = <1>;
+		};
+
+		clk_utmi_160_div5: clk_utmi_160_div5 {
+			compatible = "fixed-factor-clock";
+			#clock-cells = <0>;
+			clocks = <&clkgen_pll 2>;
+			clock-div = <5>;
+			clock-mult = <1>;
+		};
+
+		clk_utmi_160_div8: clk_utmi_160_div8 {
+			compatible = "fixed-factor-clock";
+			#clock-cells = <0>;
+			clocks = <&clkgen_pll 2>;
+			clock-div = <8>;
+			clock-mult = <1>;
+		};
 	};
 
 	soc: soc {
