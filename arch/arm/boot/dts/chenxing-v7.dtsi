@@ -260,6 +260,25 @@
 			#interrupt-cells = <2>;
 		};
 
+		clkgen_mux_rtc_sar: clkgen_mux@1f001c88 {
+			compatible = "mstar,msc313e-clkgen-mux";
+			reg = <0x1f001c88 0x4>;
+			#clock-cells = <1>;
+			clock-output-names = "rtc", "sar", "pm_sleep";
+			shifts = <0>, <5>, <10>;
+			mux-shifts = <2>, <7>, <12>;
+			mux-widths = <2>, <3>, <3>;
+			mux-ranges = <0 2>, <0 8>, <0 8>;
+			clocks = <&clkgen_mux_xtali 0>,
+					 <&rtc_32k>,
+					 <&xtal12_div8>,
+					 <&xtal12_div12>,
+					 <&rtc32k_div4>,
+					 <&xtal12_div16>,
+					 <&xtal12_div2>,
+					 <&xtal12_div4>;
+		};
+
 		pmsleep: syscon@0x1f001cb8 {
 			/* msc313e notes */
 			/* 0x1f001c00 - wake up source */
