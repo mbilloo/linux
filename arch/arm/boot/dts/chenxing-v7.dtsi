@@ -371,6 +371,7 @@
 			reg = <0x1f006000 0x1f>;
 			clocks = <&xtal12>;
 			interrupts-extended = <&intc_fiq 2 IRQ_TYPE_LEVEL_HIGH>;
+		};
 
 		timer0: timer@1f006040 {
 			compatible = "mstar,msc313e-timer";
