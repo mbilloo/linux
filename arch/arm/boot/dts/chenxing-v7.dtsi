@@ -344,6 +344,8 @@
 					  "sar_gpio1",
 					  "sar_gpio2",
 					  "sar_gpio3";
+			clocks = <&clkgen_mux_rtc_sar 1>;
+			clock-names = "sar_clk";
 			status = "disabled";
 			#gpio-cells = <2>;
 			sar0_gpio0_pins: sar0_gpio0 {
