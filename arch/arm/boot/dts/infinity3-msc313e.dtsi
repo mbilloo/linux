@@ -115,6 +115,7 @@
 };
 
 &pinctrl {
+	compatible = "mstar,msc313e-pinctrl";
 	pwm0_fuart_rx_pins: pwm0_fuart_rx {
 		function = "pwm0";
 		groups = "fuart_rx";
