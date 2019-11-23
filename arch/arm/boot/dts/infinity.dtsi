@@ -212,25 +212,6 @@
 			 <&clkgen_pll 12>,
 			 <&clkgen_pll 14>;
 	};
-			
-	clkgen_mux_aesdma_isp: clkgen_mux@1f207184 {
-		compatible = "mstar,msc313e-clkgen-mux";
-		reg = <0x1f207184 0x4>;
-		#clock-cells = <1>;
-		clock-output-names = "aesdma", "isp";
-		shifts = <0>, <8>;
-		mux-shifts = <2>, <10>;
-		mux-widths = <2>, <2>;
-		mux-ranges = <0 2>, <2 4>;
-		clocks = /* aesdma */
-				 <&clkgen_pll 14>,
-				 <&clkgen_pll 10>,
-				 /* isp */
-				 <&clkgen_pll 12>,
-				 <&clkgen_pll 14>,
-				 <&clk_mpll_288_div4>,
-				 <&clk_mpll_216_div4>;
-	};
 	
 	clkgen_mux_sr_sr_mclk: clkgen_mux@1f207188 {
 		compatible = "mstar,msc313e-clkgen-mux";
