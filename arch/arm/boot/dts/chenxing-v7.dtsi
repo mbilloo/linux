@@ -101,5 +101,10 @@
 			clock-frequency = <172000000>;
 			status = "disabled";
 		};
+
+		sram: sram@a0000000 {
+			compatible = "mmio-sram";
+			reg = <0xa0000000 0x10000>;
+		};
 	};
 };
