@@ -1310,8 +1310,8 @@ dtb-$(CONFIG_ARCH_MEDIATEK) += \
 	mt8135-evbp1.dtb
 dtb-$(CONFIG_ARCH_MILBEAUT) += milbeaut-m10v-evb.dtb
 dtb-$(CONFIG_ARCH_MSTAR) += infinity3-msc313e-breadbee.dtb \
-	msc313-breadbee_crust.dtb \
-	msc313d-mc400l.dtb
+	infinity-msc313-breadbee_crust.dtb \
+	infinity3-msc313d-mc400l.dtb
 dtb-$(CONFIG_ARCH_ZX) += zx296702-ad1.dtb
 dtb-$(CONFIG_ARCH_ASPEED) += \
 	aspeed-ast2500-evb.dtb \
