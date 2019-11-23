@@ -50,6 +50,40 @@
 		#size-cells = <1>;
 		ranges;
 
+		pmsleep: syscon@0x1f001cb8 {
+			/* msc313e notes */
+			/* 0x1f001c00 - wake up source */
+			/*
+			 * 1f001c24 -- bit 11 disables pm uart rx
+			 * -- bit 15 is set when going into deep sleep
+			 *
+			 * mysteryclk1 1f001cf4
+			 * 0x1f001cc0 -- ??
+			 * 0x1f001cc8  -- set to 9fe8 before deep sleep
+			 * 0x1f001ccc  -- set to 9fe8 before deep sleep
+			 * 0x1f001cdc  -- set to 0xa5 before deep sleep
+			 * 0x1f001c70  -- set to 0x0c before deep sleep
+			 * 0x1f001c48  -- set to 0xbabe before deep sleep
+			 *
+			 * 1f001cec -- return address after resume
+			 * 1f001cf0
+			 * 1f001cf4 -- clck for timers?
+			 */
+			/*
+			 * 0x1f001cb8 - writing 0x79 triggers a cpu reset
+			 * 0x1f001cbc - bit 3 in here controls something to do with the temp sensor
+			 */
+			compatible = "syscon";
+			reg = <0x1f001cb8 0x8>;
+		};
+
+		reboot {
+			compatible = "syscon-reboot";
+			regmap = <&pmsleep>;
+			offset = <0x0>;
+			mask = <0x79>;
+		};
+
 		gic: interrupt-controller@16001000 {
 			compatible = "arm,cortex-a7-gic";
 			#interrupt-cells = <3>;
