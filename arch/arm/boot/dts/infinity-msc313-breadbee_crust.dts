@@ -1,0 +1,57 @@
+/*
+ */
+
+/dts-v1/;
+#include "infinity-msc313.dtsi"
+#include <dt-bindings/gpio/gpio.h>
+
+/ {
+	model = "thingy.jp breadbee";
+	compatible = "thingyjp,breadbee", "mstar,msc313";
+
+	chosen {
+		stdout-path = "serial0:115200n8";
+		bootargs = "console=ttyS0,115200 root=/dev/mtdblock3 clk_ignore_unused earlyprintk=serial,ttyS0,115200";
+	};
+
+	aliases {
+		console = &pm_uart;
+		ethernet0 = &emac;
+	};
+	
+	leds {
+		compatible = "gpio-leds";
+		red {
+			gpios = <&gpio 20 GPIO_ACTIVE_HIGH>;
+			linux,default-trigger = "activity";
+		};
+		yellow {
+			gpios = <&gpio 21 GPIO_ACTIVE_HIGH>;
+			linux,default-trigger = "heartbeat";
+		};
+	};
+};
+
+&pm_uart {
+	status = "okay";
+};
+
+&emac {
+	status = "okay";
+};
+
+&isp {
+	status = "okay";
+	nor: nor@0 {
+		#address-cells = <1>;
+		#size-cells = <1>;
+		compatible = "jedec,spi-nor";
+		reg = <0>;
+		spi-max-frequency = <40000000>;
+		#include "msc313e-breadbee-partitions.dtsi"
+	};
+};
+
+&sar {
+	status = "okay";
+};
