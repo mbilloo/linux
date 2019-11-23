@@ -17,3 +17,12 @@
 	compatible = "mstar,ssc8336-gpio";
 	status = "okay";
 };
+
+&gpio_pm {
+	compatible = "mstar,ssc8336-gpio-pm";
+	gpio-ranges = <&pinctrl 0 21 1>, <&pinctrl 1 15 1>;
+	interrupt-names = "pm_unknown_1", "pm_sd_sdz";
+	interrupts-extended = <&gpio_pm 0 29 IRQ_TYPE_LEVEL_HIGH>,
+			      <&intc_irq 24 IRQ_TYPE_LEVEL_HIGH>;
+	status = "okay";
+};
