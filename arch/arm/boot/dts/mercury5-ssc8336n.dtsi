@@ -24,5 +24,6 @@
 	interrupt-names = "pm_unknown_1", "pm_sd_sdz";
 	interrupts-extended = <&gpio_pm 0 29 IRQ_TYPE_LEVEL_HIGH>,
 			      <&intc_irq 24 IRQ_TYPE_LEVEL_HIGH>;
+	/* <&intc_fiq 23 IRQ_TYPE_LEVEL_HIGH>; */
 	status = "okay";
 };
