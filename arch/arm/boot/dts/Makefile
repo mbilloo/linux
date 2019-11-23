@@ -1313,7 +1313,7 @@ dtb-$(CONFIG_ARCH_MSTAR) += infinity3-msc313e-breadbee.dtb \
 	infinity-msc313-breadbee_crust.dtb \
 	infinity3-msc313e-wiibee.dtb \
 	infinity3-msc313d-mc400l.dtb \
-	mercury5.dtb
+	mercury5-ssc8336n-midrive08.dtb
 dtb-$(CONFIG_ARCH_ZX) += zx296702-ad1.dtb
 dtb-$(CONFIG_ARCH_ASPEED) += \
 	aspeed-ast2500-evb.dtb \
