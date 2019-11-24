@@ -182,3 +182,6 @@
 	status = "okay";
 };
 
+&miu {
+	ddr-supply = <&vcc_ddr>;
+};
