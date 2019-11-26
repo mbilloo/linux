@@ -397,6 +397,7 @@
 		mstar,utmi = <&utmi0>;
 		mstar,usbc = <&usbc0>;
 		interrupts-extended = <&intc_irq 30 IRQ_TYPE_LEVEL_HIGH>;
+		status = "disabled";
 	};
 
 	utmi0: utmi@1f284200 {
@@ -459,10 +460,30 @@
 		status = "disabled";
 	};
 	
-	/* not present on the msc313? */
-	uhc1: uhc@0x1f286400 {
-
+	/* second usb port? */
+	usbphy1: usbphy@1 {
+		#phy-cells = <1>;
+		compatible = "mstar,msc313-usb-phy";
+		clocks = <&xtal12>;
+		mstar,utmi = <&utmi1>;
+		mstar,usbc = <&usbc1>;
+		interrupts-extended = <&intc_irq 30 IRQ_TYPE_LEVEL_HIGH>;
 	};
+
+	utmi1: utmi@1f285200 {
+		compatible = "syscon";
+		reg = <0x1f285200 0x80>;
+	};
+	usbc1: usbc@1f286200 {
+		compatible = "syscon";
+		reg = <0x1f286200 0x20>;
+	};
+	uhc1: uhc@1f286400 {
+		compatible = "mstar,msc313-ehci";
+		reg = <0x1f286400 0x200>;
+		status = "disabled";
+	};
+	/* */
 
 	emac: emac@1f2a2000 {
 		#address-cells = <1>;
