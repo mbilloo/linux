@@ -115,32 +115,3 @@
 	vmmc-supply = <&vcc_io>;
 	vqmmc-supply = <&vcc_io>;
 };
-
-&i2c1 {
-	status = "okay";
-	axp192: pmic@34 {
-		compatible = "x-powers,axp192";
-		reg = <0x34>;
-		interrupts-extended = <&gpio_pm 0 6 IRQ_TYPE_LEVEL_HIGH>;
-		
-		interrupt-controller;
-		#interrupt-cells = <1>;
-		
-		regulators {
-			/* Default work frequency for buck regulators */
-			x-powers,dcdc-freq = <1500>;
-
-			reg_dcdc1: dcdc1 {
-				regulator-name = "dcdc1";
-			};
-
-			reg_dcdc2: dcdc2 {
-				regulator-name = "dcdc2";
-			};
-
-			reg_dcdc3: dcdc3 {
-				regulator-name = "dcdc3";
-			};
-		};
-	};
-};
