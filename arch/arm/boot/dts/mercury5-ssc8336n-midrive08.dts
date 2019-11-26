@@ -147,27 +147,31 @@
 		reg = <0x30>;
 		regulators {
 			vcc_core: dc1 {
-				regulator-always-on;
+				regulator-name = "vcc-core";
 				regulator-min-microvolt = <600000>;
 				regulator-max-microvolt = <1200000>;
-				regulator-name = "vcc-core";
+				regulator-always-on;
 			};
 
 			vcc_ddr: dc2 {
 				regulator-name = "vcc-ddr";
 				regulator-min-microvolt = <1800000>;
 				regulator-max-microvolt = <1800000>;
-				regulator-boot-on;
+				regulator-always-on;
 			};
 
 			vcc_io: dc3 {
 				regulator-name = "vcc-io";
 				regulator-min-microvolt = <3300000>;
 				regulator-max-microvolt = <3300000>;
-				regulator-boot-on;
+				regulator-always-on;
 			};
 		};
 	};
+};
+
+&i2c1 {
+	status = "okay";
 };
 
 &sar {
