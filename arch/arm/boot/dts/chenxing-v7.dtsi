@@ -366,6 +366,11 @@
 			};
 		};
 
+		efuse: efuse@0x1f004000 {
+			compatible = "mstar,msc313-efuse";
+			reg = <0x1f004000 0x8>;
+		};
+
 		wdt: wdt@1f006000 {
 			compatible = "mstar,msc313e-wdt";
 			reg = <0x1f006000 0x1f>;
