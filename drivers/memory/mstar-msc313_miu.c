@@ -1,5 +1,6 @@
 #include <linux/module.h>
 #include <linux/of.h>
+#include <linux/regulator/consumer.h>
 #include <linux/platform_device.h>
 #include <linux/regmap.h>
 #include <linux/clk.h>
@@ -29,14 +30,17 @@
  * 
  * 0x1f202400
  * In the MSB2521 datasheet this is called MIU_DIG, miu digital?
- * 0x000 -
+ * 0x000 - config0
  *         13         |      5           |
  * enter self refresh | auto refresh off |
  * 
- * 0x004 -
+ * 0x004 - config1
  *   15   |   14   | 13    |   12   |   7 - 6  | 5 - 4   |   3 - 2     |   1 - 0
  * cko_en | adr_en | dq_en | cke_en | columns  | banks   | bus width   | dram type
- *        |        |       |        | 0x2 - 10 | 0x1 - 4 | 0x0 - 16bit | 0x2 - DDR2
+ *        |        |       |        | 0x0 - 8  | 0x0 - 2 | 0x0 - 16bit | 0x0 - SDR
+ *                                  | 0x1 - 9  | 0x1 - 4 | 0x1 - 32bit | 0x1 - DDR
+ *                                  | 0x2 - 10 | 0x2 - 8 | 0x2 - 64bit | 0x2 - DDR2
+ *        		            |          |         |             | 0x3 - DDR3
  * 
  * The vendor suspend code writes 0xFFFF to all of these
  * but the first where it writes 0xFFFE instead
@@ -60,12 +64,25 @@
  * 0x04c - group 5 request mask?
  */
 
+#define REG_CONFIG1		0x4
+#define REG_CONFIG1_TYPE	(BIT(1) | BIT(0))
+#define REG_CONFIG1_TYPE_SDR	0
+#define REG_CONFIG1_TYPE_DDR	BIT(0)
+#define REG_CONFIG1_TYPE_DDR2	BIT(1)
+#define REG_CONFIG1_TYPE_DDR3	(BIT(1) | BIT(0))
+#define REG_CONFIG1_BUSWIDTH	(BIT(3) | BIT(2))
+#define REG_CONFIG1_BANKS	(BIT(5) | BIT(4))
+#define REG_CONFIG1_BANKS_SHIFT	4
+#define REG_CONFIG1_COLS	(BIT(7) | BIT(6))
+#define REG_CONFIG1_COLS_SHIFT	6
+
 struct msc313_miu {
 	struct device *dev;
 	struct regmap *analog;
 	struct regmap *digital;
 	struct clk *ddrclk;
 	struct clk *miuclk;
+	struct regulator *ddrreg;
 };
 
 static const struct of_device_id msc313_miu_dt_ids[] = {
@@ -93,6 +110,9 @@ static int msc313_miu_probe(struct platform_device *pdev)
 	struct msc313_miu *miu;
 	struct resource *mem;
 	__iomem void *base;
+	unsigned int config1;
+	const char *types[] = {"SDR", "DDR", "DDR2", "DDR3"};
+	int banks, cols;
 	
 	miu = devm_kzalloc(&pdev->dev, sizeof(*miu), GFP_KERNEL);
 	if (!miu)
@@ -132,9 +152,21 @@ static int msc313_miu_probe(struct platform_device *pdev)
 			return PTR_ERR(miu->ddrclk);
 	}
 	
+	miu->ddrreg = devm_regulator_get_optional(&pdev->dev, "ddr");
+	if (IS_ERR(miu->ddrreg)){
+		return PTR_ERR(miu->ddrreg);
+	}
+
 	clk_prepare_enable(miu->miuclk);
 	clk_prepare_enable(miu->ddrclk);
 	
+	regmap_read(miu->digital, REG_CONFIG1, &config1);
+
+	banks = 2  << ((config1 & REG_CONFIG1_BANKS) >> REG_CONFIG1_BANKS_SHIFT);
+	cols = 8 + ((config1 & REG_CONFIG1_COLS) >> REG_CONFIG1_COLS_SHIFT);
+	dev_info(&pdev->dev, "Memory type is %s, %d banks and %d columns", types[config1 & REG_CONFIG1_TYPE],
+			banks, cols);
+
 	return 0;
 }
 
