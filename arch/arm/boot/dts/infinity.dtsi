@@ -86,11 +86,6 @@
 		reg = <0x1f003c00 0x4>;
 	};
 
-	efuse: efuse@0x1f004000 {
-		compatible = "mstar,msc313-efuse";
-		reg = <0x1f004000 0x8>;
-	};
-
         did: did@0x1f007000 {
 			compatible = "mstar,msc313-did";
 			reg = <0x1f007000 0x8>;
