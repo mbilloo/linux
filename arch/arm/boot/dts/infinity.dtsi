@@ -385,42 +385,9 @@
 		interrupts = <21 IRQ_TYPE_LEVEL_HIGH>;
 	};
 
-	usbphy0: usbphy@0 {
-		#phy-cells = <1>;
-		compatible = "mstar,msc313-usb-phy";
-		clocks = <&xtal12>;
-		mstar,utmi = <&utmi0>;
-		mstar,usbc = <&usbc0>;
-		interrupts-extended = <&intc_irq 30 IRQ_TYPE_LEVEL_HIGH>;
-		status = "disabled";
-	};
-
-	utmi0: utmi@1f284200 {
-		compatible = "syscon";
-		reg = <0x1f284200 0x80>;
-	};
-
 	bc: bc@1f284400 {
 		/* 0x1f284400 - Called "BC" which seems to be battery charger */
 		reg = <0x1f284400 0x200>;
-	};
-
-	/* this is some glue between the OTG + the ehci controller and the phy
-	 * and resets etc for the different blocks
-	 */
-	usbc0: usbc@1f284600 {
-		compatible = "syscon";
-		reg = <0x1f284600 0x20>;
-	};
-
-	uhc0: uhc@1f284800 {
-		compatible = "mstar,msc313-ehci";
-		reg = <0x1f284800 0x200>;
-		interrupts-extended = <&intc_irq 31 IRQ_TYPE_LEVEL_HIGH>;
-		phys = <&usbphy0 0>;
-		phy-names = "usb";
-		mstar,usbc = <&usbc0>;
-		status = "disabled";
 	};
 	
 	fakephy0: fakephy@0 {
@@ -454,31 +421,6 @@
 		clocks = <&xtal12>;
 		status = "disabled";
 	};
-	
-	/* second usb port? */
-	usbphy1: usbphy@1 {
-		#phy-cells = <1>;
-		compatible = "mstar,msc313-usb-phy";
-		clocks = <&xtal12>;
-		mstar,utmi = <&utmi1>;
-		mstar,usbc = <&usbc1>;
-		interrupts-extended = <&intc_irq 30 IRQ_TYPE_LEVEL_HIGH>;
-	};
-
-	utmi1: utmi@1f285200 {
-		compatible = "syscon";
-		reg = <0x1f285200 0x80>;
-	};
-	usbc1: usbc@1f286200 {
-		compatible = "syscon";
-		reg = <0x1f286200 0x20>;
-	};
-	uhc1: uhc@1f286400 {
-		compatible = "mstar,msc313-ehci";
-		reg = <0x1f286400 0x200>;
-		status = "disabled";
-	};
-	/* */
 
 	emac: emac@1f2a2000 {
 		#address-cells = <1>;
