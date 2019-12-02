@@ -189,3 +189,19 @@
 &miu {
 	ddr-supply = <&vcc_ddr>;
 };
+
+&usbphy0 {
+	status = "okay";
+};
+
+&uhc0 {
+	status = "okay";
+};
+
+&usbphy1 {
+	status = "okay";
+};
+
+&uhc1 {
+	status = "okay";
+};
