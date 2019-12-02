@@ -199,6 +199,7 @@
 };
 
 &usbphy1 {
+	mstar,utmi-dxswap;
 	status = "okay";
 };
 
