@@ -53,27 +53,6 @@
 		interrupts-extended = <&intc_irq 60 IRQ_TYPE_LEVEL_HIGH>;
 		status = "disabled";
 	};
-
-	// from disassembly
-	utmi1: utmi@1f285200 {
-		compatible = "syscon";
-		reg = <0x1f285200 0x80>;
-	};
-
-	usbc1: usbc@1f285600 {
-		compatible = "syscon";
-		reg = <0x1f285600 0x20>;
-	};
-
-	usbphy1: usbphy@1 {
-		#phy-cells = <1>;
-		compatible = "mstar,msc313-usb-phy";
-		clocks = <&xtal12>;
-		mstar,utmi = <&utmi1>;
-		mstar,usbc = <&usbc1>;
-		interrupts-extended = <&intc_irq 30 IRQ_TYPE_LEVEL_HIGH>;
-	};
-	//
 };
 
 &cpu0 {
