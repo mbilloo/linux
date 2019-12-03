@@ -73,4 +73,5 @@
 
 &uhc0 {
 	reg = <0x1f004a00 0x200>;
+	interrupts-extended = <&intc_irq 14 IRQ_TYPE_LEVEL_HIGH>;
 };
