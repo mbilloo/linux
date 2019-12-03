@@ -358,10 +358,6 @@
 		status = "disabled";
 	};
 
-	/* csi - camera interface */
-	csi: csi@1f240800 {
-	};
-	
 	/* jpe - jpeg encoder */
 	jpe: jpe@0x1f264000 {
 		reg = <0x1f264000 0x100>;
