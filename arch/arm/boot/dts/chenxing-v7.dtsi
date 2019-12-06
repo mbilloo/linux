@@ -731,6 +731,13 @@
 			interrupts-extended = <&intc_irq 32 IRQ_TYPE_LEVEL_HIGH>;
 		};
 
+		/* gop - framebuffer */
+		gop: gop@0x1f246200 {
+			compatible = "mstar,gop";
+			reg = <0x1f246200 0x200>;
+			interrupts-extended = <&intc_irq 50 IRQ_TYPE_LEVEL_HIGH>;
+		}
+
 		upll0: upll@1f284000 {
 			#clock-cells = <0>;
 			compatible = "mstar,msc313-upll";
