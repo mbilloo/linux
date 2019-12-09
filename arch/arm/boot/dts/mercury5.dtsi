@@ -53,6 +53,20 @@
 		interrupts-extended = <&intc_irq 60 IRQ_TYPE_LEVEL_HIGH>;
 		status = "disabled";
 	};
+	
+	/*
+	
+	dsi: dsi@1f344200 {
+		
+	}
+	
+	dsi_cmdq: dsi_cmdq@1f344400 {
+	
+	}
+	
+	mdl_pnl@1f2c4400 {
+	};
+	*/
 };
 
 &cpu0 {
