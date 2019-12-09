@@ -472,6 +472,13 @@
 			clocks = <&clkgen_pll 6>;
 		};
 
+		lpll: lpll@1f206600 {
+			compatible = "mstar,lpll";
+			reg = <0x1f206600 0x100>;
+			#clock-cells = <0>;
+			clocks = <&clkgen_pll MSTAR_MPLL_GATE_MPLL_432>;
+		};
+
 		// gating xtali stops interrupts from the
 		// arch timer
 		clkgen_mux_xtali: clkgen_mux@1f207000 {
