@@ -201,6 +201,14 @@
 			clock-mult = <1>;
 		};
 
+		clk_mpll_86_div4: clk_mpll_86_div4 {
+			compatible = "fixed-factor-clock";
+			#clock-cells = <0>;
+			clocks = <&clkgen_pll MSTAR_MPLL_GATE_MPLL_86>;
+			clock-div = <4>;
+			clock-mult = <1>;
+		};
+
 		clk_utmi_192_div4: clk_utmi_192_div4 {
 			compatible = "fixed-factor-clock";
 			#clock-cells = <0>;
