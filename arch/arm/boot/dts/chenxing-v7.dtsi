@@ -584,8 +584,8 @@
 			mux-widths = <2>, <2>;
 			mux-ranges = <0 2>, <2 4>;
 			clocks = /* aesdma */
-				<&clkgen_pll 14>,
-				<&clkgen_pll 10>,
+				<&clkgen_pll MSTAR_MPLL_GATE_MPLL_86>,
+				<&clkgen_pll MSTAR_MPLL_GATE_MPLL_172>,
 				/* isp */
 				<&clkgen_pll 12>,
 				<&clkgen_pll 14>,
