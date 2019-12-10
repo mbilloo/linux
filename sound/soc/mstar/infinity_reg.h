@@ -84,6 +84,24 @@ static struct reg_field sine_gen_freq_field = REG_FIELD(MSTAR_BACH_REG_DMA_TEST_
 #define MSTAR_BACH_REG_ANALOG_CTRL01  (MSTAR_BACH_BANK_2 + 0x04)
 #define MSTAR_BACH_REG_ANALOG_CTRL02  (MSTAR_BACH_BANK_2 + 0x08)
 #define MSTAR_BACH_REG_ANALOG_CTRL03  (MSTAR_BACH_BANK_2 + 0x0c)
+
+/**
+ * @brief Register 06h
+ */
+#define REG_PD_ADC0                   (1<<0)
+#define REG_PD_BIAS_DAC               (1<<1)
+#define REG_PD_INMUX_POS              2
+#define REG_PD_INMUX_MSK              (0x3<<REG_PD_INMUX_POS)
+#define REG_PD_L0_DAC                 (1<<4)
+#define REG_PD_LDO_ADC                (1<<5)
+#define REG_PD_LDO_DAC                (1<<6)
+#define REG_PD_MIC_STG1_L             (1<<7)
+#define REG_PD_MIC_STG1_R             (1<<8)
+#define REG_PD_R0_DAC                 (1<<9)
+#define REG_PD_REF_DAC                (1<<10)
+#define REG_PD_VI                     (1<<11)
+#define REG_PD_VREF                   (1<<12)
+
 #define MSTAR_BACH_REG_ANALOG_CTRL04  (MSTAR_BACH_BANK_2 + 0x10)
 #define MSTAR_BACH_REG_ANALOG_CTRL05  (MSTAR_BACH_BANK_2 + 0x14)
 #define MSTAR_BACH_REG_ANALOG_CTRL06  (MSTAR_BACH_BANK_2 + 0x18)
@@ -506,22 +524,7 @@ enum
 #define REG_EN_SW_TST_POS             0
 #define REG_EN_SW_TST_MSK             (0xFFFF<<REG_EN_SW_TST_POS)
 
-/**
- * @brief Register 06h
- */
-#define REG_PD_ADC0                   (1<<0)
-#define REG_PD_BIAS_DAC               (1<<1)
-#define REG_PD_INMUX_POS              2
-#define REG_PD_INMUX_MSK              (0x3<<REG_PD_INMUX_POS)
-#define REG_PD_L0_DAC                 (1<<4)
-#define REG_PD_LDO_ADC                (1<<5)
-#define REG_PD_LDO_DAC                (1<<6)
-#define REG_PD_MIC_STG1_L             (1<<7)
-#define REG_PD_MIC_STG1_R             (1<<8)
-#define REG_PD_R0_DAC                 (1<<9)
-#define REG_PD_REF_DAC                (1<<10)
-#define REG_PD_VI                     (1<<11)
-#define REG_PD_VREF                   (1<<12)
+
 
 /**
  * @brief Register 08h

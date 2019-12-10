@@ -204,8 +204,12 @@ struct snd_soc_dai_driver infinity_soc_codec_dai_drv[] =
 
 static int infinity_soc_codec_probe(struct snd_soc_component* component)
 {
+	struct regmap *atop;
 	struct infinity_codec_data* codec;
 	int i;
+
+	atop = syscon_regmap_lookup_by_phandle(component->dev->of_node, "mstar, atop");
+
 
 	codec = devm_kzalloc(component->dev, sizeof(*codec), GFP_KERNEL);
 	if (IS_ERR(codec))
@@ -492,33 +496,32 @@ static const struct snd_soc_dapm_widget infinity_dapm_widgets[] =
 
 static const struct snd_soc_dapm_route infinity_codec_routes[] =
 {
-
-  {"Main Playback Mux", "DMA Reader", "DMARD"},
+	{"Main Playback Mux", "DMA Reader", "DMARD"},
 #ifdef DIGMIC_EN
-  {"Main Playback Mux", "ADC In",     "DIGMIC"},
+	{"Main Playback Mux", "ADC In",     "DIGMIC"},
 #else
-  {"Main Playback Mux", "ADC In",     "ADC"},
+	{"Main Playback Mux", "ADC In",     "ADC"},
 #endif
-  {"Main Playback Mux", "Sine Gen",   "DMARD"},
-  {"Main Playback DPGA", NULL, "Main Playback Mux"},
+	{"Main Playback Mux", "Sine Gen",   "DMARD"},
+	{"Main Playback DPGA", NULL, "Main Playback Mux"},
 
-  {"DAC",     NULL, "Main Playback DPGA"},
-  //{"Hp Amp",  NULL, "Main Playback DPGA"},
+	{"DAC",     NULL, "Main Playback DPGA"},
+	//{"Hp Amp",  NULL, "Main Playback DPGA"},
 
-  {"LINEOUT", NULL, "DAC"},
- // {"HPOUT",   NULL, "Hp Amp"},
+	{"LINEOUT", NULL, "DAC"},
+	{"HPOUT",   NULL, "Hp Amp"},
 
-  {"DMAWR", NULL, "Main Capture DPGA"},
+	{"DMAWR", NULL, "Main Capture DPGA"},
 #ifdef DIGMIC_EN
-  {"Main Capture DPGA", NULL, "DIGMIC"},
-  {"DIGMIC", NULL, "MICIN"}
+	{"Main Capture DPGA", NULL, "DIGMIC"},
+	{"DIGMIC", NULL, "MICIN"}
 #else
-  {"Main Capture DPGA", NULL, "ADC"},
+	{"Main Capture DPGA", NULL, "ADC"},
 
-  {"ADC",     NULL, "ADC Mux"},
+	{"ADC",     NULL, "ADC Mux"},
 
-  {"ADC Mux", "Line-in", "LINEIN"},
-  {"ADC Mux", "Mic-in",  "MICIN"}
+	{"ADC Mux", "Line-in", "LINEIN"},
+	{"ADC Mux", "Mic-in",  "MICIN"}
 #endif
 };
 

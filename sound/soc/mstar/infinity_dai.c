@@ -2,19 +2,14 @@
  *   Copyright (c) 2008 MStar Semiconductor, Inc.  All rights reserved.
  *------------------------------------------------------------------------------*/
 
-#include <linux/init.h>
 #include <linux/module.h>
 #include <linux/device.h>
-#include <linux/delay.h>
-#include <linux/clk.h>
 
 #include <sound/core.h>
 #include <sound/pcm.h>
 #include <sound/pcm_params.h>
 #include <sound/initval.h>
 #include <sound/soc.h>
-
-#include "infinity_dai.h"
 
 static struct snd_soc_dai_ops infinity_soc_cpu_dai_ops =
 {

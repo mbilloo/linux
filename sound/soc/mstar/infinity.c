@@ -39,11 +39,6 @@ static DMACHANNEL m_infinitydmachannel[2]; // info about dma channel states
 
 //static bool m_bIsMapped; // must call MmUnmapIoSpace when destroyed
 
-static U32  m_pInfinityBaseRegAddr;
-static U32  m_pInfinityAudBank1RegAddr;
-static U32  m_pInfinityAudBank2RegAddr;
-static U32  m_pInfinityAudBank3RegAddr;
-
 static bool m_bADCActive;
 static bool m_bDACActive;
 
@@ -62,32 +57,6 @@ static bool m_bInfinityAtopStatus[BACH_ATOP_NUM];
 U16 InfinityGetMaskReg(BachRegBank_e nBank, U8 nAddr)
 {
     return InfinityReadReg(nBank, nAddr);
-}
-
-void InfinitySetBank1BaseAddr(U32 addr)
-{
-    m_pInfinityAudBank1RegAddr = addr;
-}
-
-void InfinitySetBank2BaseAddr(U32 addr)
-{
-    m_pInfinityAudBank2RegAddr = addr;
-}
-
-void InfinitySetBank3BaseAddr(U32 addr)
-{
-    m_pInfinityAudBank3RegAddr = addr;
-}
-
-
-
-
-void InfinitySetBankBaseAddr(U32 addr)
-{
-    m_pInfinityBaseRegAddr = addr;
-    m_pInfinityAudBank1RegAddr = addr + (U32)(BACH_REG_BANK_1 << 1);
-    m_pInfinityAudBank2RegAddr = addr + (U32)(BACH_REG_BANK_2 << 1);
-    m_pInfinityAudBank3RegAddr = addr + (U32)(BACH_REG_BANK_3 << 1);
 }
 
 void InfinityWriteReg2Byte(U32 nAddr, U16 nValue)
