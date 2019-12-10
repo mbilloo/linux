@@ -258,6 +258,8 @@
 			interrupts-extended = <&intc_irq 5 IRQ_TYPE_LEVEL_HIGH>;
 			dmas = <&bdma 0>, <&bdma 1>;
 			dma-names = "qspi", "qspi";
+			pinctrl-names = "default";
+			pinctrl-0 = <&pm_spi_pins>;
 			status = "disabled";
 		};
 
