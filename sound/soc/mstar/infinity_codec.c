@@ -197,7 +197,8 @@ static int infinity_soc_codec_resume(struct snd_soc_component *codec)
   int i = 0;
   u16 tmp = 0;
 
-  InfinitySysInit();
+  //InfinitySysInit();
+
   for (i = 0; i < AUD_REG_LEN; i++)
   {
     tmp = codec_reg[i];
