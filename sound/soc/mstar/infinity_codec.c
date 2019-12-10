@@ -38,17 +38,17 @@
 
 static u16 codec_reg_backup[AUD_REG_LEN] =
 {
-  0x0,    //AUD_PLAYBACK_MUX
-  0x1,    //AUD_ADC_MUX
-  0x0,    //AUD_ATOP_PWR
-  0x3,    //AUD_DPGA_PWR
-  0,     //AUD_PLAYBACK_DPGA
-  0,   //AUD_CAPTURE_DPGA
-  0,   //AUD_MIC_GAIN
-  0,   //AUD_LINEIN_GAIN
-  0,   //AUD_DIGMIC_PWR
-  0,   //AUD_DBG_SINERATE
-  0    //AUD_DBG_SINEGAIN
+  0x0,	//AUD_PLAYBACK_MUX
+  0x1,	//AUD_ADC_MUX
+  0x0,	//AUD_ATOP_PWR
+  0x3,	//AUD_DPGA_PWR
+  0,	//AUD_PLAYBACK_DPGA
+  0,	//AUD_CAPTURE_DPGA
+  0,	//AUD_MIC_GAIN
+  0,	//AUD_LINEIN_GAIN
+  0,	//AUD_DIGMIC_PWR
+  0,	//AUD_DBG_SINERATE
+  0	//AUD_DBG_SINEGAIN
 };
 
 static u16 codec_reg[AUD_REG_LEN] =
@@ -86,10 +86,12 @@ static struct infinity_pcm_dma_data infinity_pcm_dma_rd[] =
   },
 };
 
-static int snd_soc_codec_update_bits(struct snd_soc_codec *codec, unsigned int reg,
+
+
+static int snd_soc_update_bits(struct snd_soc_component *codec, unsigned int reg,
 	unsigned int mask, unsigned int val)
 {
-	bool change;
+	/*bool change;
 	unsigned int old, new;
 	int ret;
 	struct snd_soc_component *component = &codec->component;
@@ -106,7 +108,8 @@ static int snd_soc_codec_update_bits(struct snd_soc_codec *codec, unsigned int r
   	if (ret < 0)
   		return ret;
 	}
-	return change;
+	return change;*/
+	return 0;
 }
 
 static struct snd_soc_dai_ops infinity_soc_codec_dai_ops =
@@ -138,50 +141,47 @@ static int infinity_soc_dai_resume(struct snd_soc_dai *dai)
 
 struct snd_soc_dai_driver infinity_soc_codec_dai_drv[] =
 {
-  {
-    .name				= "infinity-codec-dai-main",
-    .probe				= infinity_soc_dai_probe,
-    .remove       = infinity_soc_dai_remove,
-    .suspend			= infinity_soc_dai_suspend,
-    .resume				= infinity_soc_dai_resume,
-
-    .playback			=
-    {
-      .stream_name	= "Main Playback",
-      .channels_min	= 1,
-      .channels_max	= 2,
-      .rates			= SNDRV_PCM_RATE_8000_48000,
-      .formats		= SNDRV_PCM_FMTBIT_S16_LE |
-      SNDRV_PCM_FMTBIT_S24_LE |
-      SNDRV_PCM_FMTBIT_S32_LE,
-    },
-    .capture			=
-    {
-      .stream_name	= "Main Capture",
-      .channels_min	= 1,
-      .channels_max	= 2,
-      .rates			= SNDRV_PCM_RATE_8000_48000,
-      .formats		= SNDRV_PCM_FMTBIT_S16_LE,
-    },
-    .ops				= &infinity_soc_codec_dai_ops,
-  },
-
+	{
+		.name	= "infinity-codec-dai-main",
+		.probe	= infinity_soc_dai_probe,
+		.remove	= infinity_soc_dai_remove,
+		.suspend = infinity_soc_dai_suspend,
+		.resume	= infinity_soc_dai_resume,
+		.playback =
+		{
+			.stream_name	= "Main Playback",
+			.channels_min	= 1,
+			.channels_max	= 2,
+			.rates		= SNDRV_PCM_RATE_8000_48000,
+			.formats	= SNDRV_PCM_FMTBIT_S16_LE |
+					  SNDRV_PCM_FMTBIT_S24_LE |
+					  SNDRV_PCM_FMTBIT_S32_LE,
+		},
+		.capture =
+		{
+			.stream_name	= "Main Capture",
+			.channels_min	= 1,
+			.channels_max	= 2,
+			.rates		= SNDRV_PCM_RATE_8000_48000,
+			.formats	= SNDRV_PCM_FMTBIT_S16_LE,
+		},
+		.ops	= &infinity_soc_codec_dai_ops,
+	},
 };
 
-static int infinity_soc_codec_probe(struct snd_soc_codec *codec)
+static int infinity_soc_codec_probe(struct snd_soc_component* component)
 {
 
    int i;
 
-   AUD_PRINTF(CODEC_LEVEL, "%s: codec = %s\n", __FUNCTION__, dev_name(codec->dev));
 
   //TODO: Add chip Initialization
-  InfinitySysInit();
-  AUD_PRINTF(TRACE_LEVEL, "Init system register\n");
+  //InfinitySysInit(); ~~ holy fuck!
+
 
   for (i = 0; i < AUD_REG_LEN; i++)
   {
-    snd_soc_write(codec, i, codec_reg_backup[i]);
+    snd_soc_component_write(component, i, codec_reg_backup[i]);
   }
 
   //snd_soc_dapm_disable_pin(&codec->dapm, "DMARD1");
@@ -192,12 +192,11 @@ static int infinity_soc_codec_probe(struct snd_soc_codec *codec)
   return 0;
 }
 
-static int infinity_soc_codec_remove(struct snd_soc_codec *codec)
+static void infinity_soc_codec_remove(struct snd_soc_component *codec)
 {
-  return 0;
 }
 
-static int infinity_soc_codec_resume(struct snd_soc_codec *codec)
+static int infinity_soc_codec_resume(struct snd_soc_component *codec)
 {
   int i = 0;
   u16 tmp = 0;
@@ -222,7 +221,7 @@ static int infinity_soc_codec_resume(struct snd_soc_codec *codec)
   return 0;
 }
 
-static int infinity_soc_codec_suspend(struct snd_soc_codec *codec)
+static int infinity_soc_codec_suspend(struct snd_soc_component *codec)
 {
 
   int i = 0;
@@ -248,161 +247,181 @@ static int infinity_soc_codec_suspend(struct snd_soc_codec *codec)
   return 0;
 }
 
-unsigned int infinity_codec_read(struct snd_soc_codec *codec, unsigned int reg)
+unsigned int infinity_codec_read(struct snd_soc_component *codec, unsigned int reg)
 {
   return codec_reg[reg];
 }
 
-
-
-int infinity_codec_write(struct snd_soc_codec *codec, unsigned int reg, unsigned int value)
+//step:-6dB
+#if 0
+bool InfinitySineGenGain(U16 nGain)
 {
-  int ret = 0;
-
-
-  switch(reg)
-  {
-  case AUD_PLAYBACK_MUX:
-    if(codec_reg[reg]==2 && codec_reg[reg]^value)
-      InfinitySineGenEnable(FALSE);
-
-    if (value == 0)
+    if(nGain<=4)
     {
-        //TODO: Switch Mux to DMA Reader
-      InfinitySetMux2(BACH_MUX2_MMC1,1);
-      InfinityDmaSetRate(BACH_DMA_READER1,InfinityRateFromU32(InfinityDmaGetRate(BACH_DMA_READER1)));
+        InfinityWriteReg(BACH_REG_BANK1, BACH_DMA_TEST_CTRL5, REG_SINE_GEN_GAIN_MSK, nGain<<REG_SINE_GEN_GAIN_POS );
+        return true;
     }
-    else if (value == 1)
+    else
+        return false;
+}
+
+bool InfinitySineGenRate(U16 nRate)
+{
+    if(nRate<BACH_SINERATE_NUM)
     {
-      //TODO: Switch Mux to ADC Input
-      InfinitySetMux2(BACH_MUX2_MMC1,0);
-      //if (snd_soc_dapm_get_pin_status(&codec->dapm, "DMAWR"))
-      if(InfinityDmaIsWork(BACH_DMA_WRITER1))
-      {
-        //Set the same sample rate with dma writer
-          InfinityDmaSetRate(BACH_DMA_READER1,InfinityRateFromU32(InfinityDmaGetRate(BACH_DMA_WRITER1)));
-      }
-      else
-      {
- #ifdef DIGMIC_EN
+        InfinityWriteReg(BACH_REG_BANK1, BACH_DMA_TEST_CTRL5, REG_SINE_GEN_FREQ_MSK, nRate<<REG_SINE_GEN_FREQ_POS );
+        return true;
+    }
+    else
+        return false;
+}
+
+void InfinitySineGenEnable(bool bEnable)
+{
+    U16 nConfigValue;
+    nConfigValue = (bEnable? REG_SINE_GEN_EN | REG_SINE_GEN_L | REG_SINE_GEN_R : 0);
+    InfinityWriteReg(BACH_REG_BANK1, BACH_DMA_TEST_CTRL5, REG_SINE_GEN_EN | REG_SINE_GEN_L | REG_SINE_GEN_R ,nConfigValue);
+}
+#endif
+
+int infinity_codec_write(struct snd_soc_component *codec, unsigned int reg,
+		unsigned int value) {
+	int ret = 0;
+
+	switch (reg) {
+#if 0
+	case AUD_PLAYBACK_MUX:
+		if (codec_reg[reg] == 2 && codec_reg[reg] ^ value)
+			InfinitySineGenEnable(FALSE);
+
+		if (value == 0) {
+			//TODO: Switch Mux to DMA Reader
+			InfinitySetMux2(BACH_MUX2_MMC1, 1);
+			InfinityDmaSetRate(BACH_DMA_READER1,
+					InfinityRateFromU32(
+							InfinityDmaGetRate(
+									BACH_DMA_READER1)));
+		} else if (value == 1) {
+			//TODO: Switch Mux to ADC Input
+			InfinitySetMux2(BACH_MUX2_MMC1, 0);
+			//if (snd_soc_dapm_get_pin_status(&codec->dapm, "DMAWR"))
+			if (InfinityDmaIsWork(BACH_DMA_WRITER1)) {
+				//Set the same sample rate with dma writer
+				InfinityDmaSetRate(BACH_DMA_READER1,
+						InfinityRateFromU32(
+								InfinityDmaGetRate(
+										BACH_DMA_WRITER1)));
+			} else {
+#ifdef DIGMIC_EN
           //set 16k sample rate, because 2M and 4M mode both support
           InfinityDigMicSetRate(BACH_RATE_16K);
           InfinityDmaSetRate(BACH_DMA_READER1,BACH_RATE_16K);
           InfinityDmaSetRate(BACH_DMA_WRITER1,BACH_RATE_16K);
  #else
-        //Set 48k sample rate
-          InfinityDmaSetRate(BACH_DMA_READER1,BACH_RATE_48K);
-          InfinityDmaSetRate(BACH_DMA_WRITER1,BACH_RATE_48K);
- #endif
-      }
-    }
-    else if (value == 2)
-    {
-      InfinityDmaSetRate(BACH_DMA_READER1,BACH_RATE_48K);
-      InfinitySineGenEnable(TRUE);
-    }
-    else {
-      //AUD_PRINTF(ERROR_LEVEL, "%s error parameter, reg = 0x%x, val = 0x%x\n",
-      //                        __FUNCTION__, reg, value);
-    }
-    break;
+				//Set 48k sample rate
+				InfinityDmaSetRate(BACH_DMA_READER1,
+						BACH_RATE_48K);
+				InfinityDmaSetRate(BACH_DMA_WRITER1,
+						BACH_RATE_48K);
+#endif
+			}
+		} else if (value == 2) {
+			InfinityDmaSetRate(BACH_DMA_READER1, BACH_RATE_48K);
+			InfinitySineGenEnable(TRUE);
+		} else {
+		}
+		break;
 
-  case AUD_ADC_MUX:
-    ret = snd_soc_codec_update_bits(codec, AUD_ATOP_PWR, 0x1, 0);
+	case AUD_ADC_MUX:
+		ret = snd_soc_component_update_bits(codec, AUD_ATOP_PWR, 0x1,
+				0);
 
-    if (value == 0 || value == 1)
-    {
-        codec_reg[reg] = value;
-    }
-    else
-    {
-      //AUD_PRINTF(ERROR_LEVEL, "%s error parameter, reg = 0x%x, val = 0x%x\n",
-      //                        __FUNCTION__, reg, value);
-      return 0;
-    }
+		if (value == 0 || value == 1) {
+			codec_reg[reg] = value;
+		} else {
+			return 0;
+		}
 
-    if (ret > 0)
-      snd_soc_codec_update_bits(codec, AUD_ATOP_PWR, 0x1, 0x1);
+		if (ret > 0)
+			snd_soc_component_update_bits(codec, AUD_ATOP_PWR, 0x1,
+					0x1);
 
-    break;
+		break;
 
-  case AUD_ATOP_PWR:
-    if ((codec_reg[reg] ^ value) & 0x1)
-    {
-        if(codec_reg[AUD_ADC_MUX]==0)
-            (value & 0x1) ? InfinityOpenAtop(BACH_ATOP_LINEIN) : InfinityCloseAtop(BACH_ATOP_LINEIN);
-        else
-            (value & 0x1) ? InfinityOpenAtop(BACH_ATOP_MIC) : InfinityCloseAtop(BACH_ATOP_MIC);
-    }
-    if ((codec_reg[reg] ^ value) & 0x2)
-    {
-        (value & 0x2) ? InfinityOpenAtop(BACH_ATOP_LINEOUT) : InfinityCloseAtop(BACH_ATOP_LINEOUT);
-    }
-    break;
+	case AUD_ATOP_PWR:
+		if ((codec_reg[reg] ^ value) & 0x1) {
+			if (codec_reg[AUD_ADC_MUX] == 0)
+				(value & 0x1) ? InfinityOpenAtop(
+								BACH_ATOP_LINEIN) :
+						InfinityCloseAtop(
+								BACH_ATOP_LINEIN);
+			else
+				(value & 0x1) ? InfinityOpenAtop(
+								BACH_ATOP_MIC) :
+						InfinityCloseAtop(
+								BACH_ATOP_MIC);
+		}
+		if ((codec_reg[reg] ^ value) & 0x2) {
+			(value & 0x2) ? InfinityOpenAtop(BACH_ATOP_LINEOUT) : InfinityCloseAtop(
+							BACH_ATOP_LINEOUT);
+		}
+		break;
 
-  case AUD_DPGA_PWR:
-    if ((codec_reg[reg] ^ value) & 0x1)
-    {
-      InfinitySetPathOnOff(BACH_PATH_PLAYBACK,(value & 0x1) ? TRUE : FALSE);
-    }
-    if ((codec_reg[reg] ^ value) & 0x2)
-    {
-      InfinitySetPathOnOff(BACH_PATH_CAPTURE,(value & 0x2) ? TRUE : FALSE);
-    }
-    break;
+	case AUD_DPGA_PWR:
+		if ((codec_reg[reg] ^ value) & 0x1) {
+			InfinitySetPathOnOff(BACH_PATH_PLAYBACK,
+					(value & 0x1) ? TRUE : FALSE);
+		}
+		if ((codec_reg[reg] ^ value) & 0x2) {
+			InfinitySetPathOnOff(BACH_PATH_CAPTURE,
+					(value & 0x2) ? TRUE : FALSE);
+		}
+		break;
 
-  case AUD_PLAYBACK_DPGA:
-    InfinitySetPathGain(BACH_PATH_PLAYBACK,(S8)(BACH_DPGA_GAIN_MIN_DB + value));
-    break;
-  case AUD_CAPTURE_DPGA:
-    InfinitySetPathGain(BACH_PATH_CAPTURE,(S8)(BACH_DPGA_GAIN_MIN_DB + value));
-    break;
-  case AUD_MIC_GAIN:
-    InfinityAtopMicGain(value);
-    break;
-  case AUD_LINEIN_GAIN:
-    InfinityAtopLineInGain(value);
-    break;
-  case AUD_DIGMIC_PWR:
+	case AUD_PLAYBACK_DPGA:
+		InfinitySetPathGain(BACH_PATH_PLAYBACK,
+				(S8) (BACH_DPGA_GAIN_MIN_DB + value));
+		break;
+	case AUD_CAPTURE_DPGA:
+		InfinitySetPathGain(BACH_PATH_CAPTURE,
+				(S8) (BACH_DPGA_GAIN_MIN_DB + value));
+		break;
+	case AUD_MIC_GAIN:
+		InfinityAtopMicGain(value);
+		break;
+	case AUD_LINEIN_GAIN:
+		InfinityAtopLineInGain(value);
+		break;
+	case AUD_DIGMIC_PWR:
+		if ((codec_reg[reg] ^ value)) {
+			if (!InfinityDigMicEnable(value)) {
+				return -1;
+			}
+		}
+		break;
+	case AUD_DBG_SINERATE:
+		if ((codec_reg[reg] ^ value)) {
+			if (!InfinitySineGenRate(value)) {
+				return -1;
+			}
+		}
+		break;
+	case AUD_DBG_SINEGAIN:
+		if ((codec_reg[reg] ^ value)) {
+			if (!InfinitySineGenGain(value)) {
+				return -1;
+			}
+		}
+		break;
+#endif
+	default:
+		dev_info(codec->dev, "unhandled register write to %u = %u", reg, value);
+		break;
+	}
 
-    if ((codec_reg[reg] ^ value))
-    {
-      if(!InfinityDigMicEnable(value)){
-        //AUD_PRINTF(ERROR_LEVEL, "%s DigMic Enable/Disable failed val = 0x%x\n",
-        //                   __FUNCTION__, value);
-        return -1;
-      }
-    }
-    break;
-  case AUD_DBG_SINERATE:
-    if ((codec_reg[reg] ^ value))
-    {
-      if(!InfinitySineGenRate(value)){
-        //AUD_PRINTF(ERROR_LEVEL, "%s SineGen Rate failed val = 0x%x\n",
-        //                   __FUNCTION__, value);
-        return -1;
-      }
-    }
-    break;
-  case AUD_DBG_SINEGAIN:
-    if ((codec_reg[reg] ^ value))
-    {
-      if(!InfinitySineGenGain(value)){
-        //AUD_PRINTF(ERROR_LEVEL, "%s SineGen Gain failed val = 0x%x\n",
-        //                   __FUNCTION__, value);
-        return -1;
-      }
-    }
-    break;
-  default:
-    //AUD_PRINTF(ERROR_LEVEL, "%s error parameter, reg = 0x%x, val = 0x%x\n",
-    //                        __FUNCTION__, reg, value);
-    break;
-  }
+	codec_reg[reg] = value;
 
-  codec_reg[reg] = value;
-
-  return 0;
+	return 0;
 }
 
 static const unsigned int infinity_dpga_tlv[] =
@@ -512,27 +531,19 @@ static const struct snd_soc_dapm_route infinity_codec_routes[] =
 #endif
 };
 
-static struct snd_soc_codec_driver infinity_soc_codec_drv =
-{
-  .probe =    infinity_soc_codec_probe,
-  .remove =   infinity_soc_codec_remove,
-  .suspend =  infinity_soc_codec_suspend,
-  .resume =   infinity_soc_codec_resume,
-
-  //.idle_bias_off = TRUE,
-
-  .write = infinity_codec_write,
-  .read  = infinity_codec_read,
-  //.reg_cache_size = sizeof(codec_reg);
-  //.reg_word_size = 1,
-  .dapm_widgets = infinity_dapm_widgets,
-  .num_dapm_widgets = ARRAY_SIZE(infinity_dapm_widgets),
-  .dapm_routes = infinity_codec_routes,
-  .num_dapm_routes = ARRAY_SIZE(infinity_codec_routes),
-  .controls =	infinity_snd_controls,
-  .num_controls = ARRAY_SIZE(infinity_snd_controls),
-  //.reg_cache_size = WM8994_MAX_REGISTER,
-  //.volatile_register = wm8994_soc_volatile,
+static const struct snd_soc_component_driver infinity_soc_codec_drv = {
+	.probe =    infinity_soc_codec_probe,
+	.remove =   infinity_soc_codec_remove,
+	.suspend =  infinity_soc_codec_suspend,
+	.resume =   infinity_soc_codec_resume,
+	.write =    infinity_codec_write,
+	.read  =    infinity_codec_read,
+	.controls = infinity_snd_controls,
+	.num_controls = ARRAY_SIZE(infinity_snd_controls),
+	.dapm_widgets = infinity_dapm_widgets,
+	.num_dapm_widgets = ARRAY_SIZE(infinity_dapm_widgets),
+	.dapm_routes = infinity_codec_routes,
+	.num_dapm_routes = ARRAY_SIZE(infinity_codec_routes),
 };
 
 static int infinity_codec_probe(struct platform_device *pdev)
@@ -540,6 +551,8 @@ static int infinity_codec_probe(struct platform_device *pdev)
 	u32 val;
 	int ret;
 	struct device_node *node = pdev->dev.of_node; //(struct device_node *)platform_get_drvdata(pdev);
+
+	dev_info(&pdev->dev, "probe");
 
 	ret = of_property_read_u32(node, "playback-volume-level", &val);
 	if (ret == 0)
@@ -564,73 +577,34 @@ static int infinity_codec_probe(struct platform_device *pdev)
 	{
 		codec_reg_backup[AUD_LINEIN_GAIN] = val;
 	}
-
-  //dev_set_name(&pdev->dev, "infinity-codec");
-	return snd_soc_register_codec(&pdev->dev, &infinity_soc_codec_drv,
+	return snd_soc_register_component(&pdev->dev, &infinity_soc_codec_drv,
 			infinity_soc_codec_dai_drv, ARRAY_SIZE(infinity_soc_codec_dai_drv));
 }
 
 static int infinity_codec_remove(struct platform_device *pdev)
 {
-  snd_soc_unregister_codec(&pdev->dev);
+  snd_soc_unregister_component(&pdev->dev);
   return 0;
 }
 
+static const struct of_device_id infinity_codec_of_match[] = {
+	{ .compatible = "mstar,snd-infinity-codec", },
+	{ },
+};
+MODULE_DEVICE_TABLE(of, infinity_codec_of_match);
+
 static struct platform_driver infinity_codec_driver =
 {
-  .probe = infinity_codec_probe,
-  .remove = infinity_codec_remove,
-
-  .driver = {
-    .name = "infinity-codec",
-    .owner = THIS_MODULE,
-  },
+	.driver = {
+		.name = "infinity-codec",
+		.owner = THIS_MODULE,
+		.of_match_table = infinity_codec_of_match,
+	},
+	.probe = infinity_codec_probe,
+	.remove = infinity_codec_remove,
 };
 
-static struct platform_device *infinity_codec_device = NULL;
-static int __init infinity_codec_init(void)
-{
-
-  int ret = 0;
-
-  struct device_node *np;
-
-  infinity_codec_device = platform_device_alloc("infinity-codec", -1);
-  if (!infinity_codec_device)
-  {
-    return -ENOMEM;
-  }
-
-  np = of_find_compatible_node(NULL, NULL, "mstar,infinity-audio");
-  if (np)
-  {
-    infinity_codec_device->dev.of_node = of_node_get(np);
-    of_node_put(np);
-  }
-
-  ret = platform_device_add(infinity_codec_device);
-  if (ret)
-  {
-    platform_device_put(infinity_codec_device);
-  }
-
-  ret = platform_driver_register(&infinity_codec_driver);
-  if (ret)
-  {
-    platform_device_unregister(infinity_codec_device);
-  }
-
-  return ret;
-}
-
-static void __exit infinity_codec_exit(void)
-{
-  platform_device_unregister(infinity_codec_device);
-  platform_driver_unregister(&infinity_codec_driver);
-}
-
-module_init(infinity_codec_init);
-module_exit(infinity_codec_exit);
+module_platform_driver(infinity_codec_driver);
 
 /* Module information */
 MODULE_AUTHOR("Roger Lai, roger.lai@mstarsemi.com");

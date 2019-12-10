@@ -1,11 +1,6 @@
-// $Change: 548282 $
+// SWEET BABY JEZZZUS!!!
 //
-// bach.cpp
-//
-// defines for the registers in the iNfinity BACH chip
-//
-//
-#if defined(__linux__)
+
 #include <linux/module.h>
 #include <linux/init.h>
 #include <linux/sched.h>
@@ -32,9 +27,6 @@
 //extern DEVINFO_BOARD_TYPE ms_devinfo_board_type(void);
 #define BOARDNAME() 0x0801 //ms_devinfo_board_type()
 
-#endif
-
-
 const U16 g_nInfinityDmaIntReg[BACH_DMA_NUM][BACH_DMA_INT_NUM] =
 {
     {REG_WR_UNDERRUN_INT_EN, REG_WR_OVERRUN_INT_EN, 0, REG_WR_FULL_INT_EN},
@@ -43,29 +35,23 @@ const U16 g_nInfinityDmaIntReg[BACH_DMA_NUM][BACH_DMA_INT_NUM] =
 
 static S8  m_nInfinityDpgaGain[4] = {0, 0, 0, 0};
 
-
-//-------------------------------------------------------------------------------------------------
-//  Global Variables
-//-------------------------------------------------------------------------------------------------
-
-
 static DMACHANNEL m_infinitydmachannel[2]; // info about dma channel states
 
-//static BOOL m_bIsMapped; // must call MmUnmapIoSpace when destroyed
+//static bool m_bIsMapped; // must call MmUnmapIoSpace when destroyed
 
 static U32  m_pInfinityBaseRegAddr;
 static U32  m_pInfinityAudBank1RegAddr;
 static U32  m_pInfinityAudBank2RegAddr;
 static U32  m_pInfinityAudBank3RegAddr;
 
-static BOOL m_bADCActive;
-static BOOL m_bDACActive;
+static bool m_bADCActive;
+static bool m_bDACActive;
 
 static U16 m_nMicGain = 0x1;
 static U16 m_nMicInGain = 0x011;
 static U16 m_nLineInGain = 0x000;
 
-static BOOL m_bInfinityAtopStatus[BACH_ATOP_NUM];
+static bool m_bInfinityAtopStatus[BACH_ATOP_NUM];
 
 
 
@@ -128,7 +114,7 @@ void InfinityWriteReg(BachRegBank_e nBank, U8 nAddr, U16 regMsk, U16 nValue)
 {
     U16 nConfigValue;
 
-    switch(nBank)
+    /*switch(nBank)
     {
     case BACH_REG_BANK1:
         nConfigValue = READ_WORD(m_pInfinityAudBank1RegAddr + ((nAddr) << 1));
@@ -151,13 +137,14 @@ void InfinityWriteReg(BachRegBank_e nBank, U8 nAddr, U16 regMsk, U16 nValue)
     default:
         ERRMSG("WAVEDEV.DLL: InfinityWriteReg - ERROR bank default case!\n");
         break;
-    }
+    }*/
+
 }
 
 
 U16 InfinityReadReg(BachRegBank_e nBank, U8 nAddr)
 {
-    switch(nBank)
+    /*switch(nBank)
     {
     case BACH_REG_BANK1:
         return READ_WORD(m_pInfinityAudBank1RegAddr + ((nAddr) << 1));
@@ -168,7 +155,7 @@ U16 InfinityReadReg(BachRegBank_e nBank, U8 nAddr)
     default:
         ERRMSG("WAVEDEV.DLL: InfinityReadReg - ERROR bank default case!\n");
         return 0;
-    }
+    }*/
 }
 
 //------------------------------------------------------------------------------
@@ -183,8 +170,8 @@ U16 InfinityReadReg(BachRegBank_e nBank, U8 nAddr)
 //      u32RegLength:   [in] Length of the address space of audio hardware register.
 //
 //  Return Value
-//      Returns TRUE if device was mapped properly
-//      Return FALSE if device could not be mapped
+//      Returns true if device was mapped properly
+//      Return false if device could not be mapped
 //------------------------------------------------------------------------------
 void InfinityDmaInitChannel( U32 nChannelIndex,
                              U32 nPhysDMAAddr,
@@ -215,29 +202,12 @@ void InfinityDmaInitChannel( U32 nChannelIndex,
     InfinityDmaSetThreshold((BachDmaChannel_e)nChannelIndex, nOverrunTh, nUnderrunTh);
 
     // Set up channel mode
-    InfinityDmaSetChMode((BachDmaChannel_e)nChannelIndex, (nChannels==1 ? TRUE:FALSE));
+    InfinityDmaSetChMode((BachDmaChannel_e)nChannelIndex, (nChannels==1 ? true:false));
 
     return ;
 }
 
-void InfinityDmaReset(void)
-{
-    //rest DMA1 interal register
 
-    InfinityWriteReg(BACH_REG_BANK1, BACH_DMA1_CTRL_4, 0xFFFF, 0);		//reset DMA 1 read size
-    InfinityWriteReg(BACH_REG_BANK1, BACH_DMA1_CTRL_12, 0xFFFF, 0);		//reset DMA 1 write size
-
-    InfinityWriteReg(BACH_REG_BANK1, BACH_DMA1_CTRL_0, REG_SW_RST_DMA, REG_SW_RST_DMA);		//DMA 1 software reset
-    InfinityWriteReg(BACH_REG_BANK1, BACH_DMA1_CTRL_0, REG_SW_RST_DMA, 0);
-
-
-    InfinityWriteReg(BACH_REG_BANK1, BACH_DMA1_CTRL_0, (REG_PRIORITY_KEEP_HIGH | REG_RD_LEVEL_CNT_LIVE_MASK),
-                     (REG_PRIORITY_KEEP_HIGH | REG_RD_LEVEL_CNT_LIVE_MASK));
-
-    //enable DMA interrupt
-    InfinityWriteReg(BACH_REG_BANK2, BACH_INT_EN, REG_DMA_INT_EN, REG_DMA_INT_EN);
-
-}
 
 void InfinityDmaReInit(BachDmaChannel_e eDmaChannel)
 {
@@ -262,7 +232,7 @@ void InfinityDmaReInit(BachDmaChannel_e eDmaChannel)
 
 }
 
-void InfinityDmaEnable(BachDmaChannel_e eDmaChannel, BOOL bEnable)
+void InfinityDmaEnable(BachDmaChannel_e eDmaChannel, bool bEnable)
 {
     switch ( eDmaChannel )
     {
@@ -309,14 +279,14 @@ void InfinityDmaStartChannel(BachDmaChannel_e eDmaChannel)
 //TRACE1("BachDmaStartChannel %d",eDmaChannel);
     //DmaReInit(eDmaChannel);
     InfinityDmaClearInt(eDmaChannel);
-    InfinityDmaEnable(eDmaChannel, TRUE);
+    InfinityDmaEnable(eDmaChannel, true);
     m_infinitydmachannel[eDmaChannel].nDMAChannelState = DMA_RUNNING;  // save the state
     return;
 }
 
 void InfinityDmaStopChannel(BachDmaChannel_e eDmaChannel)
 {
-    InfinityDmaEnable(eDmaChannel, FALSE);
+    InfinityDmaEnable(eDmaChannel, false);
     InfinityDmaReInit(eDmaChannel);
 
     //Sleep(100);
@@ -475,7 +445,7 @@ void InfinityDmaSetPhyAddr(BachDmaChannel_e eDmaChannel, U32 nBufAddrOffset, U32
 
 }
 
-BOOL InfinityDmaMaskInt(BachDmaChannel_e eDmaChan, BachDmaInterrupt_e eDmaInt, BOOL bMask)
+bool InfinityDmaMaskInt(BachDmaChannel_e eDmaChan, BachDmaInterrupt_e eDmaInt, bool bMask)
 {
     switch(eDmaChan)
     {
@@ -490,13 +460,13 @@ BOOL InfinityDmaMaskInt(BachDmaChannel_e eDmaChan, BachDmaInterrupt_e eDmaInt, B
         break;
 
     default:
-        return FALSE;
+        return false;
     }
 
-    return TRUE;
+    return true;
 }
 
-BOOL InfinityDmaIsFull(BachDmaChannel_e eDmaChannel)
+bool InfinityDmaIsFull(BachDmaChannel_e eDmaChannel)
 {
     U16 nConfigValue;
 
@@ -504,14 +474,14 @@ BOOL InfinityDmaIsFull(BachDmaChannel_e eDmaChannel)
     {
     case BACH_DMA_WRITER1:
         nConfigValue = InfinityReadReg(BACH_REG_BANK1, BACH_DMA1_CTRL_8);
-        return (nConfigValue & REG_WR_FULL_FLAG) ? TRUE : FALSE;
+        return (nConfigValue & REG_WR_FULL_FLAG) ? true : false;
 
     default:
-        return FALSE;
+        return false;
     }
 }
 
-BOOL InfinityDmaIsEmpty(BachDmaChannel_e eDmaChannel)
+bool InfinityDmaIsEmpty(BachDmaChannel_e eDmaChannel)
 {
     U16 nConfigValue;
 
@@ -519,14 +489,14 @@ BOOL InfinityDmaIsEmpty(BachDmaChannel_e eDmaChannel)
     {
     case BACH_DMA_READER1:
         nConfigValue = InfinityReadReg(BACH_REG_BANK1, BACH_DMA1_CTRL_8);
-        return (nConfigValue & REG_RD_EMPTY_FLAG) ? TRUE : FALSE;
+        return (nConfigValue & REG_RD_EMPTY_FLAG) ? true : false;
 
     default:
-        return FALSE;
+        return false;
     }
 }
 
-BOOL InfinityDmaIsLocalEmpty(BachDmaChannel_e eDmaChannel)
+bool InfinityDmaIsLocalEmpty(BachDmaChannel_e eDmaChannel)
 {
     U16 nConfigValue;
 
@@ -534,15 +504,15 @@ BOOL InfinityDmaIsLocalEmpty(BachDmaChannel_e eDmaChannel)
     {
     case BACH_DMA_READER1:
         nConfigValue = InfinityReadReg(BACH_REG_BANK1, BACH_DMA1_CTRL_8);
-        return (nConfigValue & REG_RD_LOCALBUF_EMPTY) ? TRUE : FALSE;
+        return (nConfigValue & REG_RD_LOCALBUF_EMPTY) ? true : false;
 
     default:
-        return FALSE;
+        return false;
     }
 }
 
 
-BOOL InfinityDmaIsUnderrun(BachDmaChannel_e eDmaChannel)
+bool InfinityDmaIsUnderrun(BachDmaChannel_e eDmaChannel)
 {
     U16 nConfigValue;
 
@@ -550,21 +520,21 @@ BOOL InfinityDmaIsUnderrun(BachDmaChannel_e eDmaChannel)
     {
     case BACH_DMA_WRITER1:
         nConfigValue = InfinityReadReg(BACH_REG_BANK1, BACH_DMA1_CTRL_8);
-        return (nConfigValue & REG_WR_UNDERRUN_FLAG) ? TRUE : FALSE;
+        return (nConfigValue & REG_WR_UNDERRUN_FLAG) ? true : false;
 
     case BACH_DMA_READER1:
         nConfigValue = InfinityReadReg(BACH_REG_BANK1, BACH_DMA1_CTRL_8);
-        return (nConfigValue & REG_RD_UNDERRUN_FLAG) ? TRUE : FALSE;
+        return (nConfigValue & REG_RD_UNDERRUN_FLAG) ? true : false;
 
     default:
         ERRMSG("InfinityDmaIsUnderrun - ERROR default case!\n");
-        return FALSE;
+        return false;
     }
 
-    return FALSE;
+    return false;
 }
 
-BOOL InfinityDmaIsOverrun(BachDmaChannel_e eDmaChannel)
+bool InfinityDmaIsOverrun(BachDmaChannel_e eDmaChannel)
 {
     U16 nConfigValue;
 
@@ -572,17 +542,17 @@ BOOL InfinityDmaIsOverrun(BachDmaChannel_e eDmaChannel)
     {
     case BACH_DMA_WRITER1:
         nConfigValue = InfinityReadReg(BACH_REG_BANK1, BACH_DMA1_CTRL_8);
-        return (nConfigValue & REG_WR_OVERRUN_FLAG) ? TRUE : FALSE;
+        return (nConfigValue & REG_WR_OVERRUN_FLAG) ? true : false;
 
     case BACH_DMA_READER1:
         nConfigValue = InfinityReadReg(BACH_REG_BANK1, BACH_DMA1_CTRL_8);
-        return (nConfigValue & REG_RD_OVERRUN_FLAG) ? TRUE : FALSE;
+        return (nConfigValue & REG_RD_OVERRUN_FLAG) ? true : false;
 
     default:
-        return FALSE;
+        return false;
     }
 
-    return FALSE;
+    return false;
 }
 
 U32 InfinityDmaTrigLevelCnt(BachDmaChannel_e eDmaChannel, U32 nDataSize)
@@ -689,7 +659,7 @@ BachRate_e InfinityRateFromU32(U32 nRate)
     }
 }
 
-BOOL InfinityDmaSetRate(BachDmaChannel_e eDmaChannel, BachRate_e eRate)
+bool InfinityDmaSetRate(BachDmaChannel_e eDmaChannel, BachRate_e eRate)
 {
 
     //TODO:
@@ -716,7 +686,7 @@ BOOL InfinityDmaSetRate(BachDmaChannel_e eDmaChannel, BachRate_e eRate)
             InfinityWriteReg(BACH_REG_BANK1, BACH_SR0_SEL, REG_CIC_3_SEL_MSK, 3<<REG_CIC_3_SEL_POS);
             break;
         default:
-            return FALSE;
+            return false;
         }
         break;
 
@@ -755,14 +725,14 @@ BOOL InfinityDmaSetRate(BachDmaChannel_e eDmaChannel, BachRate_e eRate)
             InfinityWriteReg(BACH_REG_BANK2, BACH_AU_SYS_CTRL1, REG_CODEC_SEL_MSK, 3<<REG_CODEC_SEL_POS);
             break;
         default:
-            return FALSE;
+            return false;
         }
         break;
     default:
-        return FALSE;
+        return false;
     }
 
-    return TRUE;
+    return true;
 }
 
 
@@ -772,7 +742,7 @@ U32 InfinityDmaGetRate(BachDmaChannel_e eDmaChannel)
 }
 
 
-void InfinityDmaSetChMode(BachDmaChannel_e eDma, BOOL bMono)
+void InfinityDmaSetChMode(BachDmaChannel_e eDma, bool bMono)
 {
     switch(eDma)
     {
@@ -794,13 +764,13 @@ void InfinityDmaSetChMode(BachDmaChannel_e eDma, BOOL bMono)
     }
 }
 
-BOOL InfinityDmaIsWork(BachDmaChannel_e eDmaChannel)
+bool InfinityDmaIsWork(BachDmaChannel_e eDmaChannel)
 {
-    return ((m_infinitydmachannel[eDmaChannel].nDMAChannelState==DMA_RUNNING)? TRUE : FALSE);
+    return ((m_infinitydmachannel[eDmaChannel].nDMAChannelState==DMA_RUNNING)? true : false);
 }
 
 
-void InfinityDpgaCtrl(BachDpga_e eDpga, BOOL bEnable, BOOL bMute, BOOL bFade)
+void InfinityDpgaCtrl(BachDpga_e eDpga, bool bEnable, bool bMute, bool bFade)
 {
     U8 nAddr = 0;
     U16 nConfigValue;
@@ -920,7 +890,7 @@ void InfinityDpgaSetGain(BachDpga_e eDpga, S8 s8Gain)
     InfinityWriteReg(BACH_REG_BANK1, nAddr, REG_GAIN_R_MSK | REG_GAIN_L_MSK, (nRGain<<REG_GAIN_R_POS) | (nLGain<<REG_GAIN_L_POS));
 }
 
-void InfinitySetPathOnOff(BachPath_e ePath, BOOL bOn)
+void InfinitySetPathOnOff(BachPath_e ePath, bool bOn)
 {
     switch(ePath)
     {
@@ -1102,21 +1072,21 @@ void InfinityAtopInit(void)
 
 
     //status init
-    m_bADCActive = FALSE;
-    m_bDACActive = FALSE;
+    m_bADCActive = false;
+    m_bDACActive = false;
 
     for(i = 0; i < BACH_ATOP_NUM; i++)
-        m_bInfinityAtopStatus[i] = FALSE;
+        m_bInfinityAtopStatus[i] = false;
 }
 
-void InfinityAtopEnableRef(BOOL bEnable)
+void InfinityAtopEnableRef(bool bEnable)
 {
     U16 nMask;
     nMask = (REG_PD_VI | REG_PD_VREF);
     InfinityWriteReg(BACH_REG_BANK3, BACH_ANALOG_CTRL03, nMask, (bEnable? 0:nMask));
 }
 
-void InfinityAtopDac(BOOL bEnable)
+void InfinityAtopDac(bool bEnable)
 {
     U16 nMask;
     nMask = (REG_PD_BIAS_DAC | REG_PD_L0_DAC | REG_PD_LDO_DAC | REG_PD_R0_DAC | REG_PD_REF_DAC);
@@ -1124,7 +1094,7 @@ void InfinityAtopDac(BOOL bEnable)
     m_bDACActive = bEnable;
 }
 
-void InfinityAtopAdc(BOOL bEnable)
+void InfinityAtopAdc(bool bEnable)
 {
     U16 nMask;
     nMask = (REG_PD_ADC0 | REG_PD_INMUX_MSK | REG_PD_LDO_ADC );
@@ -1132,111 +1102,111 @@ void InfinityAtopAdc(BOOL bEnable)
     m_bADCActive = bEnable;
 }
 
-void InfinityAtopMic(BOOL bEnable)
+void InfinityAtopMic(bool bEnable)
 {
     if(bEnable)
     {
-        InfinityAtopAdc(TRUE);
+        InfinityAtopAdc(true);
         InfinityWriteReg(BACH_REG_BANK3, BACH_ANALOG_CTRL03, REG_PD_MIC_STG1_L | REG_PD_MIC_STG1_R, 0);
         InfinityWriteReg(BACH_REG_BANK3, BACH_ANALOG_CTRL08, REG_SEL_MICGAIN_STG1_L_MSK | REG_SEL_MICGAIN_STG1_R_MSK, m_nMicGain<<REG_SEL_MICGAIN_STG1_L_POS | m_nMicGain<<REG_SEL_MICGAIN_STG1_R_POS);
         InfinityWriteReg(BACH_REG_BANK3, BACH_ANALOG_CTRL06, REG_SEL_GAIN_INMUX0_MSK | REG_SEL_GAIN_INMUX1_MSK, m_nMicInGain<<REG_SEL_GAIN_INMUX0_POS | m_nMicInGain<<REG_SEL_GAIN_INMUX1_POS);
         InfinityWriteReg(BACH_REG_BANK3, BACH_ANALOG_CTRL05, REG_SEL_CH_INMUX0_MSK | REG_SEL_CH_INMUX1_MSK, 0x7<<REG_SEL_CH_INMUX0_POS | 0x7<<REG_SEL_CH_INMUX1_POS);
-        m_bInfinityAtopStatus[BACH_ATOP_MIC]=TRUE;
+        m_bInfinityAtopStatus[BACH_ATOP_MIC]=true;
 
     }
     else
     {
-        InfinityAtopAdc(FALSE);
+        InfinityAtopAdc(false);
         InfinityWriteReg(BACH_REG_BANK3, BACH_ANALOG_CTRL03, REG_PD_MIC_STG1_L | REG_PD_MIC_STG1_R, REG_PD_MIC_STG1_L | REG_PD_MIC_STG1_R);
-        m_bInfinityAtopStatus[BACH_ATOP_MIC]=FALSE;
+        m_bInfinityAtopStatus[BACH_ATOP_MIC]=false;
     }
 }
 
-void InfinityAtopLineIn(BOOL bEnable)
+void InfinityAtopLineIn(bool bEnable)
 {
     if(bEnable)
     {
-        InfinityAtopAdc(TRUE);
+        InfinityAtopAdc(true);
         InfinityWriteReg(BACH_REG_BANK3, BACH_ANALOG_CTRL06, REG_SEL_GAIN_INMUX0_MSK | REG_SEL_GAIN_INMUX1_MSK, m_nLineInGain<<REG_SEL_GAIN_INMUX0_POS | m_nLineInGain<<REG_SEL_GAIN_INMUX1_POS);
         InfinityWriteReg(BACH_REG_BANK3, BACH_ANALOG_CTRL05, REG_SEL_CH_INMUX0_MSK | REG_SEL_CH_INMUX1_MSK, 0x0<<REG_SEL_CH_INMUX0_POS | 0x0<<REG_SEL_CH_INMUX1_POS);
-        m_bInfinityAtopStatus[BACH_ATOP_LINEIN]=TRUE;
+        m_bInfinityAtopStatus[BACH_ATOP_LINEIN]=true;
     }
     else
     {
-        InfinityAtopAdc(FALSE);
-        m_bInfinityAtopStatus[BACH_ATOP_LINEIN]=FALSE;
+        InfinityAtopAdc(false);
+        m_bInfinityAtopStatus[BACH_ATOP_LINEIN]=false;
     }
 
 }
 
 
-BOOL InfinityOpenAtop(BachAtopPath_e ePath)
+bool InfinityOpenAtop(BachAtopPath_e ePath)
 {
     if(ePath < 0 || ePath > BACH_ATOP_NUM)
-        return FALSE;
+        return false;
     else
     {
         if(!(m_bADCActive||m_bDACActive))
-            InfinityAtopEnableRef(TRUE);
+            InfinityAtopEnableRef(true);
         if(ePath<2)
         {
             if(ePath==BACH_ATOP_LINEIN)
             {
                 if(m_bInfinityAtopStatus[BACH_ATOP_MIC])
-                    return FALSE;
+                    return false;
                 else if(!m_bInfinityAtopStatus[BACH_ATOP_LINEIN])
-                    InfinityAtopLineIn(TRUE);
+                    InfinityAtopLineIn(true);
             }
             else
             {
                 if(m_bInfinityAtopStatus[BACH_ATOP_LINEIN])
-                    return FALSE;
+                    return false;
                 else if(!m_bInfinityAtopStatus[BACH_ATOP_MIC])
-                    InfinityAtopMic(TRUE);
+                    InfinityAtopMic(true);
             }
         }
         else
         {
             if(!m_bDACActive)
-                InfinityAtopDac(TRUE);
+                InfinityAtopDac(true);
         }
-        return TRUE;
+        return true;
     }
 }
 
-BOOL InfinityCloseAtop(BachAtopPath_e ePath)
+bool InfinityCloseAtop(BachAtopPath_e ePath)
 {
     switch(ePath)
     {
     case BACH_ATOP_LINEIN:
         if(m_bInfinityAtopStatus[BACH_ATOP_LINEIN])
-            InfinityAtopLineIn(FALSE);
+            InfinityAtopLineIn(false);
         break;
     case BACH_ATOP_MIC:
         if(m_bInfinityAtopStatus[BACH_ATOP_MIC])
-            InfinityAtopMic(FALSE);
+            InfinityAtopMic(false);
         break;
     case BACH_ATOP_LINEOUT:
         if(m_bInfinityAtopStatus[BACH_ATOP_LINEOUT])
-            InfinityAtopDac(FALSE);
+            InfinityAtopDac(false);
         break;
     default:
-        return FALSE;
+        return false;
     }
 
     if(!(m_bADCActive || m_bDACActive))
-        InfinityAtopEnableRef(FALSE);
-    return TRUE;
+        InfinityAtopEnableRef(false);
+    return true;
 }
 
 
-BOOL InfinityAtopMicGain(U16 nSel)
+bool InfinityAtopMicGain(U16 nSel)
 {
     U16 nMicInSel;
     if(nSel>0x1F)
     {
         ERRMSG("BachAtopMicGain - ERROR!! not Support.\n");
-        return FALSE;
+        return false;
     }
 
     m_nMicGain = (nSel&0x18)>>3;
@@ -1255,15 +1225,15 @@ BOOL InfinityAtopMicGain(U16 nSel)
     }
 
 
-    return TRUE;
+    return true;
 }
 
-BOOL InfinityAtopLineInGain(U16 nLevel)
+bool InfinityAtopLineInGain(U16 nLevel)
 {
     if(nLevel>7)
     {
         ERRMSG("BachAtopLineInGain - ERROR!! Level too large .\n");
-        return FALSE;
+        return false;
     }
 
     if(nLevel==2)
@@ -1276,11 +1246,11 @@ BOOL InfinityAtopLineInGain(U16 nLevel)
     if(m_bInfinityAtopStatus[BACH_ATOP_LINEIN])
         InfinityWriteReg(BACH_REG_BANK3, BACH_ANALOG_CTRL06, REG_SEL_GAIN_INMUX0_MSK | REG_SEL_GAIN_INMUX1_MSK, m_nLineInGain<<REG_SEL_GAIN_INMUX0_POS | m_nLineInGain<<REG_SEL_GAIN_INMUX1_POS);
 
-    return TRUE;
+    return true;
 
 }
 
-BOOL InfinityDigMicSetRate(BachRate_e eRate)
+bool InfinityDigMicSetRate(BachRate_e eRate)
 {
     U16 nConfigValue;
     nConfigValue = InfinityReadReg(BACH_REG_BANK2, BACH_DIG_MIC_CTRL0);
@@ -1295,7 +1265,7 @@ BOOL InfinityDigMicSetRate(BachRate_e eRate)
             InfinityWriteReg(BACH_REG_BANK2, BACH_DIG_MIC_CTRL0, REG_DIGMIC_SEL_MSK, 2<<REG_DIGMIC_SEL_POS);
             break;
         default:
-            return FALSE;
+            return false;
         }
     }
     else
@@ -1312,53 +1282,23 @@ BOOL InfinityDigMicSetRate(BachRate_e eRate)
             InfinityWriteReg(BACH_REG_BANK2, BACH_DIG_MIC_CTRL0, REG_DIGMIC_SEL_MSK, 2<<REG_DIGMIC_SEL_POS);
             break;
         default:
-            return FALSE;
+            return false;
         }
     }
-    return TRUE;
+    return true;
 
 }
 
 
-BOOL InfinityDigMicEnable(BOOL bEn)
+bool InfinityDigMicEnable(bool bEn)
 {
     U16 nConfigValue;
     nConfigValue = InfinityReadReg(BACH_REG_BANK2, BACH_DIG_MIC_CTRL1);
     if(nConfigValue & REG_CIC_SEL)
     {
         InfinityWriteReg(BACH_REG_BANK2, BACH_DIG_MIC_CTRL0, REG_DIGMIC_EN, (bEn ? REG_DIGMIC_EN :0) );
-        return TRUE;
+        return true;
     }
     else
-        return FALSE;
-}
-
-//step:-6dB
-BOOL InfinitySineGenGain(U16 nGain)
-{
-    if(nGain<=4)
-    {
-        InfinityWriteReg(BACH_REG_BANK1, BACH_DMA_TEST_CTRL5, REG_SINE_GEN_GAIN_MSK, nGain<<REG_SINE_GEN_GAIN_POS );
-        return TRUE;
-    }
-    else
-        return FALSE;
-}
-
-BOOL InfinitySineGenRate(U16 nRate)
-{
-    if(nRate<BACH_SINERATE_NUM)
-    {
-        InfinityWriteReg(BACH_REG_BANK1, BACH_DMA_TEST_CTRL5, REG_SINE_GEN_FREQ_MSK, nRate<<REG_SINE_GEN_FREQ_POS );
-        return TRUE;
-    }
-    else
-        return FALSE;
-}
-
-void InfinitySineGenEnable(BOOL bEnable)
-{
-    U16 nConfigValue;
-    nConfigValue = (bEnable? REG_SINE_GEN_EN | REG_SINE_GEN_L | REG_SINE_GEN_R : 0);
-    InfinityWriteReg(BACH_REG_BANK1, BACH_DMA_TEST_CTRL5, REG_SINE_GEN_EN | REG_SINE_GEN_L | REG_SINE_GEN_R ,nConfigValue);
+        return false;
 }
