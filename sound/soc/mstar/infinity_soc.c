@@ -23,6 +23,14 @@
 #include "infinity_dai.h"
 #include "infinity.h"
 
+struct infinity_soc {
+	struct snd_soc_dai_link_component cpu_dai_component;
+	struct snd_soc_dai_link_component platform_component;
+	struct snd_soc_dai_link_component codec_component;
+	struct snd_soc_dai_link dai_link;
+	struct snd_soc_card card;
+};
+
 static int infinity_soc_dai_link_init(struct snd_soc_pcm_runtime *rtd) {
 	return 0;
 }
@@ -133,95 +141,70 @@ static struct snd_soc_ops infinity_soc_ops = {
 	.hw_params = infinity_soc_dai_link_hw_params,
 };
 
-static struct snd_soc_dai_link_component infinity_soc_cpus[] = {
-	{
-		.name = "infinity-cpu-dai",
-	}
-};
-
-static struct snd_soc_dai_link_component infinity_soc_codecs[] = {
-	{
-		.name = "infinity-codec",
-		.dai_name = "infinity-codec-dai-main",
-	}
-};
-
-static struct snd_soc_dai_link_component infinity_soc_platforms[] = {
-	{
-		.name = "infinity-platform",
-	}
-};
-
-static struct snd_soc_dai_link infinity_soc_dais[] = {
-	{
-		.name = "Infinity Soc Dai Link",
-		.stream_name = "msb2501_dai_stream",
-		.cpus = infinity_soc_cpus,
-		.num_cpus = ARRAY_SIZE(infinity_soc_cpus),
-		.codecs = infinity_soc_codecs,
-		.num_codecs = ARRAY_SIZE(infinity_soc_codecs),
-		.platforms = infinity_soc_platforms,
-		.num_platforms = ARRAY_SIZE(infinity_soc_platforms),
-		.init = infinity_soc_dai_link_init,
-		.ops = &infinity_soc_ops,
-	},
-};
-
-static struct snd_soc_card infinity_soc_card = {
-		.name = "infinity_snd_machine",
-		.owner = THIS_MODULE,
-		.dai_link = infinity_soc_dais,
-		.num_links = ARRAY_SIZE(infinity_soc_dais),
-		.probe = infinity_soc_card_probe,
-		.suspend_pre = infinity_soc_card_suspend_pre,
-		.suspend_post = infinity_soc_card_suspend_post,
-		.resume_pre = infinity_soc_card_resume_pre,
-		.resume_post = infinity_soc_card_resume_post,
-};
-
 static int infinity_audio_probe(struct platform_device *pdev) {
-	//int ret = 0;
+	struct device *dev = &pdev->dev;
+	struct infinity_soc *soc;
+	struct device_node* device_node;
+	int ret;
 
-	//struct resource *res_mem;
-	//struct resource *res_irq;
-	//struct device_node *np = pdev->dev.of_node;
+	soc = devm_kzalloc(dev, sizeof(*soc), GFP_KERNEL);
+	if(IS_ERR(soc))
+		return PTR_ERR(soc);
 
+	device_node = of_parse_phandle(dev->of_node, "mstar,bach-cpu", 0);
+	if(IS_ERR(device_node))
+		return PTR_ERR(device_node);
+	soc->cpu_dai_component.of_node = device_node;
 
+	device_node = of_parse_phandle(dev->of_node, "mstar,bach-platform", 0);
+		if(IS_ERR(device_node))
+			return PTR_ERR(device_node);
+	soc->platform_component.of_node = device_node;
 
-	/*
-	 ret = of_property_read_u32(np, "debug", &val);
-	 if (ret == 0)
-	 priv->mclk_fs = val;
+	device_node = of_parse_phandle(dev->of_node, "mstar,bach-codec", 0);
+		if(IS_ERR(device_node))
+			return PTR_ERR(device_node);
+	soc->codec_component.of_node = device_node;
+	soc->codec_component.dai_name = "infinity-codec-dai-main",
 
-	 if (of_get_property(np, "fiq-merged", NULL) != NULL)
-	 {
-	 pr_info(" ms_irq_of_init->fiq-merged !\n");
-	 mic->fiq_merged = TRUE;
+	soc->dai_link.name = "Infinity Soc Dai Link";
+	soc->dai_link.stream_name = "msb2501_dai_stream";
+	soc->dai_link.cpus = &soc->cpu_dai_component;
+	soc->dai_link.num_cpus = 1;
+	soc->dai_link.codecs = &soc->codec_component;
+	soc->dai_link.num_codecs = 1;
+	soc->dai_link.platforms = &soc->platform_component;
+	soc->dai_link.num_platforms = 1;
+	soc->dai_link.init = infinity_soc_dai_link_init;
+	soc->dai_link.ops = &infinity_soc_ops;
 
-	 } else
-	 mic->fiq_merged = FALSE;
+	soc->card.name = "infinity_snd_machine";
+	soc->card.owner = THIS_MODULE;
+	soc->card.dai_link = &soc->dai_link;
+	soc->card.num_links = 1;
+	soc->card.probe = infinity_soc_card_probe;
+	soc->card.suspend_pre = infinity_soc_card_suspend_pre;
+	soc->card.suspend_post = infinity_soc_card_suspend_post;
+	soc->card.resume_pre = infinity_soc_card_resume_pre;
+	soc->card.resume_post = infinity_soc_card_resume_post;
 
+	soc->card.dev = dev;
+	dev_set_drvdata(dev, soc);
 
-	 //res_mem = platform_get_resource(pdev, IORESOURCE_MEM, 0);
-	 BACH_BASE_ADDR = (unsigned int)of_iomap(np, 0);
-	 if (BACH_BASE_ADDR)
-	 {
-	 //BACH_BASE_ADDR = (unsigned int)res_mem->start;
-	 AUD_PRINTF(TRACE_LEVEL, "Get resource IORESOURCE_MEM and IO mapping = 0x%x\n", (unsigned int)BACH_BASE_ADDR);
-	 }
-	 else
-	 return -EINVAL;
-	 */
+	dev_info(dev, "registering card");
+	ret = devm_snd_soc_register_card(dev, &soc->card);
 
-	infinity_soc_card.dev = &pdev->dev;
+	if(!ret){
+		dev_info(dev, "registered");
+	}
 
-	//return devm_snd_soc_register_card(&pdev->dev, &infinity_soc_card);
-
-	return snd_soc_register_card(&infinity_soc_card);
+	return ret;
 }
 
 int infinity_audio_remove(struct platform_device *pdev) {
-	return snd_soc_unregister_card(&infinity_soc_card);
+	struct infinity_soc *soc = dev_get_drvdata(&pdev->dev);
+	snd_soc_unregister_card(&soc->card);
+	return 0;
 }
 
 static const struct of_device_id infinity_audio_of_match[] = {
