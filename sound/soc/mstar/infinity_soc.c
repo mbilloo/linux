@@ -1,9 +1,7 @@
 /*------------------------------------------------------------------------------
  *   Copyright (c) 2008 MStar Semiconductor, Inc.  All rights reserved.
  *------------------------------------------------------------------------------*/
-//------------------------------------------------------------------------------
-//  Include files
-//------------------------------------------------------------------------------
+
 #include <linux/module.h>
 #include <linux/interrupt.h>
 #include <linux/platform_device.h>
@@ -19,7 +17,6 @@
 #include <sound/jack.h>
 
 #include "infinity_pcm.h"
-#include "infinity_dai.h"
 #include "infinity.h"
 
 struct infinity_soc {
