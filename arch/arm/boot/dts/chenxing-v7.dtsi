@@ -914,6 +914,8 @@
 			mstar,utmi = <&utmi0>;
 			mstar,usbc = <&usbc0>;
 			interrupts-extended = <&intc_irq 30 IRQ_TYPE_LEVEL_HIGH>;
+			/*pinctrl-names = "default";
+			pinctrl-0 = <&usb_pins>;*/
 			status = "disabled";
 		};
 
