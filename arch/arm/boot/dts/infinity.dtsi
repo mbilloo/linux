@@ -334,14 +334,6 @@
 		status = "disabled";
 	};
 
-	bach: bach@1f206800 {
-		reg = <0x1f206800 0x200>,
-		      <0x1f2a0400 0x200>,
-		      <0x1f2a0600 0x200>;
-		interrupt-parent = <&intc_irq>;
-		interrupts = <42 IRQ_TYPE_LEVEL_HIGH>;
-	};
-
 	fuart: uart@1f220400 {
 		compatible = "mstar,msc313-uart";
 		reg = <0x1f220400 0x100>;
