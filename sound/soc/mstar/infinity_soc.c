@@ -19,7 +19,6 @@
 #include <sound/jack.h>
 
 #include "infinity_pcm.h"
-#include "infinity_codec.h"
 #include "infinity_dai.h"
 #include "infinity.h"
 
@@ -228,3 +227,4 @@ module_platform_driver(infinity_audio);
 
 MODULE_AUTHOR("Roger Lai, roger.lai@mstarsemi.com");
 MODULE_DESCRIPTION("iNfinity Bach Audio ASLA SoC Machine");
+MODULE_LICENSE("GPL v2");

@@ -1,26 +1,25 @@
-/*------------------------------------------------------------------------------
- *   Copyright (c) 2008 MStar Semiconductor, Inc.  All rights reserved.
- *  ------------------------------------------------------------------------------*/
+// SPDX-License-Identifier: GPL-2.0
+/*
+ *   Copyright (c) 2008 MStar Semiconductor, Inc.
+ *
+ *   This code is based on MStar's original driver that was shipped as part
+ *   of a kernel source dump. It's assumed to be GPLv2.
+ *
+ */
 
 #include <linux/module.h>
-#include <linux/types.h>
-#include <linux/slab.h>
 #include <linux/errno.h>
-#include <linux/gpio.h>
-#include <linux/workqueue.h>
-#include <linux/moduleparam.h>
 #include <linux/version.h>
 #include <linux/kernel.h>
 #include <linux/init.h>
 #include <linux/delay.h>
 #include <linux/pm.h>
-#include <linux/i2c.h>
 #include <linux/platform_device.h>
-#include <linux/interrupt.h>
+#include <linux/mfd/syscon.h>
+#include <linux/regmap.h>
 
 #include <linux/of.h>
 #include <linux/of_address.h>
-#include <linux/of_irq.h>
 
 #include <sound/core.h>
 #include <sound/pcm.h>
@@ -28,42 +27,91 @@
 #include <sound/soc.h>
 #include <sound/soc-dapm.h>
 #include <sound/initval.h>
-#include <asm/div64.h>
 #include <sound/tlv.h>
 #include <sound/jack.h>
 
-#include "infinity_codec.h"
 #include "infinity_pcm.h"
 #include "infinity.h"
 
-static u16 codec_reg_backup[AUD_REG_LEN] =
+/**
+* Used to set Playback volume 0~76 (mapping to -64dB~12dB)
+*/
+#define MAIN_PLAYBACK_VOLUME "Main Playback Volume"
+
+/**
+* Used to set Capture volume 0~76 (mapping to -64dB~12dB)
+*/
+#define MAIN_CAPTURE_VOLUME "Main Capture Volume"
+
+/**
+* Used to set microphone gain, total 5 bits ,
+* it consists of the upper 2 bits(4 levels) + the lower 3 bits (8 levels)
+*/
+#define MIC_GAIN_SELECTION "Mic Gain Selection"
+
+/**
+* Used to set line-in gain level 0~7
+*/
+#define LINEIN_GAIN_LEVEL "LineIn Gain Level"
+
+/**
+* Used to set internal debug sinegen gain level 0~4 (-6dB per step)
+*/
+#define SINEGEN_GAIN_LEVEL "SineGen Gain Level"
+
+/**
+* Used to set internal debug sinegen rate set 0~10 (0 for singen disabling)
+*/
+#define SINEGEN_RATE_SELECT "SineGen Rate Select"
+
+/**
+* Used to select audio playback input (DMA Reader, ADC In)
+*/
+#define MAIN_PLAYBACK_MUX "Main Playback Mux"
+
+/**
+* Used to select ADC input (Line-in, Mic-in)
+*/
+#define ADC_MUX "ADC Mux"
+
+enum
 {
-  0x0,	//AUD_PLAYBACK_MUX
-  0x1,	//AUD_ADC_MUX
-  0x0,	//AUD_ATOP_PWR
-  0x3,	//AUD_DPGA_PWR
-  0,	//AUD_PLAYBACK_DPGA
-  0,	//AUD_CAPTURE_DPGA
-  0,	//AUD_MIC_GAIN
-  0,	//AUD_LINEIN_GAIN
-  0,	//AUD_DIGMIC_PWR
-  0,	//AUD_DBG_SINERATE
-  0	//AUD_DBG_SINEGAIN
+	AUD_PLAYBACK_MUX = 0,
+	AUD_ADC_MUX,    //0x1
+	AUD_ATOP_PWR,   //0x2
+	AUD_DPGA_PWR,   //0x3
+	AUD_PLAYBACK_DPGA,
+	AUD_CAPTURE_DPGA,
+	AUD_MIC_GAIN,
+	AUD_LINEIN_GAIN,
+	AUD_DIGMIC_PWR,
+	AUD_DBG_SINERATE,
+	AUD_DBG_SINEGAIN,
+	AUD_REG_LEN,
 };
 
-static u16 codec_reg[AUD_REG_LEN] =
+static const char *infinity_output_select[]  = {"DMA Reader", "ADC In", "Sine Gen"};
+static const struct soc_enum infinity_outsel_enum =
+  SOC_ENUM_SINGLE(AUD_PLAYBACK_MUX, 0, 3, infinity_output_select);
+
+#define OUTPUT_DMA	0
+#define OUTPUT_ADC_IN	1
+#define OUTPUT_SINE_GEN	2
+
+
+static u16 codec_reg_backup[AUD_REG_LEN] =
 {
-  0x0,    //AUD_PLAYBACK_MUX(0:DMA reader 1:ADC In)
-  0x1,    //AUD_ADC_MUX(0:Line-In 1:Mic-in)
-  0x0,    //AUD_ATOP_PWR
-  0x3,    //AUD_DPGA_PWR
-  0,     //AUD_PLAYBACK_DPGA
-  0,   //AUD_CAPTURE_DPGA
-  0,   //AUD_MIC_GAIN
-  0,   //AUD_LINEIN_GAIN
-  0,   //AUD_DIGMIC_PWR
-  0,   //AUD_DBG_SINERATE
-  0    //AUD_DBG_SINEGAIN
+	0x0,	//AUD_PLAYBACK_MUX
+	0x1,	//AUD_ADC_MUX
+	0x0,	//AUD_ATOP_PWR
+	0x3,	//AUD_DPGA_PWR
+	0,	//AUD_PLAYBACK_DPGA
+	0,	//AUD_CAPTURE_DPGA
+	0,	//AUD_MIC_GAIN
+	0,	//AUD_LINEIN_GAIN
+	0,	//AUD_DIGMIC_PWR
+	0,	//AUD_DBG_SINERATE
+	0,	//AUD_DBG_SINEGAIN
 };
 
 static struct infinity_pcm_dma_data infinity_pcm_dma_wr[] =
@@ -82,31 +130,20 @@ static struct infinity_pcm_dma_data infinity_pcm_dma_rd[] =
 	},
 };
 
+struct infinity_codec_data {
+	struct device *dev;
+	struct regmap *regmap;
 
+	//
+	struct regmap_field *mux0_mmc1_src;
 
-static int snd_soc_update_bits(struct snd_soc_component *codec, unsigned int reg,
-	unsigned int mask, unsigned int val)
-{
-	/*bool change;
-	unsigned int old, new;
-	int ret;
-	struct snd_soc_component *component = &codec->component;
-
-	ret = component->read(component, reg, &old);
-	if (ret < 0)
-		return ret;
-
-	new = (old & ~mask) | (val & mask);
-	change = old != new;
-	if (change)
-	{
-		ret = component->write(component, reg, new);
-  	if (ret < 0)
-  		return ret;
-	}
-	return change;*/
-	return 0;
-}
+	// sine gen knobs
+	struct regmap_field *sine_gen_en;
+	struct regmap_field *sine_gen_len;
+	struct regmap_field *sine_gen_ren;
+	struct regmap_field *sine_gen_gain;
+	struct regmap_field *sine_gen_freq;
+};
 
 static struct snd_soc_dai_ops infinity_soc_codec_dai_ops =
 {
@@ -167,25 +204,36 @@ struct snd_soc_dai_driver infinity_soc_codec_dai_drv[] =
 
 static int infinity_soc_codec_probe(struct snd_soc_component* component)
 {
+	struct infinity_codec_data* codec;
+	int i;
 
-   int i;
+	codec = devm_kzalloc(component->dev, sizeof(*codec), GFP_KERNEL);
+	if (IS_ERR(codec))
+		return PTR_ERR(codec);
 
+	codec->dev = component->dev;
 
-  //TODO: Add chip Initialization
-  //InfinitySysInit(); ~~ holy fuck!
+	codec->regmap = syscon_regmap_lookup_by_phandle(component->dev->of_node,
+			"mstar,bach");
+	if (IS_ERR(codec->regmap))
+		return PTR_ERR(codec->regmap);
 
+	codec->mux0_mmc1_src = devm_regmap_field_alloc(component->dev,
+			codec->regmap, mux0_mmc1_src_field);
 
-  for (i = 0; i < AUD_REG_LEN; i++)
-  {
-    snd_soc_component_write(component, i, codec_reg_backup[i]);
-  }
+	codec->sine_gen_en = devm_regmap_field_alloc(component->dev,
+			codec->regmap, sine_gen_en_field);
+	codec->sine_gen_len = devm_regmap_field_alloc(component->dev,
+			codec->regmap, sine_gen_len_field);
+	codec->sine_gen_ren = devm_regmap_field_alloc(component->dev,
+			codec->regmap, sine_gen_ren_field);
+	codec->sine_gen_gain = devm_regmap_field_alloc(component->dev,
+			codec->regmap, sine_gen_gain_field);
+	codec->sine_gen_freq = devm_regmap_field_alloc(component->dev,
+			codec->regmap, sine_gen_freq_field);
 
-  //snd_soc_dapm_disable_pin(&codec->dapm, "DMARD1");
-  //snd_soc_dapm_disable_pin(&codec->dapm, "DMARD2");
-  //snd_soc_dapm_sync(&codec->dapm);
-  //memcpy(codec_reg_backup, codec_reg, sizeof(codec_reg));
-
-  return 0;
+	snd_soc_component_set_drvdata(component, codec);
+	return 0;
 }
 
 static void infinity_soc_codec_remove(struct snd_soc_component *codec)
@@ -194,59 +242,12 @@ static void infinity_soc_codec_remove(struct snd_soc_component *codec)
 
 static int infinity_soc_codec_resume(struct snd_soc_component *codec)
 {
-  int i = 0;
-  u16 tmp = 0;
-
-  //InfinitySysInit();
-
-  for (i = 0; i < AUD_REG_LEN; i++)
-  {
-    tmp = codec_reg[i];
-    snd_soc_update_bits(codec, i, 0xff, codec_reg_backup[i]);
-    codec_reg_backup[i] = tmp;
-  }
-#if 0
-  snd_soc_dapm_enable_pin(&codec->dapm, "DMAWR1");
-  snd_soc_dapm_enable_pin(&codec->dapm, "DMAWR2");
-  snd_soc_dapm_enable_pin(&codec->dapm, "DMARD1");
-  snd_soc_dapm_enable_pin(&codec->dapm, "DMARD2");
-  snd_soc_dapm_enable_pin(&codec->dapm, "BTRX");
-  snd_soc_dapm_enable_pin(&codec->dapm, "LINEIN");
-  snd_soc_dapm_sync(&codec->dapm);
-#endif
-
   return 0;
 }
 
 static int infinity_soc_codec_suspend(struct snd_soc_component *codec)
 {
-
-  int i = 0;
-  u16 tmp = 0;
-
-  for (i = 0; i < AUD_REG_LEN; i++)
-  {
-    tmp = codec_reg_backup[i];
-    codec_reg_backup[i] = codec_reg[i];;
-    codec_reg[i] = tmp;
-  }
-
-#if 0
-  //snd_soc_dapm_disable_pin(&codec->dapm, "DMAWR1");
-  //snd_soc_dapm_disable_pin(&codec->dapm, "DMAWR2");
-  snd_soc_dapm_disable_pin(&codec->card->dapm, "DMARD1");
-  snd_soc_dapm_disable_pin(&codec->card->dapm, "DMARD2");
-  snd_soc_dapm_disable_pin(&codec->card->dapm, "BTRX");
-  snd_soc_dapm_disable_pin(&codec->card->dapm, "LINEIN1");
-  snd_soc_dapm_sync(&codec->card->dapm);
-#endif
-
   return 0;
-}
-
-unsigned int infinity_codec_read(struct snd_soc_component *codec, unsigned int reg)
-{
-  return codec_reg[reg];
 }
 
 //step:-6dB
@@ -279,56 +280,70 @@ void InfinitySineGenEnable(bool bEnable)
     nConfigValue = (bEnable? REG_SINE_GEN_EN | REG_SINE_GEN_L | REG_SINE_GEN_R : 0);
     InfinityWriteReg(BACH_REG_BANK1, BACH_DMA_TEST_CTRL5, REG_SINE_GEN_EN | REG_SINE_GEN_L | REG_SINE_GEN_R ,nConfigValue);
 }
+
 #endif
 
-int infinity_codec_write(struct snd_soc_component *codec, unsigned int reg,
+static unsigned int infinity_codec_read(struct snd_soc_component *component, unsigned int reg)
+{
+	struct infinity_codec_data *codec = snd_soc_component_get_drvdata(component);
+	unsigned int val;
+	switch(reg){
+		case AUD_PLAYBACK_MUX:
+			// if sine gen is enabled it trumps anything else
+			regmap_field_read(codec->sine_gen_en, &val);
+			if(val)
+				return OUTPUT_SINE_GEN;
+			regmap_field_read(codec->mux0_mmc1_src, &val);
+			if(val)
+				return OUTPUT_DMA;
+			else
+				return OUTPUT_ADC_IN;
+		case AUD_DBG_SINERATE:
+			regmap_field_read(codec->sine_gen_freq, &val);
+			return val;
+		case AUD_DBG_SINEGAIN:
+			regmap_field_read(codec->sine_gen_gain, &val);
+			return val;
+		default:
+			dev_info(codec->dev, "unhandled register read from %u", reg);
+			return 0;
+	}
+}
+
+static void infinity_codec_disable_sine_gen(struct infinity_codec_data *codec){
+	regmap_field_write(codec->sine_gen_en, 0);
+}
+
+static int infinity_codec_write(struct snd_soc_component *component, unsigned int reg,
 		unsigned int value) {
+	struct infinity_codec_data *codec = snd_soc_component_get_drvdata(component);
 	int ret = 0;
 
 	switch (reg) {
-#if 0
-	case AUD_PLAYBACK_MUX:
-		if (codec_reg[reg] == 2 && codec_reg[reg] ^ value)
-			InfinitySineGenEnable(FALSE);
-
-		if (value == 0) {
-			//TODO: Switch Mux to DMA Reader
-			InfinitySetMux2(BACH_MUX2_MMC1, 1);
-			InfinityDmaSetRate(BACH_DMA_READER1,
-					InfinityRateFromU32(
-							InfinityDmaGetRate(
-									BACH_DMA_READER1)));
-		} else if (value == 1) {
-			//TODO: Switch Mux to ADC Input
-			InfinitySetMux2(BACH_MUX2_MMC1, 0);
-			//if (snd_soc_dapm_get_pin_status(&codec->dapm, "DMAWR"))
-			if (InfinityDmaIsWork(BACH_DMA_WRITER1)) {
-				//Set the same sample rate with dma writer
-				InfinityDmaSetRate(BACH_DMA_READER1,
-						InfinityRateFromU32(
-								InfinityDmaGetRate(
-										BACH_DMA_WRITER1)));
-			} else {
-#ifdef DIGMIC_EN
-          //set 16k sample rate, because 2M and 4M mode both support
-          InfinityDigMicSetRate(BACH_RATE_16K);
-          InfinityDmaSetRate(BACH_DMA_READER1,BACH_RATE_16K);
-          InfinityDmaSetRate(BACH_DMA_WRITER1,BACH_RATE_16K);
- #else
-				//Set 48k sample rate
-				InfinityDmaSetRate(BACH_DMA_READER1,
-						BACH_RATE_48K);
-				InfinityDmaSetRate(BACH_DMA_WRITER1,
-						BACH_RATE_48K);
-#endif
+		case AUD_PLAYBACK_MUX:
+			switch(value){
+			case OUTPUT_DMA:
+				infinity_codec_disable_sine_gen(codec);
+				regmap_field_write(codec->mux0_mmc1_src, 1);
+				//InfinityDmaSetRate(BACH_DMA_READER1,
+				//		InfinityRateFromU32(InfinityDmaGetRate(BACH_DMA_READER1)));
+				break;
+			case OUTPUT_ADC_IN:
+				infinity_codec_disable_sine_gen(codec);
+				regmap_field_write(codec->mux0_mmc1_src, 0);
+				break;
+			case OUTPUT_SINE_GEN:
+				regmap_field_write(codec->sine_gen_len, 1);
+				regmap_field_write(codec->sine_gen_ren, 1);
+				regmap_field_write(codec->sine_gen_en, 1);
+				//InfinityDmaSetRate(BACH_DMA_READER1, BACH_RATE_48K);
+				//InfinitySineGenEnable(true);
+				break;
+			default:
+				return -EINVAL;
 			}
-		} else if (value == 2) {
-			InfinityDmaSetRate(BACH_DMA_READER1, BACH_RATE_48K);
-			InfinitySineGenEnable(TRUE);
-		} else {
-		}
 		break;
-
+#if 0
 	case AUD_ADC_MUX:
 		ret = snd_soc_component_update_bits(codec, AUD_ATOP_PWR, 0x1,
 				0);
@@ -396,28 +411,18 @@ int infinity_codec_write(struct snd_soc_component *codec, unsigned int reg,
 			}
 		}
 		break;
+#endif
 	case AUD_DBG_SINERATE:
-		if ((codec_reg[reg] ^ value)) {
-			if (!InfinitySineGenRate(value)) {
-				return -1;
-			}
-		}
+		regmap_field_write(codec->sine_gen_freq, value);
 		break;
 	case AUD_DBG_SINEGAIN:
-		if ((codec_reg[reg] ^ value)) {
-			if (!InfinitySineGenGain(value)) {
-				return -1;
-			}
-		}
+		regmap_field_write(codec->sine_gen_gain, value);
 		break;
-#endif
+
 	default:
 		dev_info(codec->dev, "unhandled register write to %u = %u", reg, value);
 		break;
 	}
-
-	codec_reg[reg] = value;
-
 	return 0;
 }
 
@@ -427,33 +432,22 @@ static const unsigned int infinity_dpga_tlv[] =
   0, 76, TLV_DB_LINEAR_ITEM(-64, 12),
 };
 
-static const char *infinity_chip[]     = {"iNfinity_2.0"};
-
-static const struct soc_enum infinity_chip_enum =
-  SOC_ENUM_SINGLE(SND_SOC_NOPM, 0, 1, infinity_chip);
-
-
-
 static const struct snd_kcontrol_new infinity_snd_controls[] =
 {
-  //TODO: Modify according volume or gain level
-  SOC_ENUM(CHIP_VERSION, infinity_chip_enum),
-
-  SOC_SINGLE_TLV(MAIN_PLAYBACK_VOLUME, AUD_PLAYBACK_DPGA, 0, 76, 0, infinity_dpga_tlv),
-  SOC_SINGLE_TLV(MAIN_CAPTURE_VOLUME, AUD_CAPTURE_DPGA, 0, 76, 0, infinity_dpga_tlv),
-  SOC_SINGLE_TLV(MIC_GAIN_SELECTION, AUD_MIC_GAIN, 0, 31, 0, NULL),
-  SOC_SINGLE_TLV(LINEIN_GAIN_LEVEL, AUD_LINEIN_GAIN, 0, 7, 0, NULL),
-  SOC_SINGLE_TLV(SINEGEN_GAIN_LEVEL, AUD_DBG_SINEGAIN, 0, 4, 0, NULL),
-  SOC_SINGLE_RANGE(SINEGEN_RATE_SELECT, AUD_DBG_SINERATE, 0, 0, 10, 0)
-
+	SOC_SINGLE_TLV(MAIN_PLAYBACK_VOLUME, AUD_PLAYBACK_DPGA, 0, 76, 0, infinity_dpga_tlv),
+	SOC_SINGLE_TLV(MAIN_CAPTURE_VOLUME, AUD_CAPTURE_DPGA, 0, 76, 0, infinity_dpga_tlv),
+	SOC_SINGLE_TLV(MIC_GAIN_SELECTION, AUD_MIC_GAIN, 0, 31, 0, NULL),
+	SOC_SINGLE_TLV(LINEIN_GAIN_LEVEL, AUD_LINEIN_GAIN, 0, 7, 0, NULL),
+	SOC_SINGLE_TLV(SINEGEN_GAIN_LEVEL, AUD_DBG_SINEGAIN, 0, 4, 0, NULL),
+	SOC_SINGLE_RANGE(SINEGEN_RATE_SELECT, AUD_DBG_SINERATE, 0, 0, 10, 0)
 };
 
-static const char *infinity_output_select[]  = {"DMA Reader", "ADC In", "Sine Gen"};
+
+
 static const char *infinity_adc_select[]     = {"Line-in", "Mic-in"};
 
 
-static const struct soc_enum infinity_outsel_enum =
-  SOC_ENUM_SINGLE(AUD_PLAYBACK_MUX, 0, 3, infinity_output_select);
+
 
 static const struct soc_enum infinity_adcsel_enum =
   SOC_ENUM_SINGLE(AUD_ADC_MUX, 0, 2, infinity_adc_select);
@@ -549,8 +543,6 @@ static int infinity_codec_probe(struct platform_device *pdev)
 	int ret;
 	struct device_node *node = pdev->dev.of_node; //(struct device_node *)platform_get_drvdata(pdev);
 
-	dev_info(&pdev->dev, "probe");
-
 	ret = of_property_read_u32(node, "playback-volume-level", &val);
 	if (ret == 0)
 	{
@@ -606,3 +598,4 @@ module_platform_driver(infinity_codec_driver);
 /* Module information */
 MODULE_AUTHOR("Roger Lai, roger.lai@mstarsemi.com");
 MODULE_DESCRIPTION("Infinity Bach Audio ALSA SoC Codec");
+MODULE_LICENSE("GPL v2");
