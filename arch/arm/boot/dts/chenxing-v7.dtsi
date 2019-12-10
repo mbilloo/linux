@@ -479,6 +479,11 @@
 			clocks = <&clkgen_pll MSTAR_MPLL_GATE_MPLL_432>;
 		};
 
+		atop: syscon@1f206800 {
+			compatible = "syscon";
+			reg = <0x1f206800 0x600>;
+		};
+
 		bach: syscon@1f2a0400 {
 			compatible = "syscon";
 			reg = <0x1f2a0400 0x600>;
