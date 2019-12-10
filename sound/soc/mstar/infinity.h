@@ -57,12 +57,14 @@ typedef short           S16;
 #define BACH_DPGA_GAIN_MIN_DB -64 //actually -63.5 dB
 #define BACH_DPGA_GAIN_MIN_IDX 0x7F
 
+/*
 #define WRITE_BYTE(_reg, _val)      (*((volatile U8*)(_reg)))  = (U8)(_val)
 #define WRITE_WORD(_reg, _val)      (*((volatile U16*)(_reg))) = (U16)(_val)
 #define WRITE_LONG(_reg, _val)      (*((volatile U32*)(_reg))) = (U32)(_val)
 #define READ_BYTE(_reg)             (*(volatile U8*)(_reg))
 #define READ_WORD(_reg)             (*(volatile U16*)(_reg))
 #define READ_LONG(_reg)             (*(volatile U32*)(_reg))
+*/
 
 typedef struct DMAChannelTag
 {

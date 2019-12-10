@@ -92,22 +92,24 @@ void InfinitySetBankBaseAddr(U32 addr)
 
 void InfinityWriteReg2Byte(U32 nAddr, U16 nValue)
 {
-    WRITE_WORD(m_pInfinityBaseRegAddr + ((nAddr) << 1), nValue);
+    //WRITE_WORD(m_pInfinityBaseRegAddr + ((nAddr) << 1), nValue);
 }
 
 void InfinityWriteRegByte(U32 nAddr, U8 nValue)
 {
-    WRITE_BYTE(m_pInfinityBaseRegAddr + ((nAddr) << 1) - ((nAddr) & 1), nValue);
+    //WRITE_BYTE(m_pInfinityBaseRegAddr + ((nAddr) << 1) - ((nAddr) & 1), nValue);
 }
 
 U16 InfinityReadReg2Byte(U32 nAddr)
 {
-    return READ_WORD(m_pInfinityBaseRegAddr + ((nAddr) << 1));
+    //return READ_WORD(m_pInfinityBaseRegAddr + ((nAddr) << 1));
+	return 0;
 }
 
 U8 InfinityReadRegByte(U32 nAddr)
 {
-    return READ_BYTE(m_pInfinityBaseRegAddr + ((nAddr) << 1) - ((nAddr) & 1));
+    //return READ_BYTE(m_pInfinityBaseRegAddr + ((nAddr) << 1) - ((nAddr) & 1));
+	return 0;
 }
 
 void InfinityWriteReg(BachRegBank_e nBank, U8 nAddr, U16 regMsk, U16 nValue)
@@ -576,24 +578,6 @@ void InfinitySysInit(void)
     // nConfigValue = InfinityReadReg2Byte(0x10340A);
     // AUD_PRINTF(ERROR_LEVEL, "!!!!!!!!!!!!%s: 0x10340A=0x%x\n", __FUNCTION__, nConfigValue);
 
-}
-
-
-void InfinitySetMux2(BachMux2_e eMux, U8 u8Choice)
-{
-    switch(eMux)
-    {
-    case BACH_MUX2_MMC1:
-        InfinityWriteReg(BACH_REG_BANK1, BACH_MUX0_SEL, REG_MMC1_SRC_SEL, (u8Choice?REG_MMC1_SRC_SEL:0));;
-        break;
-    case BACH_MUX2_DMAWR1:
-        InfinityWriteReg(BACH_REG_BANK2, BACH_MUX3_SEL, MUX_ASRC_ADC_SEL, (u8Choice?MUX_ASRC_ADC_SEL:0));;
-        break;
-    default:
-        ERRMSG("InfinitySetMux2 - ERROR MUX2 default case!\n");
-        return;
-
-    }
 }
 
 void InfinityAtopInit(void)

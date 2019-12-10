@@ -3,6 +3,16 @@
  *
  * bank 0
  *
+ * 0xc - mux0 sel
+ * |       5      |
+ * | mmc1 src sel |
+ * | 0 -          |
+ * | 1 -          |
+ *
+ * 0x1d4 - dma test ctrl 5 (sine wave gen)
+ *       15    |       14      |      13        | 7 - 4 |   3 - 0   |
+ * sine gen en | sine gen left | sine gen right | gain  | frequency |
+ *
  * bank 1
  *
  * bank 2
@@ -12,25 +22,55 @@
 #ifndef _INFINITY_REG_H_
 #define _INFINITY_REG_H_
 
-#define MSTAR_BACH_BANK_0	      0
-#define MSTAR_BACH_REG_DMA1_CTRL_0    (MSTAR_BACH_BANK_0 + 0x100)
-#define MSTAR_BACH_REG_DMA1_CTRL_1    (MSTAR_BACH_BANK_0 + 0x104)
-#define MSTAR_BACH_REG_DMA1_CTRL_2    (MSTAR_BACH_BANK_0 + 0x108)
-#define MSTAR_BACH_REG_DMA1_CTRL_3    (MSTAR_BACH_BANK_0 + 0x10c)
-#define MSTAR_BACH_REG_DMA1_CTRL_4    (MSTAR_BACH_BANK_0 + 0x110)
-#define MSTAR_BACH_REG_DMA1_CTRL_5    (MSTAR_BACH_BANK_0 + 0x114)
-#define MSTAR_BACH_REG_DMA1_CTRL_6    (MSTAR_BACH_BANK_0 + 0x118)
-#define MSTAR_BACH_REG_DMA1_CTRL_7    (MSTAR_BACH_BANK_0 + 0x11c)
-#define MSTAR_BACH_REG_DMA1_CTRL_8    (MSTAR_BACH_BANK_0 + 0x120)
-#define MSTAR_BACH_REG_DMA1_CTRL_9    (MSTAR_BACH_BANK_0 + 0x124)
-#define MSTAR_BACH_REG_DMA1_CTRL_10   (MSTAR_BACH_BANK_0 + 0x128)
-#define MSTAR_BACH_REG_DMA1_CTRL_11   (MSTAR_BACH_BANK_0 + 0x12c)
-#define MSTAR_BACH_REG_DMA1_CTRL_12   (MSTAR_BACH_BANK_0 + 0x130)
-#define MSTAR_BACH_REG_DMA1_CTRL_13   (MSTAR_BACH_BANK_0 + 0x134)
-#define MSTAR_BACH_REG_DMA1_CTRL_14   (MSTAR_BACH_BANK_0 + 0x138)
-#define MSTAR_BACH_REG_DMA1_CTRL_15   (MSTAR_BACH_BANK_0 + 0x13c)
-#define MSTAR_BACH_REG_DMA_TEST_CTRL5 (MSTAR_BACH_BANK_0 + 0x140)
-#define MSTAR_BACH_REG_DMA_TEST_CTRL7 (MSTAR_BACH_BANK_0 + 0x144)
+#define MSTAR_BACH_BANK_0			0
+
+#define MSTAR_BACH_REG_ENABLE_CTRL		(MSTAR_BACH_BANK_0 + 0)
+//#define MSTAR_BACH_REG_SR0_SEL			(MSTAR_BACH_BANK_0)
+#define MSTAR_BACH_REG_MUX0_SEL			(MSTAR_BACH_BANK_0 + 0x0c)
+static struct reg_field mux0_mmc1_src_field	= REG_FIELD(MSTAR_BACH_REG_MUX0_SEL, 5, 5);
+
+//#define MSTAR_BACH_REG_MUX1_SEL			(MSTAR_BACH_BANK_0)
+//#define MSTAR_BACH_REG_MIX1_SEL			(MSTAR_BACH_BANK_0)
+//#define MSTAR_BACH_REG_SDM_OFFSET		(MSTAR_BACH_BANK_0)
+//#define MSTAR_BACH_REG_SDM_CTRL			(MSTAR_BACH_BANK_0)
+//#define MSTAR_BACH_REG_CODEC_I2S_RX_CTRL	(MSTAR_BACH_BANK_0)
+//#define MSTAR_BACH_REG_CODEC_I2S_TX_CTRL	(MSTAR_BACH_BANK_0)
+//#define MSTAR_BACH_REG_SYNTH_CTRL		(MSTAR_BACH_BANK_0)
+//#define MSTAR_BACH_REG_PAD0_CFG			(MSTAR_BACH_BANK_0)
+//#define MSTAR_BACH_REG_MMC1_DPGA_CFG1		(MSTAR_BACH_BANK_0)
+//#define MSTAR_BACH_REG_MMC1_DPGA_CFG2		(MSTAR_BACH_BANK_0)
+//#define MSTAR_BACH_REG_ADC_DPGA_CFG1		(MSTAR_BACH_BANK_0)
+//#define MSTAR_BACH_REG_ADC_DPGA_CFG2		(MSTAR_BACH_BANK_0)
+//#define MSTAR_BACH_REG_AEC1_DPGA_CFG1		(MSTAR_BACH_BANK_0)
+//#define MSTAR_BACH_REG_AEC1_DPGA_CFG2		(MSTAR_BACH_BANK_0)
+//#define MSTAR_BACH_REG_MMCDEC1_DPGA_CFG1	(MSTAR_BACH_BANK_0)
+//#define MSTAR_BACH_REG_MMCDEC1_DPGA_CFG2	(MSTAR_BACH_BANK_0)
+
+#define MSTAR_BACH_REG_DMA1_CTRL_0			(MSTAR_BACH_BANK_0 + 0x100)
+#define MSTAR_BACH_REG_DMA1_CTRL_1			(MSTAR_BACH_BANK_0 + 0x104)
+#define MSTAR_BACH_REG_DMA1_CTRL_2			(MSTAR_BACH_BANK_0 + 0x108)
+#define MSTAR_BACH_REG_DMA1_CTRL_3			(MSTAR_BACH_BANK_0 + 0x10c)
+#define MSTAR_BACH_REG_DMA1_CTRL_4			(MSTAR_BACH_BANK_0 + 0x110)
+#define MSTAR_BACH_REG_DMA1_CTRL_5			(MSTAR_BACH_BANK_0 + 0x114)
+#define MSTAR_BACH_REG_DMA1_CTRL_6			(MSTAR_BACH_BANK_0 + 0x118)
+#define MSTAR_BACH_REG_DMA1_CTRL_7			(MSTAR_BACH_BANK_0 + 0x11c)
+#define MSTAR_BACH_REG_DMA1_CTRL_8			(MSTAR_BACH_BANK_0 + 0x120)
+#define MSTAR_BACH_REG_DMA1_CTRL_9			(MSTAR_BACH_BANK_0 + 0x124)
+#define MSTAR_BACH_REG_DMA1_CTRL_10			(MSTAR_BACH_BANK_0 + 0x128)
+#define MSTAR_BACH_REG_DMA1_CTRL_11			(MSTAR_BACH_BANK_0 + 0x12c)
+#define MSTAR_BACH_REG_DMA1_CTRL_12			(MSTAR_BACH_BANK_0 + 0x130)
+#define MSTAR_BACH_REG_DMA1_CTRL_13			(MSTAR_BACH_BANK_0 + 0x134)
+#define MSTAR_BACH_REG_DMA1_CTRL_14			(MSTAR_BACH_BANK_0 + 0x138)
+#define MSTAR_BACH_REG_DMA1_CTRL_15			(MSTAR_BACH_BANK_0 + 0x13c)
+
+#define MSTAR_BACH_REG_DMA_TEST_CTRL5			(MSTAR_BACH_BANK_0 + 0x1d4)
+static struct reg_field sine_gen_en_field   = REG_FIELD(MSTAR_BACH_REG_DMA_TEST_CTRL5, 15, 15);
+static struct reg_field sine_gen_len_field  = REG_FIELD(MSTAR_BACH_REG_DMA_TEST_CTRL5, 14, 14);
+static struct reg_field sine_gen_ren_field  = REG_FIELD(MSTAR_BACH_REG_DMA_TEST_CTRL5, 13, 13);
+static struct reg_field sine_gen_gain_field = REG_FIELD(MSTAR_BACH_REG_DMA_TEST_CTRL5, 4, 7);
+static struct reg_field sine_gen_freq_field = REG_FIELD(MSTAR_BACH_REG_DMA_TEST_CTRL5, 0, 3);
+
+#define MSTAR_BACH_REG_DMA_TEST_CTRL7 (MSTAR_BACH_BANK_0 + 0x1dc)
 
 #define MSTAR_BACH_BANK_1             0x200
 #define MSTAR_BACH_REG_INT_EN         (MSTAR_BACH_BANK_1 + 0x1c)
@@ -168,10 +208,7 @@ enum
 #define REG_SRC1_SEL_MSK              (0xF<<REG_SRC1_SEL_POS)
 
 
-/**
- * @brief Register 06h,
- */
-#define REG_MMC1_SRC_SEL              (1<<5)
+
 
 
 /**
@@ -373,16 +410,7 @@ enum
 #define REG_WR_LEVEL_CNT_MSK          (0xFFFF << REG_RD_LEVEL_CNT_POS)
 
 
-/**
- * @brief Register EAh
- */
-#define REG_SINE_GEN_EN              (1<<15)
-#define REG_SINE_GEN_L               (1<<14)
-#define REG_SINE_GEN_R               (1<<13)
-#define REG_SINE_GEN_GAIN_POS        4
-#define REG_SINE_GEN_GAIN_MSK        (0XF << REG_SINE_GEN_GAIN_POS)
-#define REG_SINE_GEN_FREQ_POS        0
-#define REG_SINE_GEN_FREQ_MSK        (0XF << REG_SINE_GEN_FREQ_POS)
+
 
 
 /**

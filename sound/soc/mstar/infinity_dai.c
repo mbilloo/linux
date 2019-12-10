@@ -78,3 +78,4 @@ module_platform_driver(infinity_cpu_dai_driver);
 /* Module information */
 MODULE_AUTHOR("Trevor Wu, trevor.wu@mstarsemi.com");
 MODULE_DESCRIPTION("Infinity Bach Audio ALSA SoC Dai");
+MODULE_LICENSE("GPL v2");

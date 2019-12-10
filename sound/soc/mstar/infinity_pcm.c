@@ -1410,3 +1410,4 @@ module_platform_driver(infinity_pcm_driver);
 
 MODULE_AUTHOR("Roger Lai, roger.lai@mstarsemi.com");
 MODULE_DESCRIPTION("iNfinity Bach PCM DMA module");
+MODULE_LICENSE("GPL v2");
