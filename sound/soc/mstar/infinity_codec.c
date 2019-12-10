@@ -68,22 +68,18 @@ static u16 codec_reg[AUD_REG_LEN] =
 
 static struct infinity_pcm_dma_data infinity_pcm_dma_wr[] =
 {
-  {
-    .name	= "DMA writer",
-    .channel	= BACH_DMA_WRITER1,
-    //.dma_addr	= NULL,
-    //.dma_size	= 0,
-  },
+	{
+		.name	 = "DMA writer",
+		.channel = BACH_DMA_WRITER1,
+	},
 };
 
 static struct infinity_pcm_dma_data infinity_pcm_dma_rd[] =
 {
-  {
-    .name	= "DMA reader",
-    .channel	= BACH_DMA_READER1,
-    //.dma_addr	= NULL,
-    //.dma_size	= 0,
-  },
+	{
+		.name	 = "DMA reader",
+		.channel = BACH_DMA_READER1,
+	},
 };
 
 

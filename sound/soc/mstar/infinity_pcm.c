@@ -939,7 +939,7 @@ static const struct of_device_id infinity_pcm_of_match[] = {
 	},
 	{ },
 };
-MODULE_DEVICE_TABLE(of, infinity_pc_of_match);
+MODULE_DEVICE_TABLE(of, infinity_pcm_of_match);
 
 static struct platform_driver infinity_pcm_driver = {
 	.driver = {
