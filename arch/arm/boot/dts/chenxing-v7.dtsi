@@ -753,6 +753,14 @@
 				groups = "sd";
 				bias-pull-up;
 			};
+			usb_pins: usb {
+				function = "usb";
+				groups = "usb";
+			};
+			usb1_pins: usb1 {
+				function = "usb1";
+				groups = "usb1";
+			};
 		};
 
 		pm_uart: uart@1f221000 {
