@@ -493,6 +493,7 @@
 
 		bach_codec: bach_codec@0 {
 			compatible = "mstar,snd-infinity-codec";
+			mstar,atop = <&atop>;
 			mstar,bach = <&bach>;
 		};
 
