@@ -51,6 +51,8 @@
 		bus-width = <4>;
 		clocks = <&clkgen_mux_sdio 0>;
 		interrupts-extended = <&intc_irq 60 IRQ_TYPE_LEVEL_HIGH>;
+		pinctrl-names = "default";
+		pinctrl-0 = <&sdio_pins>;
 		status = "disabled";
 	};
 	
