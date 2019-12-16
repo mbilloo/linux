@@ -551,6 +551,7 @@ void InfinitySysInit(void)
 
 void InfinityAtopInit(void)
 {
+	// ~dgp this looks like the wrong address?
     int i;
     InfinityWriteRegByte(0x00103400, 0x14);
     //InfinityWriteRegByte(0x00103401, 0x02);
