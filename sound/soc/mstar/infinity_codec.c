@@ -482,7 +482,7 @@ static const struct snd_soc_dapm_widget infinity_dapm_widgets[] =
 
 
   SND_SOC_DAPM_DAC("DAC",   NULL, AUD_ATOP_PWR, 1, 0),
-  //SND_SOC_DAPM_DAC("Hp Amp",NULL, AUD_ATOP_PWR, 1, 0),
+  SND_SOC_DAPM_DAC("Hp Amp",NULL, AUD_ATOP_PWR, 1, 0),
   SND_SOC_DAPM_ADC("ADC",   NULL, AUD_ATOP_PWR, 0, 0),
   //SND_SOC_DAPM_ADC("Mic Bias", NULL, AUD_ATOP_PWR, 2, 0),
   //SND_SOC_DAPM_MICBIAS("Mic Bias", AUD_ATOP_PWR, 5, 0),
@@ -497,32 +497,18 @@ static const struct snd_soc_dapm_widget infinity_dapm_widgets[] =
 static const struct snd_soc_dapm_route infinity_codec_routes[] =
 {
 	{"Main Playback Mux", "DMA Reader", "DMARD"},
-#ifdef DIGMIC_EN
-	{"Main Playback Mux", "ADC In",     "DIGMIC"},
-#else
 	{"Main Playback Mux", "ADC In",     "ADC"},
-#endif
 	{"Main Playback Mux", "Sine Gen",   "DMARD"},
 	{"Main Playback DPGA", NULL, "Main Playback Mux"},
 
 	{"DAC",     NULL, "Main Playback DPGA"},
-	//{"Hp Amp",  NULL, "Main Playback DPGA"},
-
 	{"LINEOUT", NULL, "DAC"},
-	{"HPOUT",   NULL, "Hp Amp"},
 
 	{"DMAWR", NULL, "Main Capture DPGA"},
-#ifdef DIGMIC_EN
-	{"Main Capture DPGA", NULL, "DIGMIC"},
-	{"DIGMIC", NULL, "MICIN"}
-#else
 	{"Main Capture DPGA", NULL, "ADC"},
 
 	{"ADC",     NULL, "ADC Mux"},
-
-	{"ADC Mux", "Line-in", "LINEIN"},
 	{"ADC Mux", "Mic-in",  "MICIN"}
-#endif
 };
 
 static const struct snd_soc_component_driver infinity_soc_codec_drv = {
