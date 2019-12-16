@@ -190,7 +190,7 @@
 &sd {
 	vmmc-supply = <&vcc_io>;
 	vqmmc-supply = <&vcc_io>;
-	cd-gpios = <&gpio_pm 1 GPIO_ACTIVE_LOW>;
+	cd-gpios = <&gpio_pm 7 GPIO_ACTIVE_LOW>;
 	status = "okay";
 };
 
