@@ -119,6 +119,15 @@
 				<&intc_fiq 0 IRQ_TYPE_LEVEL_HIGH>;
 		status = "disabled";
 	};
+
+	 wifi_pwr: fixedregulator@0 {
+		compatible = "regulator-fixed";
+		regulator-name = "wifi_pwr";
+		regulator-min-microvolt = <3300000>;
+		regulator-max-microvolt = <3300000>;
+		gpio = <&gpio_pm 5 0>;
+	};
+
 };
 
 &cpu0 {
