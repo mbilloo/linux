@@ -91,3 +91,9 @@
 	reg = <0x1f004a00 0x200>;
 	interrupts-extended = <&intc_irq 14 IRQ_TYPE_LEVEL_HIGH>;
 };
+
+&gpio_pm {
+	interrupt-names = "pm_spi_do", "pm_sd_sdz";
+	interrupts-extended = <&gpio_pm 0 29 IRQ_TYPE_LEVEL_HIGH>,
+			      <&intc_irq 24 IRQ_TYPE_LEVEL_HIGH>;
+};
