@@ -74,6 +74,8 @@ static void msc313e_sleep_intc_chainedhandler(struct irq_desc *desc){
 	status |= readw_relaxed(intc->base + REG_STATUS_HIGH) << 16;
 
 	while (status) {
+		// pretty sure this results in an off by one
+		// need to validate why I did this.
 		hwirq = __ffs(status);
 		virq = irq_find_mapping(intc->domain, hwirq);
 		if (virq)
