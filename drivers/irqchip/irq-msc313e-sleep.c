@@ -12,6 +12,8 @@
 #include <linux/of_irq.h>
 #include <dt-bindings/interrupt-controller/arm-gic.h>
 
+#include <soc/mstar/riu.h>
+
 /*
  * pm "sleep" intc
  * This is another interrupt controller that seems to be in the always on
@@ -29,8 +31,7 @@
 
 #define NR_INTR_SLEEP	32
 
-#define REG_STATUS_LOW	0x0
-#define REG_STATUS_HIGH	0x4
+#define REG_STATUS	0x0
 
 struct msc313e_sleep_intc {
 	void __iomem *base;
@@ -70,8 +71,7 @@ static void msc313e_sleep_intc_chainedhandler(struct irq_desc *desc){
 	unsigned int virq;
 
 	chained_irq_enter(chip, desc);
-	status = readw_relaxed(intc->base + REG_STATUS_LOW);
-	status |= readw_relaxed(intc->base + REG_STATUS_HIGH) << 16;
+	status = riu_readl_relaxed(intc->base + REG_STATUS);
 
 	while (status) {
 		// pretty sure this results in an off by one
