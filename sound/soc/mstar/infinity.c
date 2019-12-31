@@ -551,31 +551,63 @@ void InfinitySysInit(void)
 
 void InfinityAtopInit(void)
 {
-	// ~dgp this looks like the wrong address?
+
     int i;
     InfinityWriteRegByte(0x00103400, 0x14);
     //InfinityWriteRegByte(0x00103401, 0x02);
     InfinityWriteRegByte(0x00103401, 0x0a);//enable MSP,speed up charge VREF
+
+    // ~ dgp atop 0x0 0x0a14, reset 0x0204, en_dac_ck? msp
+
+
     InfinityWriteRegByte(0x00103402, 0x30);
     InfinityWriteRegByte(0x00103403, 0x00);
+
+    // ~ dgp atop 0x4 0x0030, reset 0x0000, en_qs_ldo_adc, en_qs_ldo_dac?
+
     InfinityWriteRegByte(0x00103404, 0x80);
     InfinityWriteRegByte(0x00103405, 0x00);
+
+    // ~ dgp atop 0x8 - 0x0080, sw tst, reset 0x0080
+
     //InfinityWriteRegByte(0x00103406, 0x00);
     //InfinityWriteRegByte(0x00103407, 0x00);
+
     InfinityWriteRegByte(0x00103406, 0xf7);
     InfinityWriteRegByte(0x00103407, 0x1f);
+
+    //~ dgp atop 0xc 0x1ff7, kernel has 1fff, reset 0x1fff, power down everything?
+
     InfinityWriteRegByte(0x00103408, 0x00);
     InfinityWriteRegByte(0x00103409, 0x00);
+
+
+    // ~ dgp atop 0x10 0x0000, reset 0x0000 - reset dac?
+
     InfinityWriteRegByte(0x0010340a, 0x77);
     InfinityWriteRegByte(0x0010340b, 0x00);
+
+    // ~ dgp atop 0x14 0x0077, reset 0x000 - inmux?
+
     InfinityWriteRegByte(0x0010340c, 0x33);
     InfinityWriteRegByte(0x0010340d, 0x00);
+
+    // ~ dgp atop 0x18 0x0033, reset 0x0000 - sel gain
+
     InfinityWriteRegByte(0x0010340e, 0x00);
     InfinityWriteRegByte(0x0010340f, 0x00);
+
+    // ~ dgp atop 0x1c 0x0000, reset 0
+
     InfinityWriteRegByte(0x00103410, 0x14);
     InfinityWriteRegByte(0x00103411, 0x00);
+
+    // ~ dgp atop 0x20 0x0014, reset 0, - mic gain
+
     InfinityWriteRegByte(0x00103424, 0x02);
     InfinityWriteRegByte(0x00103425, 0x00);
+
+    // ~ dgp atop 0x48 0x0002 ???
 
 
     //status init
