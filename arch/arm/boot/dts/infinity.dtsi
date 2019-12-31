@@ -383,6 +383,10 @@
 		#phy-cells = <0>;
 	};
 
+	emmc: emmc@1f280400 {
+
+	}
+
 	sdio: sdio@1f282000 {
 		compatible = "mstar,msc313-sdio";
 		interrupt-parent = <&intc_irq>;
