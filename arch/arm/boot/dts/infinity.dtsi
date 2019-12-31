@@ -318,11 +318,6 @@
 		compatible = "mstar,msc313-mcm";
 		reg = <0x1f226800 0xa8>;
 	};
-	
-	/* holder for notes */
-	fcie {
-		interrupts = <18 IRQ_TYPE_LEVEL_HIGH>;
-	};
 };
 
 &soc {	
@@ -384,8 +379,8 @@
 	};
 
 	emmc: emmc@1f280400 {
-
-	}
+		interrupts = <18 IRQ_TYPE_LEVEL_HIGH>;
+	};
 
 	sdio: sdio@1f282000 {
 		compatible = "mstar,msc313-sdio";
