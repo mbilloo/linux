@@ -51,9 +51,22 @@
  *
  * 0x010 - config4
  *
- *    15   |    14    | 13 - 8 | 7 - 4  | 3 - 0
- * trp msb | trcd msb |  trs   |  trp   | trcd
- *    0    |     0    |  0x1e  |  0x9   | 0x9
+ *    15   |    14    | 13 - 8 |    7 - 4  |   3 - 0
+ * trp[4]  |  trcd[4] |  trs   |  trp[3:0] | trcd[3:0]
+ *    0    |     0    |  0x1e  |  0x9      | 0x9
+ *
+ * 0x014 - config5
+ * 13 - 8 | 7 - 4 | 3 - 0
+ *   trc  | trtp  | trrd
+ *
+ * 0x018 - config6
+ * 15 - 12 | 11 - 8 | 7 - 4 | 3 - 0
+ *  trtw   |  twtr  |  twr  |  twl
+ *
+ * 0x01c - config7
+ *
+ *    15  | 14   | 12 | 11 - 8 | 7 - 0
+ * twr[4] | tccd |  txp   | trfc
  *
  * The vendor suspend code writes 0xFFFF to all of these
  * but the first where it writes 0xFFFE instead
@@ -104,6 +117,13 @@
 #define REG_CONFIG4_TRAS_SHIFT		8
 #define REG_CONFIG4_TRCD_MSB		BIT(14)
 #define REG_CONFIG4_TRP_MSB		BIT(15)
+
+#define REG_CONFIG5			0x14
+#define REG_CONFIG5_TRRD		GENMASK(3,0)
+#define REG_CONFIG5_TRTP		GENMASK(7,4)
+#define REG_CONFIG5_TRTP_SHIFT		4
+#define REG_CONFIG5_TRC			GENMASK(13, 8)
+#define REG_CONFIG5_TRC_SHIFT		8
 
 struct msc313_miu {
 	struct device *dev;
@@ -177,6 +197,37 @@ static int msc313_miu_read_tras(struct msc313_miu *miu){
 	return ret;
 }
 
+static int msc313_miu_read_trrd(struct msc313_miu *miu){
+	unsigned config4;
+	int ret;
+	ret = regmap_read(miu->digital, REG_CONFIG5, &config4);
+	if(!ret){
+		ret = (config4 & REG_CONFIG5_TRRD);
+	}
+	return ret;
+}
+
+static int msc313_miu_read_trtp(struct msc313_miu *miu){
+	unsigned config4;
+	int ret;
+	ret = regmap_read(miu->digital, REG_CONFIG5, &config4);
+	if(!ret){
+		ret = (config4 & REG_CONFIG5_TRTP) >> REG_CONFIG5_TRTP_SHIFT;
+	}
+	return ret;
+}
+
+static int msc313_miu_read_trc(struct msc313_miu *miu){
+	unsigned config4;
+	int ret;
+	ret = regmap_read(miu->digital, REG_CONFIG5, &config4);
+	if(!ret){
+		ret = (config4 & REG_CONFIG5_TRC) >> REG_CONFIG5_TRC_SHIFT;
+	}
+	return ret;
+}
+
+
 static int msc313_miu_probe(struct platform_device *pdev)
 {
 	struct msc313_miu *miu;
@@ -185,7 +236,7 @@ static int msc313_miu_probe(struct platform_device *pdev)
 	unsigned int config1;
 	
 	int banks, cols, buswidth;
-	int trcd, trp, tras;
+	int trcd, trp, tras, trrd, trtp, trc;
 
 	u32 dtval;
 
@@ -248,8 +299,12 @@ static int msc313_miu_probe(struct platform_device *pdev)
 	trcd = msc313_miu_read_trcd(miu);
 	trp = msc313_miu_read_trp(miu);
 	tras = msc313_miu_read_tras(miu);
+	trrd = msc313_miu_read_trrd(miu);
+	trtp = msc313_miu_read_trtp(miu);
+	trc = msc313_miu_read_trc(miu);
 
-	dev_info(miu->dev, "trcd: %d, trp: %d, tras: %d", trcd, trp, tras);
+	dev_info(miu->dev, "trcd: %d, trp: %d, tras: %d, trrd: %d, trtp: %d, trc: %d",
+			trcd, trp, tras, trrd, trtp, trc);
 
 	if(!of_property_read_u32(pdev->dev.of_node, "mstar,rd-timing", &dtval)) {
 		dev_info(&pdev->dev, "Setting read back data delay to %d", (int) dtval);
