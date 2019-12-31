@@ -459,6 +459,9 @@
 			interrupts = <49 IRQ_TYPE_LEVEL_HIGH>;
 			clock-names = "miu", "ddr";
 			clocks = <&clkgen_mux_miu 0>, <&clkgen_mux_ddrsyn 0>;
+			/*mstar,rd-timing = <0xB>;*/
+			mstar,trcd = <0x6>;
+			mstar,trp = <0x6>;
 		};
 
 		l3bridge: l3bridge@1f204400 {
