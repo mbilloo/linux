@@ -14,9 +14,6 @@
  * sine gen en | sine gen left | sine gen right | gain  | frequency |
  *
  * bank 1
- *
- * bank 2
- *
  */
 
 #ifndef _INFINITY_REG_H_
@@ -78,6 +75,22 @@ static struct reg_field sine_gen_freq_field = REG_FIELD(MSTAR_BACH_REG_DMA_TEST_
 #define MSTAR_BACH_REG_AU_SYS_CTRL1   (MSTAR_BACH_BANK_1 + 0x58)
 #define MSTAR_BACH_REG_DIG_MIC_CTRL0  (MSTAR_BACH_BANK_1 + 0x74)
 #define MSTAR_BACH_REG_DIG_MIC_CTRL1  (MSTAR_BACH_BANK_1 + 0x78)
+
+/*
+ * bank 2
+ *
+ * ctrl 0
+ *
+ * ctrl 1
+ *
+ * ctrl 2
+ *
+ * ctrl 3 - power control
+ *    7       |    6    |    5    |   4    | 3 - 2 |     1    |   0
+ * mic stg1_l | ldo dac | ldo adc | l0 dac | inmux | bias dac | adc0
+ *
+ *
+ */
 
 #define MSTAR_BACH_BANK_2             0x400
 #define MSTAR_BACH_REG_ANALOG_CTRL00  (MSTAR_BACH_BANK_2 + 0x00)
