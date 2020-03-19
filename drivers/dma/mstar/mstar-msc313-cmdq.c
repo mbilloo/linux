@@ -24,6 +24,14 @@
  * the camera ip blocks. Apparently this thing can do registers writes,
  * polling for a bit to be set or cleared among other operations.
  *
+ * descriptors are apparently 8 bytes like this;
+ * | 0 - 1 | 2 - 3 | 4 - 6                              | 7:0-3             | 7:4-7 |
+ * | mask  | data  | addr                               | cmd               | dbg   |
+ * |       |       | this is an address in io/riu space | 0x0 - nop         |       |
+ * |       |       | which seems to be 4-byte addressed | 0x1 - write       |       |
+ * |       |       |                                    | 0x3 - poll eq     |       |
+ * |       |       |                                    | 0xb - poll not eq |       |
+ *
  * 0x004 -
  * 0
  * en
