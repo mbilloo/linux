@@ -85,9 +85,9 @@
 		shifts = <0>;
 		mux-shifts = <2>;
 		mux-widths = <2>;
-		clocks = <&clkgen_pll 9>,
+		clocks = <&clkgen_pll MSTAR_MPLL_GATE_MPLL_216>,
 			 <&clk_mpll_216_div2>,
-			 <&clkgen_pll 14>,
+			 <&clkgen_pll MSTAR_MPLL_GATE_MPLL_86>,
 		         <&clk_mpll_288_div4>;
 	};
 
@@ -229,36 +229,6 @@
 	mcm2: mcm@1f226800 {
 		compatible = "mstar,msc313-mcm";
 		reg = <0x1f226800 0xa8>;
-	};
-
-	clkgen_mux_spi_mcu_pm: clkgen_mux@1f001c80 {
-		compatible = "mstar,msc313e-clkgen-mux";
-		reg = <0x1f001c80 0x4>;
-		#clock-cells = <1>;
-		clock-output-names = "mcu_pm", "spi_pm";
-		shifts = <0>, <8>;
-		mux-shifts = <2>, <10>;
-		mux-widths = <4>, <4>;
-		mux-ranges = <0 1>, <1 16>;
-		clocks = /* mcu_pm */
-				 <&clkgen_pll 9>,
-				 /* spi_pm */
-				 <&rtc_32k>,
-				 <&clk_mpll_216_div8>,
-				 <&clk_mpll_144_div4>,
-				 <&clk_mpll_86_div2>,
-				 <&clk_mpll_216_div4>,
-				 <&clk_mpll_144_div2>,
-				 <&clkgen_pll 14>,
-				 <&clk_mpll_216_div2>,
-				 <&xtal12_div8>,
-				 <&xtal12_div12>,
-				 <&rtc32k_div4>,
-				 <&xtal12_div16>,
-				 <&xtal12_div2>,
-				 <&xtal12_div4>,
-				 <&xtal12>,
-				 <&xtal24>;
 	};
 
 	pwm0: pwm@1f001da0 {
