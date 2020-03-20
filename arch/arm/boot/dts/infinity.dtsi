@@ -41,37 +41,9 @@
 			clock-latency-ns = <300000>;
 		};
 	};
+};
 
-	clkgen_mux_spi_mcu_pm: clkgen_mux@1f001c80 {
-		compatible = "mstar,msc313e-clkgen-mux";
-		reg = <0x1f001c80 0x4>;
-		#clock-cells = <1>;
-		clock-output-names = "mcu_pm", "spi_pm";
-		shifts = <0>, <8>;
-		mux-shifts = <2>, <10>;
-		mux-widths = <4>, <4>;
-		mux-ranges = <0 1>, <1 16>;
-		clocks = /* mcu_pm */
-				 <&clkgen_pll 9>,
-				 /* spi_pm */
-				 <&rtc_32k>,
-				 <&clk_mpll_216_div8>,
-				 <&clk_mpll_144_div4>,
-				 <&clk_mpll_86_div2>,
-				 <&clk_mpll_216_div4>,
-				 <&clk_mpll_144_div2>,
-				 <&clkgen_pll 14>,
-				 <&clk_mpll_216_div2>,
-				 <&xtal12_div8>,
-				 <&xtal12_div12>,
-				 <&rtc32k_div4>,
-				 <&xtal12_div16>,
-				 <&xtal12_div2>,
-				 <&xtal12_div4>,
-				 <&xtal12>,
-				 <&xtal24>;
-	};
-
+&soc {
 	/* bit 10 in here controls something to do with the temp sensor */
 	tmpsensor_magic2@1f001d90 {
 		compatible = "syscon";
@@ -97,55 +69,12 @@
 		clock-frequency = <25000000>;
 	};
 
-	clkgen_mux_mcu_ruibrdg: clkgen_mux@1f207004 {
-		compatible = "mstar,msc313e-clkgen-mux";
-		reg = <0x1f207004 0x4>;
-		#clock-cells = <1>;
-		clock-output-names = "mcu", "ruibrdg";
-		shifts = <0>, <8>;
-		mux-shifts = <2>, <10>;
-		mux-widths = <2>, <2>;
-		mux-ranges = <0 4 >, <4 1>;
-		clocks = <&clkgen_pll 9>,
-				 <&clkgen_pll 10>,
-				 <&clk_mpll_288_div2>,
-				 <&clk_mpll_216_div2>,
-				 <&clkgen_mux_mcu_ruibrdg 0>;
-	};
+
 	
 	phyclk25: phyclk25 {
 		#clock-cells = <0>;
 		compatible = "fixed-clock";
 		clock-frequency = <25000000>;
-	};
-
-	clkgen_mux_mcu_ruibrdg: clkgen_mux@1f207004 {
-		compatible = "mstar,msc313e-clkgen-mux";
-		reg = <0x1f207004 0x4>;
-		#clock-cells = <1>;
-		clock-output-names = "mcu", "ruibrdg";
-		shifts = <0>, <8>;
-		mux-shifts = <2>, <10>;
-		mux-widths = <2>, <2>;
-		mux-ranges = <0 4 >, <4 1>;
-		clocks = <&clkgen_pll 9>,
-				 <&clkgen_pll 10>,
-				 <&clk_mpll_288_div2>,
-				 <&clk_mpll_216_div2>,
-				 <&clkgen_mux_mcu_ruibrdg 0>;
-	};
-	
-	/* 
-	 * This seems important as the ipl turns it on at boot.
-	 * Maybe tck == test clock? for JTAG?
-	 */
-	clkgen_mux_tck: clkgen_mux@1f2070c0 {
-		compatible = "mstar,msc313e-clkgen-mux";
-		reg = <0x1f2070c0 0x4>;
-		#clock-cells = <1>;
-		clock-output-names = "tck";
-		shifts = <0>;
-		clocks = <&xtal12>; /* this is wrong */
 	};
 
 	clkgen_mux_spi: clkgen_mux@1f2070c8 {
@@ -280,24 +209,7 @@
 		output-flags = <0x800>;
 		clocks = <&phyclk25>;
 	};
-	
-	cmdq: cmdq@1f224000 {
-		reg = <0x1f224000 0x200>;
-		compatible = "mstar,msc313-cmdq";
-		interrupt-parent = <&intc_irq>;
-		interrupts = <17 IRQ_TYPE_LEVEL_HIGH>;
-		clocks = <&clkgen_mux_miu 0>;
-	};
-	
-	aesdma: aesdma@1f224400 {
-	    /* maybe 0x1f112220 */
-		reg = <0x1f224400 0x200>;
-		compatible = "mstar,msc313e-aesdma";
-		/*interrupt-parent = <&intc_irq>;
-		interrupts = <37 IRQ_TYPE_LEVEL_HIGH>;*/
-		clocks = <&clkgen_mux_aesdma_isp 0>;
-	};
-	
+
 	mcm0: mcm@1f226000 {
 		compatible = "mstar,msc313-mcm";
 		reg = <0x1f226000 0x8>;
@@ -318,9 +230,37 @@
 		compatible = "mstar,msc313-mcm";
 		reg = <0x1f226800 0xa8>;
 	};
-};
 
-&soc {	
+	clkgen_mux_spi_mcu_pm: clkgen_mux@1f001c80 {
+		compatible = "mstar,msc313e-clkgen-mux";
+		reg = <0x1f001c80 0x4>;
+		#clock-cells = <1>;
+		clock-output-names = "mcu_pm", "spi_pm";
+		shifts = <0>, <8>;
+		mux-shifts = <2>, <10>;
+		mux-widths = <4>, <4>;
+		mux-ranges = <0 1>, <1 16>;
+		clocks = /* mcu_pm */
+				 <&clkgen_pll 9>,
+				 /* spi_pm */
+				 <&rtc_32k>,
+				 <&clk_mpll_216_div8>,
+				 <&clk_mpll_144_div4>,
+				 <&clk_mpll_86_div2>,
+				 <&clk_mpll_216_div4>,
+				 <&clk_mpll_144_div2>,
+				 <&clkgen_pll 14>,
+				 <&clk_mpll_216_div2>,
+				 <&xtal12_div8>,
+				 <&xtal12_div12>,
+				 <&rtc32k_div4>,
+				 <&xtal12_div16>,
+				 <&xtal12_div2>,
+				 <&xtal12_div4>,
+				 <&xtal12>,
+				 <&xtal24>;
+	};
+
 	pwm0: pwm@1f001da0 {
 		compatible = "mstar,msc313-pwm";
 		reg = <0x1f001da0 0xc>;
@@ -345,6 +285,23 @@
 		status = "disabled";
 	};
 
+	cmdq: cmdq@1f224000 {
+		reg = <0x1f224000 0x200>;
+		compatible = "mstar,msc313-cmdq";
+		interrupt-parent = <&intc_irq>;
+		interrupts = <17 IRQ_TYPE_LEVEL_HIGH>;
+		clocks = <&clkgen_mux_miu 0>;
+	};
+
+	aesdma: aesdma@1f224400 {
+	    /* maybe 0x1f112220 */
+		reg = <0x1f224400 0x200>;
+		compatible = "mstar,msc313e-aesdma";
+		/*interrupt-parent = <&intc_irq>;
+		interrupts = <37 IRQ_TYPE_LEVEL_HIGH>;*/
+		clocks = <&clkgen_mux_aesdma_isp 0>;
+	};
+
 	/* jpe - jpeg encoder */
 	jpe: jpe@0x1f264000 {
 		reg = <0x1f264000 0x100>;
@@ -352,13 +309,13 @@
 		interrupts = <29 IRQ_TYPE_LEVEL_HIGH>;
 		clocks = <&clkgen_mux_jpe 0>;
 	};
-		
+
 	/* mfe - video encoder*/
 	mfe: mfe@1f264800 {
 		reg = <0x1f264800 0x200>;
 		interrupts = <28 IRQ_TYPE_LEVEL_HIGH>;
 	};
-		
+
 	/* vhe - hevc encoder? English in comments is very good
 	 * so likely this is an IP block
 	 */
@@ -366,16 +323,6 @@
 		reg = <0x1F265200 0x200>,
 		      <0x1F265000 0x100>;
 		interrupts = <21 IRQ_TYPE_LEVEL_HIGH>;
-	};
-
-	bc: bc@1f284400 {
-		/* 0x1f284400 - Called "BC" which seems to be battery charger */
-		reg = <0x1f284400 0x200>;
-	};
-	
-	fakephy0: fakephy@0 {
-		compatible = "usb-nop-xceiv";
-		#phy-cells = <0>;
 	};
 
 	emmc: emmc@1f280400 {
@@ -395,6 +342,16 @@
 		pinctrl-0 = <&sdio_pins>;
 		cd-gpios = <&gpio_pm 1 GPIO_ACTIVE_LOW>;
 		status = "disabled";
+	};
+
+	bc: bc@1f284400 {
+		/* 0x1f284400 - Called "BC" which seems to be battery charger */
+		reg = <0x1f284400 0x200>;
+	};
+
+	fakephy0: fakephy@0 {
+		compatible = "usb-nop-xceiv";
+		#phy-cells = <0>;
 	};
 
 	otg0: otg@1f284a00 {
@@ -440,6 +397,7 @@
 			reg = <0>;
 		};
 	};
+
 };
 
 &cpu0 {

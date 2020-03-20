@@ -532,29 +532,40 @@
 			clocks = <&xtal12>;
 		};
 
-		clkgen_mux_mcu: clkgen_mux@1f207004 {
-			// mcu
-			// riubrdg
-		}
+		clkgen_mux_mcu_riubrdg: clkgen_mux@1f207004 {
+			compatible = "mstar,msc313e-clkgen-mux";
+			reg = <0x1f207004 0x4>;
+			#clock-cells = <1>;
+			clock-output-names = "mcu", "riubrdg";
+			shifts = <0>, <8>;
+			mux-shifts = <2>, <10>;
+			mux-widths = <2>, <2>;
+			mux-ranges = <0 4 >, <4 1>;
+			clocks = <&clkgen_pll 9>,
+				 <&clkgen_pll 10>,
+				 <&clk_mpll_288_div2>,
+				 <&clk_mpll_216_div2>,
+				 <&clkgen_mux_mcu_riubrdg 0>;
+		};
 
 		clkgen_mux_bist: clkgen_mux@1f207008 {
-		}
+		};
 
 		clkgen_mux_bist_sc_gp: clkgen_mux@1f20700c {
 			// bist_sc_gp
-		}
+		};
 
 		clkgen_mux_pwr_ctl: clkgen_mux@1f207010 {
 			// pwr_ctrl
 			// 
-		}
+		};
 
 		// this one is interesting, looks like
 		// the clock thats used to deglitch
 		clkgen_mux_boot: clkgen_mux@1f207020 {
 			// boot
 			// 
-		}
+		};
 
 		clkgen_mux_miu: clkgen_mux@1f20705c {
 			compatible = "mstar,msc313e-clkgen-mux";
@@ -599,6 +610,18 @@
 			clocks = <&clkgen_pll 10>,
 				 <&clk_mpll_288_div2>,
 				 <&xtal12>;
+		};
+
+		/* This seems important as the ipl turns it on at boot.
+		 * Maybe tck == test clock? for JTAG?
+		 */
+		clkgen_mux_tck: clkgen_mux@1f2070c0 {
+			compatible = "mstar,msc313e-clkgen-mux";
+			reg = <0x1f2070c0 0x4>;
+			#clock-cells = <1>;
+			clock-output-names = "tck";
+			shifts = <0>;
+			clocks = <&xtal12>; /* this is wrong */
 		};
 
 		clkgen_mux_miic: clkgen_mux@1f2070dc {
