@@ -541,8 +541,8 @@
 			mux-shifts = <2>, <10>;
 			mux-widths = <2>, <2>;
 			mux-ranges = <0 4 >, <4 1>;
-			clocks = <&clkgen_pll 9>,
-				 <&clkgen_pll 10>,
+			clocks = <&clkgen_pll MSTAR_MPLL_GATE_MPLL_216>,
+				 <&clkgen_pll MSTAR_MPLL_GATE_MPLL_172>,
 				 <&clk_mpll_288_div2>,
 				 <&clk_mpll_216_div2>,
 				 <&clkgen_mux_mcu_riubrdg 0>;
@@ -591,8 +591,8 @@
 			shifts = <0>;
 			mux-shifts = <2>;
 			mux-widths = <2>;
-			clocks = <&clkgen_pll 6>,
-				 <&clkgen_pll 9>,
+			clocks = <&clkgen_pll MSTAR_MPLL_GATE_MPLL_432>,
+				 <&clkgen_pll MSTAR_MPLL_GATE_MPLL_216>,
 				 <&xtal12>;
 		};
 
@@ -607,7 +607,7 @@
 			shifts = <0>, <8>;
 			mux-shifts = <2>, <10>;
 			mux-widths = <2>, <2>;
-			clocks = <&clkgen_pll 10>,
+			clocks = <&clkgen_pll MSTAR_MPLL_GATE_MPLL_172>,
 				 <&clk_mpll_288_div2>,
 				 <&xtal12>;
 		};
