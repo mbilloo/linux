@@ -36,6 +36,8 @@ static u32 __iomem *miu_flush;
 static const char * const infinity_board_dt_compat[] = {
 	"mstar,infinity",
 	"mstar,infinity3",
+	"mstar,infinity5",
+	"mstar,infinity6",
 	"mstar,mercury5",
 	NULL,
 };
