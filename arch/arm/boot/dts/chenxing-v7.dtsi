@@ -579,12 +579,34 @@
 		};
 
 		clkgen_mux_bist: clkgen_mux@1f207008 {
+			compatible = "mstar,msc313e-clkgen-mux";
+			reg = <0x1f207008 0x4>;
+			#clock-cells = <1>;
+			clock-output-names = "bist";
+			shifts = <0>;
+			mux-shifts = <2>;
+			mux-widths = <2>;
+			clocks = <&clkgen_pll MSTAR_MPLL_GATE_MPLL_172>,
+				 <&clk_mpll_216_div2>,
+				 <&clk_mpll_216_div4>,
+				 <&xtal12>;
 		};
 
 		clkgen_mux_bist_sc_gp: clkgen_mux@1f20700c {
-			// bist_sc_gp
+			compatible = "mstar,msc313e-clkgen-mux";
+			reg = <0x1f20700c 0x4>;
+			#clock-cells = <1>;
+			clock-output-names = "bist_sc_gp";
+			shifts = <0>;
+			mux-shifts = <2>;
+			mux-widths = <2>;
+			clocks = <&clkgen_pll MSTAR_MPLL_GATE_MPLL_172>,
+				 <&clk_mpll_216_div2>,
+				 <&clk_mpll_216_div4>,
+				 <&xtal12>;
 		};
 
+		/* can't write on i3, i6 only? */
 		clkgen_mux_pwr_ctl: clkgen_mux@1f207010 {
 			// pwr_ctrl
 			// 
@@ -593,8 +615,14 @@
 		// this one is interesting, looks like
 		// the clock thats used to deglitch
 		clkgen_mux_boot: clkgen_mux@1f207020 {
-			// boot
-			// 
+			compatible = "mstar,msc313e-clkgen-mux";
+			reg = <0x1f207020 0x4>;
+			#clock-cells = <1>;
+			clock-output-names = "boot";
+			shifts = <0>;
+			mux-shifts = <2>;
+			mux-widths = <2>;
+			clocks = <&xtal12>;
 		};
 
 		clkgen_mux_miu: clkgen_mux@1f20705c {
@@ -627,6 +655,15 @@
 		};
 
 		clkgen_mux_miu_boot: clkgen_mux@1f207080 {
+			compatible = "mstar,msc313e-clkgen-mux";
+			reg = <0x1f207080 0x4>;
+			#clock-cells = <1>;
+			clock-output-names = "miu_boot";
+			shifts = <0>;
+			mux-shifts = <2>;
+			mux-widths = <2>;
+			clocks = <&xtal12>,
+				 <&clkgen_mux_miu 0>;
 		};
 
 		clkgen_mux_uart: clkgen_mux@1f2070c4 {
@@ -709,8 +746,8 @@
 				<&clkgen_pll MSTAR_MPLL_GATE_MPLL_86>,
 				<&clkgen_pll MSTAR_MPLL_GATE_MPLL_172>,
 				/* isp */
-				<&clkgen_pll 12>,
-				<&clkgen_pll 14>,
+				<&clkgen_pll MSTAR_MPLL_GATE_MPLL_123>,
+				<&clkgen_pll MSTAR_MPLL_GATE_MPLL_86>,
 				<&clk_mpll_288_div4>,
 				<&clk_mpll_216_div4>;
 		};
