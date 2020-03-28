@@ -723,6 +723,17 @@
 				 <&clkgen_mux_miu 0>;
 		};
 
+		/* This seems important as the ipl turns it on at boot.
+		 * Maybe tck == test clock? for JTAG?
+		 */
+		clkgen_mux_tck: clkgen_mux@1f2070c0 {
+			compatible = "mstar,msc313e-clkgen-mux";
+			reg = <0x1f2070c0 0x4>;
+			#clock-cells = <1>;
+			clock-output-names = "tck";
+			shifts = <0>;
+		};
+
 		clkgen_mux_uart: clkgen_mux@1f2070c4 {
 			compatible = "mstar,msc313e-clkgen-mux";
 			reg = <0x1f2070c4 0x4>;
@@ -734,18 +745,6 @@
 			clocks = <&clkgen_pll MSTAR_MPLL_GATE_MPLL_172>,
 				 <&clk_mpll_288_div2>,
 				 <&xtal12>;
-		};
-
-		/* This seems important as the ipl turns it on at boot.
-		 * Maybe tck == test clock? for JTAG?
-		 */
-		clkgen_mux_tck: clkgen_mux@1f2070c0 {
-			compatible = "mstar,msc313e-clkgen-mux";
-			reg = <0x1f2070c0 0x4>;
-			#clock-cells = <1>;
-			clock-output-names = "tck";
-			shifts = <0>;
-			clocks = <&xtal12>; /* this is wrong */
 		};
 
 		clkgen_mux_miic: clkgen_mux@1f2070dc {
