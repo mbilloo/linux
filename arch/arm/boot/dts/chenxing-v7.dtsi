@@ -596,7 +596,7 @@
 			reg = <0x1f207000 0x4>;
 			#clock-cells = <1>;
 			clock-output-names = "xtali", "xtali_sc_gp", "live";
-			output-flags = <0x800>, <0x0>, <0x0>;
+			output-flags = <MSTAR_CLKGEN_OUTPUTFLAG_CRITICAL>, <0x0>, <0x0>;
 			shifts = <0>, <4>, <8>;
 			mux-shifts = <2>, <6>, <10>;
 			mux-widths = <2>, <2>, <2>;
@@ -612,6 +612,7 @@
 			mux-shifts = <2>, <10>;
 			mux-widths = <2>, <2>;
 			mux-ranges = <0 4 >, <4 1>;
+			output-flags = <0>, <MSTAR_CLKGEN_OUTPUTFLAG_CRITICAL>;
 			clocks = <&clkgen_pll MSTAR_MPLL_GATE_MPLL_216>,
 				 <&clkgen_pll MSTAR_MPLL_GATE_MPLL_172>,
 				 <&clk_mpll_288_div2>,
@@ -671,7 +672,7 @@
 			reg = <0x1f20705c 0x4>;
 			#clock-cells = <1>;
 			clock-output-names = "miu";
-			output-flags = <0x800>;
+			output-flags = <MSTAR_CLKGEN_OUTPUTFLAG_CRITICAL>;
 			shifts = <0>;
 			mux-shifts = <2>;
 			mux-widths = <2>;
@@ -697,7 +698,7 @@
 			reg = <0x1f207064 0x4>;
 			#clock-cells = <1>;
 			clock-output-names = "ddrsyn";
-			output-flags = <0x800>;
+			output-flags = <MSTAR_CLKGEN_OUTPUTFLAG_CRITICAL>;
 			shifts = <0>;
 			mux-shifts = <2>;
 			mux-widths = <2>;
