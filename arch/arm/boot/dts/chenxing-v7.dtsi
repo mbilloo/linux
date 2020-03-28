@@ -287,6 +287,10 @@
 			ranges;
 			clocks = <&clkgen_mux_mcu_riubrdg 1>;
 			interrupts-extended = <&intc_irq 51 IRQ_TYPE_LEVEL_HIGH>;
+
+			mailbox: bdma@1f200800 {
+				reg = <0x1f200800 0x200>;
+			};
 		};
 
 		isp: isp@1f001000 {
