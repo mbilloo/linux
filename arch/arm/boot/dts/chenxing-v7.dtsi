@@ -281,7 +281,7 @@
 		ranges;
 
 		riubrdg: riubrdg {
-			compatible = "mstar,riubrdg", "simple-pm-bus";
+			compatible = "mstar,riubrdg";
 			#address-cells = <1>;
 			#size-cells = <1>;
 			ranges;
