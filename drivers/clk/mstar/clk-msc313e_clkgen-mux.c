@@ -42,12 +42,13 @@ static int msc313e_clkgen_mux_probe(struct platform_device *pdev)
 	struct clk_gate *gate;
 	struct clk_mux *mux;
 	struct clk* clk;
-	int numparents, numshifts, nummuxes, muxindex;
+	int numparents, numshifts, nummuxes, muxindex, muxrangeoffset;
 	struct clk_onecell_data *clk_data;
 	const char *name;
 	const char *parents[32];
 	const char **muxparents;
 	u32 gateshift, muxshift, muxwidth, muxclockoffset, muxnumclocks, outputflags;
+	int ret;
 
 	if (!pdev->dev.of_node)
 		return -ENODEV;
@@ -56,95 +57,146 @@ static int msc313e_clkgen_mux_probe(struct platform_device *pdev)
 	if (!id)
 		return -ENODEV;
 
-	numparents = of_clk_parent_fill(pdev->dev.of_node, parents, ARRAY_SIZE(parents));
+	numparents = of_clk_parent_fill(pdev->dev.of_node, parents,
+			ARRAY_SIZE(parents));
 
-	if(numparents <= 0)
-	{
-		dev_info(&pdev->dev, "need some parents");
-		return -EINVAL;
+	if(numparents < 0){
+		dev_info(&pdev->dev, "failed to get clock parents\n");
+		ret = numparents;
+		goto out;
+	}
+	else if(numparents == 0){
+		dev_dbg(&pdev->dev, "no parent clocks, gating only\n");
 	}
 
 	base = of_iomap(pdev->dev.of_node, 0);
-	if (IS_ERR(base))
-		return PTR_ERR(base);
+	if (IS_ERR(base)){
+		ret = PTR_ERR(base);
+		goto out;
+	}
 
 	nummuxes = of_property_count_strings(pdev->dev.of_node,
 			"clock-output-names");
 	if (!nummuxes) {
 		dev_info(&pdev->dev, "output names need to be specified");
-		return -ENODEV;
+		ret = -ENODEV;
+		goto out;
 	}
 
 	numshifts = of_property_count_u32_elems(pdev->dev.of_node, "shifts");
 	if(!numshifts){
 		dev_info(&pdev->dev, "shifts need to be specified");
-		return -ENODEV;
+		ret =-ENODEV;
+		goto out;
 	}
 
 	if(numshifts != nummuxes){
 		dev_info(&pdev->dev, "number of shifts must match the number of outputs");
-		return -EINVAL;
+		ret = -EINVAL;
+		goto out;
 	}
+
+	// check mux shifts, widths, ranges here
 
 	clk_data = devm_kzalloc(&pdev->dev, sizeof(struct clk_onecell_data),
 			GFP_KERNEL);
-	if (!clk_data)
-		return -ENOMEM;
+	if (!clk_data){
+		ret = -ENOMEM;
+		goto out;
+	}
+
 	clk_data->clk_num = nummuxes;
-	clk_data->clks = devm_kcalloc(&pdev->dev, nummuxes, sizeof(struct clk *),
-			GFP_KERNEL);
-	if (!clk_data->clks)
-		return -ENOMEM;
+	clk_data->clks = devm_kcalloc(&pdev->dev, nummuxes,
+			sizeof(struct clk *), GFP_KERNEL);
+	if (!clk_data->clks){
+		ret = -ENOMEM;
+		goto out;
+	}
 
 	for (muxindex = 0; muxindex < nummuxes; muxindex++) {
-		clkgen_mux = devm_kzalloc(&pdev->dev, sizeof(*clkgen_mux), GFP_KERNEL);
-		if (!clkgen_mux)
-			return -ENOMEM;
+		ret = of_property_read_string_index(pdev->dev.of_node, "clock-output-names",
+				muxindex, &name);
+		if(ret)
+			goto out;
 
+		ret = of_property_read_u32_index(pdev->dev.of_node, "shifts",
+				muxindex, &gateshift);
+		if(ret)
+			goto out;
+
+		clkgen_mux = devm_kzalloc(&pdev->dev, sizeof(*clkgen_mux),GFP_KERNEL);
+		if (!clkgen_mux){
+			ret = -ENOMEM;
+			goto out;
+		}
 		clkgen_mux->base = base;
 
-		of_property_read_string_index(pdev->dev.of_node, "clock-output-names",
-				muxindex, &name);
-
+		/* there is always a gate */
 		gate = devm_kzalloc(&pdev->dev, sizeof(*gate), GFP_KERNEL);
-		if(!gate)
-			return -ENOMEM;
-
+		if(!gate){
+			ret = -ENOMEM;
+			goto out;
+		}
 		gate->reg = base;
-		of_property_read_u32_index(pdev->dev.of_node, "shifts", muxindex, &gateshift);
 		gate->bit_idx = gateshift;
 		gate->flags = CLK_GATE_SET_TO_DISABLE;
 
-		if(of_property_read_u32_index(pdev->dev.of_node, "mux-shifts", muxindex, &muxshift) == 0 &&
-				of_property_read_u32_index(pdev->dev.of_node, "mux-widths", muxindex, &muxwidth) == 0){
-			mux = devm_kzalloc(&pdev->dev, sizeof(*mux), GFP_KERNEL);
-			if(!mux)
-				return -ENOMEM;
-			mux->reg = base;
-			mux->shift = muxshift;
-			mux->mask = ~((~0 >> muxwidth) << muxwidth);
-			mux->flags = CLK_MUX_ROUND_CLOSEST;
-		}
-		else {
-			dev_info(&pdev->dev, "mux-shifts or mux-widths missing\n");
-			mux = NULL;
-		}
+		/* it's possible to not have a mux, there has to be some parents
+		 * and a shift and width value for each output
+		 */
+		mux = NULL;
 
-		if(of_property_read_u32_index(pdev->dev.of_node, "mux-ranges", muxindex * 2, &muxclockoffset) == 0 &&
-						of_property_read_u32_index(pdev->dev.of_node, "mux-ranges", (muxindex * 2) + 1, &muxnumclocks) == 0){
-			muxparents = parents + muxclockoffset;
-			muxnumclocks = muxnumclocks;
-			dev_dbg(&pdev->dev, "using clocks %d -> %d for mux", (int)(muxclockoffset), (int)(muxclockoffset + muxnumclocks));
-		}
-		else {
-			muxparents = parents;
-			muxnumclocks = numparents;
-			dev_dbg(&pdev->dev, "clock range not specified, mux will use all clocks");
-		}
+		if(numparents == 0)
+			goto outputflags;
 
+		ret = of_property_read_u32_index(pdev->dev.of_node, "mux-shifts",
+				muxindex, &muxshift);
+		if(ret)
+			goto out;
+		ret = of_property_read_u32_index(pdev->dev.of_node, "mux-widths",
+				muxindex, &muxwidth);
+		if(ret)
+			goto out;
+
+		mux = devm_kzalloc(&pdev->dev, sizeof(*mux), GFP_KERNEL);
+		if(!mux){
+			ret = -ENOMEM;
+			goto out;
+		}
+		mux->reg = base;
+		mux->shift = muxshift;
+		mux->mask = ~((~0 >> muxwidth) << muxwidth);
+		mux->flags = CLK_MUX_ROUND_CLOSEST;
+
+		muxrangeoffset = muxindex * 2;
+		ret = of_property_read_u32_index(pdev->dev.of_node, "mux-ranges",
+				muxrangeoffset, &muxclockoffset);
+		if(ret)
+			goto allparents;
+
+		ret = of_property_read_u32_index(pdev->dev.of_node, "mux-ranges",
+				muxrangeoffset + 1, &muxnumclocks);
+		if(ret)
+			goto allparents;
+
+		muxparents = parents + muxclockoffset;
+		dev_dbg(&pdev->dev, "using clocks %d -> %d for mux",
+			(int)(muxclockoffset), (int)(muxclockoffset + muxnumclocks));
+
+		goto outputflags;
+
+allparents:
+		muxparents = parents;
+		muxnumclocks = numparents;
+		dev_dbg(&pdev->dev, "clock range not specified, mux will use all clocks");
+
+outputflags:
 		outputflags = 0;
-		if(of_property_read_u32_index(pdev->dev.of_node, "output-flags", muxindex, &outputflags) == 0){
-			dev_dbg(&pdev->dev, "applying flags %x to output %d", outputflags, muxindex);
+		of_property_read_u32_index(pdev->dev.of_node, "output-flags",
+				muxindex, &outputflags);
+		if(!ret){
+			dev_dbg(&pdev->dev, "applying flags %x to output %d",
+					outputflags, muxindex);
 		}
 
 		clk = clk_register_composite(&pdev->dev, name,
@@ -154,13 +206,17 @@ static int msc313e_clkgen_mux_probe(struct platform_device *pdev)
 				&gate->hw, &clk_gate_ops,
 				outputflags);
 		if (IS_ERR(clk)) {
-			return PTR_ERR(clk);
+			ret = PTR_ERR(clk);
+			goto out;
 		}
 
 		clk_data->clks[muxindex] = clk;
 	}
 
-	return of_clk_add_provider(pdev->dev.of_node, of_clk_src_onecell_get, clk_data);
+	ret = of_clk_add_provider(pdev->dev.of_node, of_clk_src_onecell_get, clk_data);
+
+out:
+	return ret;
 }
 
 static int msc313e_clkgen_mux_remove(struct platform_device *pdev)
