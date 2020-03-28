@@ -280,6 +280,15 @@
 		#size-cells = <1>;
 		ranges;
 
+		riubrdg: riubrdg {
+			compatible = "mstar,riubrdg", "simple-pm-bus";
+			#address-cells = <1>;
+			#size-cells = <1>;
+			ranges;
+			clocks = <&clkgen_mux_mcu_riubrdg 1>;
+			interrupts-extended = <&intc_irq 51 IRQ_TYPE_LEVEL_HIGH>;
+		};
+
 		isp: isp@1f001000 {
 			compatible = "mstar,msc313-isp";
 			reg = <0x1f001000 0x400>,
