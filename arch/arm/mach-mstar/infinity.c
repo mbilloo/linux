@@ -42,6 +42,11 @@ static const char * const infinity_board_dt_compat[] = {
 	NULL,
 };
 
+static const char * const infinity_smp_board_dt_compat[] = {
+	"mstar,infinity2m",
+	NULL,
+};
+
 /*
  * This may need locking to deal with situations where an interrupt
  * happens while we are in here and mb() gets called by the interrupt handler.
@@ -71,4 +76,11 @@ static void __init infinity_init(void)
 DT_MACHINE_START(INFINITY_DT, "MStar Infinity (Device Tree)")
 	.dt_compat	= infinity_board_dt_compat,
 	.init_machine	= infinity_init,
+MACHINE_END
+
+DT_MACHINE_START(INFINITY_SMP_DT, "MStar Infinity SMP (Device Tree)")
+	.dt_compat	= infinity_smp_board_dt_compat,
+	.init_machine	= infinity_init,
+#ifdef CONFIG_SMP
+#endif
 MACHINE_END
