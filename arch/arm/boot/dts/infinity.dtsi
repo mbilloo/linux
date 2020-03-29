@@ -133,8 +133,8 @@
 		mux-widths = <2>;
 		output-flags = <0x800>; /* this marks the clock as critical, gating this clock stops access to the registers */
 		clocks = <&clk_mpll_288_div2>,
-			 <&clkgen_pll 12>,
-			 <&clkgen_pll 14>;
+			 <&clkgen_pll MSTAR_MPLL_GATE_MPLL_123>,
+			 <&clkgen_pll MSTAR_MPLL_GATE_MPLL_86>;
 	};
 	
 	clkgen_mux_sr_sr_mclk: clkgen_mux@1f207188 {
