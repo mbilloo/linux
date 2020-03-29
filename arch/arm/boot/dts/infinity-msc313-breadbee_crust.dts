@@ -5,10 +5,10 @@
  */
 
 /dts-v1/;
-#include "infinity3-msc313e.dtsi"
+#include "infinity-msc313.dtsi"
 #include "infinity-breadbee-common.dtsi"
 
 / {
 	model = "thingy.jp breadbee";
-	compatible = "thingyjp,breadbee", "mstar,infinity3";
+	compatible = "thingyjp,breadbee_crust", "mstar,infinity";
 };
