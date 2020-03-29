@@ -41,11 +41,11 @@ static const struct of_device_id msc313e_timer_dt_ids[] = {
 MODULE_DEVICE_TABLE(of, msc313e_timer_dt_ids);
 
 static const struct regmap_config msc313_timer_regmap_config = {
-		.name = "msc313-timer",
 		.reg_bits = 16,
 		.val_bits = 16,
 		.reg_stride = 4,
 };
+
 static struct reg_field noten_field = REG_FIELD(REG_CTRL, 0, 0);
 
 static irqreturn_t msc313e_timer_irq(int irq, void *data)
