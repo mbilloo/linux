@@ -186,24 +186,24 @@
 		};
 	};
 
-	acodec_sound: acodec-sound {
+/*	acodec_sound: acodec-sound {
 		compatible = "rockchip,multicodecs-card";
 		rockchip,card-name = "rockchip,rk3308-acodec";
 		rockchip,codec-hp-det;
 		rockchip,mclk-fs = <256>;
 		rockchip,cpu = <&i2s_8ch_2>;
 		rockchip,codec = <&acodec>;
-     };
+     };*/
 };
 
 &cpu0 {
 	cpu-supply = <&vdd_core>;
 };
 
-&dmc {
+/*&dmc {
 	center-supply = <&vdd_log>;
 	status = "okay";
-};
+};*/
 
 &emmc {
 	bus-width = <4>;
@@ -232,7 +232,7 @@
 	status = "okay";
 };
 
-&mac {
+/*&mac {
 	phy-supply = <&vcc_phy>;
 	clock_in_out = "output";
 	assigned-clocks = <&cru SCLK_MAC>;
@@ -241,9 +241,9 @@
 	snps,reset-active-low;
 	snps,reset-delays-us = <0 50000 50000>;
 	status = "okay";
-};
+};*/
 
-&io_domains {
+/*&io_domains {
 	status = "okay";
 
 	vccio0-supply = <&vcc_io>;
@@ -252,12 +252,12 @@
 	vccio3-supply = <&vccio_flash>;
 	vccio4-supply = <&vccio_sdio>;
 	vccio5-supply = <&vcc_io>;
-};
+};*/
 
-&i2s_8ch_2 {
+/*&i2s_8ch_2 {
 	status = "okay";
 	#sound-dai-cells = <0>;
-};
+};*/
 
 &pinctrl {
 	pinctrl-names = "default";
@@ -299,7 +299,7 @@
 	pinctrl-0 = <&pwm0_pin_pull_down>;
 };
 
-&rockchip_suspend {
+/*&rockchip_suspend {
 	rockchip,pwm-regulator-config = <
 		(0
 		| RKPM_PWM_REGULATOR
@@ -307,7 +307,7 @@
 	>;
 
 	status = "okay";
-};
+};*/
 
 &sdio {
 	max-frequency = <110000000>;
@@ -322,13 +322,13 @@
 	status = "okay";
 };
 
-&tsadc {
-	rockchip,hw-tshut-mode = <0>;		/* 0:CRU */
-	rockchip,hw-tshut-polarity = <1>;	/* 1:HIGH */
-	status = "okay";
-};
+//&tsadc {
+//	rockchip,hw-tshut-mode = <0>;		/* 0:CRU */
+//	rockchip,hw-tshut-polarity = <1>;	/* 1:HIGH */
+//	status = "okay";
+//};
 
-&u2phy {
+/*&u2phy {
 	status = "okay";
 
 	u2phy_host: host-port {
@@ -340,7 +340,7 @@
 		vbus-supply = <&vcc_otg_vbus>;
 		status = "okay";
 	};
-};
+};*/
 
 &uart4 {
 	pinctrl-names = "default";
@@ -348,28 +348,28 @@
 	status = "okay";
 };
 
-&usb20_otg {
+/*&usb20_otg {
 	dr_mode = "otg";
 	status = "okay";
-};
+};*/
 
-&usb_host0_ehci {
+/*&usb_host0_ehci {
 	status = "okay";
-};
+};*/
 
-&usb_host0_ohci{
+/*&usb_host0_ohci{
 	status = "okay";
-};
+};*/
 
-&acodec {
+/*&acodec {
 	status = "okay";
-};
+};*/
 
-&thermal_zones {
+/*&thermal_zones {
 	soc_thermal {
 		thermal-sensors = <&tsadc 0>;
 	};
-};
+};*/
 
 &wdt {
 	status = "okay";

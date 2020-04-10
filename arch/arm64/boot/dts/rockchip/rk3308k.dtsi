@@ -18,7 +18,7 @@
 	rockchip,high-temp-max-volt = <1125000>;
 };
 
-&rockchip_suspend {
+/*&rockchip_suspend {
 	rockchip,sleep-mode-config = <
 		(0
 		| RKPM_PMU_HW_PLLS_PD
@@ -44,4 +44,4 @@
 			};
 		};
 	};
-};
+};*/
