@@ -13,6 +13,11 @@
 	model = "Radxa ROCK Pi S";
 	compatible = "radxa,rockpis", "rockchip,rk3308";
 
+	chosen {
+		stdout-path = &uart0;
+		bootargs = "earlycon console=ttyS0,1500000n8";
+	};
+
 	sdio_pwrseq: sdio-pwrseq {
 		compatible = "mmc-pwrseq-simple";
 		pinctrl-names = "default";
@@ -342,11 +347,15 @@
 	};
 };*/
 
-&uart4 {
+&uart0 {
+	status = "okay";
+};
+
+/*&uart4 {
 	pinctrl-names = "default";
 	pinctrl-0 = <&uart4_xfer &uart4_cts>;
 	status = "okay";
-};
+};*/
 
 /*&usb20_otg {
 	dr_mode = "otg";
