@@ -199,7 +199,7 @@
 		#size-cells = <1>;
 
 		u2phy: usb2-phy@100 {
-		compatible = "rockchip,rk3308-usb2phy";
+			compatible = "rockchip,rk3308-usb2phy";
 			reg = <0x100 0x10>;
 			clocks = <&cru SCLK_USBPHY_REF>;
 			clock-names = "phyclk";
@@ -208,6 +208,16 @@
 			assigned-clock-parents = <&u2phy>;
 			clock-output-names = "usb480m_phy";
 			status = "disabled";
+
+			u2phy_otg: otg-port {
+				#phy-cells = <0>;
+				interrupts = <GIC_SPI 67 IRQ_TYPE_LEVEL_HIGH>,
+					     <GIC_SPI 68 IRQ_TYPE_LEVEL_HIGH>,
+					     <GIC_SPI 69 IRQ_TYPE_LEVEL_HIGH>;
+				interrupt-names = "otg-bvalid", "otg-id",
+						  "linestate";
+				status = "disabled";
+			};
 
 			u2phy_host: host-port {
 				#phy-cells = <0>;
@@ -608,6 +618,22 @@
 		dma-names = "tx";
 		pinctrl-names = "default";
 		pinctrl-0 = <&spdif_out>;
+		status = "disabled";
+	};
+
+	usb20_otg: usb@ff400000 {
+		compatible = "rockchip,rk3066-usb", "snps,dwc2";
+		reg = <0x0 0xff400000 0x0 0x40000>;
+		interrupts = <GIC_SPI 66 IRQ_TYPE_LEVEL_HIGH>;
+		clocks = <&cru HCLK_OTG>;
+		clock-names = "otg";
+		dr_mode = "otg";
+		g-np-tx-fifo-size = <16>;
+		g-rx-fifo-size = <280>;
+		g-tx-fifo-size = <256 128 128 64 32 16>;
+		g-use-dma;
+		phys = <&u2phy_otg>;
+		phy-names = "usb2-phy";
 		status = "disabled";
 	};
 
