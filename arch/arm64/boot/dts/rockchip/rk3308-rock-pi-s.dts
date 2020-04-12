@@ -248,7 +248,7 @@
 	status = "okay";
 };
 
-/*&io_domains {
+&io_domains {
 	status = "okay";
 
 	vccio0-supply = <&vcc_io>;
@@ -257,7 +257,7 @@
 	vccio3-supply = <&vccio_flash>;
 	vccio4-supply = <&vccio_sdio>;
 	vccio5-supply = <&vcc_io>;
-};*/
+};
 
 /*&i2s_8ch_2 {
 	status = "okay";
