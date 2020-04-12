@@ -362,7 +362,6 @@
 	status = "okay";
 };
 
-/*
 &usb_host_ehci {
 	status = "okay";
 };
@@ -370,7 +369,6 @@
 &usb_host_ohci{
 	status = "okay";
 };
-*/
 
 /*&acodec {
 	status = "okay";
