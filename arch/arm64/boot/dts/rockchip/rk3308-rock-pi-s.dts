@@ -237,7 +237,7 @@
 	status = "okay";
 };
 
-/*&mac {
+&mac {
 	phy-supply = <&vcc_phy>;
 	clock_in_out = "output";
 	assigned-clocks = <&cru SCLK_MAC>;
@@ -246,7 +246,7 @@
 	snps,reset-active-low;
 	snps,reset-delays-us = <0 50000 50000>;
 	status = "okay";
-};*/
+};
 
 /*&io_domains {
 	status = "okay";
