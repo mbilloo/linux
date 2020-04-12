@@ -362,13 +362,13 @@
 	status = "okay";
 };*/
 
-/*&usb_host0_ehci {
+&usb_host_ehci {
 	status = "okay";
-};*/
+};
 
-/*&usb_host0_ohci{
+&usb_host_ohci{
 	status = "okay";
-};*/
+};
 
 /*&acodec {
 	status = "okay";
