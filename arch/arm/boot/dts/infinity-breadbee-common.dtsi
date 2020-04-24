@@ -111,6 +111,7 @@
 
 &sar {
 	status = "okay";
+	mstar,avdd = <&vcc_io>;
 };
 
 &sdio {
