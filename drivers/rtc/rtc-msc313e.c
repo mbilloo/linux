@@ -51,7 +51,6 @@ static int ms_rtc_read_alarm(struct device *dev, struct rtc_wkalrm *alarm)
 	struct ms_rtc_info *info = dev_get_drvdata(dev);
 	unsigned long seconds;
 
-	printk("read alarm\n");
 	seconds = readw(info->rtc_base + REG_RTC_MATCH_VAL_L)
 			| (readw(info->rtc_base + REG_RTC_MATCH_VAL_H) << 16);
 
@@ -67,7 +66,7 @@ static int mstar_rtc_alarm_irq_enable(struct device *dev, unsigned int enabled)
 {
 	struct ms_rtc_info *info = dev_get_drvdata(dev);
 	u16 reg;
-	printk("irq enable\n");
+
 	reg = readw(info->rtc_base + REG_RTC_CTRL);
 	if(enabled){
 		writew(reg & ~(INT_MASK_BIT), info->rtc_base + REG_RTC_CTRL);
@@ -83,7 +82,6 @@ static int ms_rtc_set_alarm(struct device *dev, struct rtc_wkalrm *alarm)
 	struct ms_rtc_info *info = dev_get_drvdata(dev);
 	unsigned long seconds;
 
-	printk("set alarm\n");
 	rtc_tm_to_time(&alarm->time, &seconds);
 	writew((seconds & 0xFFFF), info->rtc_base + REG_RTC_MATCH_VAL_L);
 	writew((seconds >> 16) & 0xFFFF, info->rtc_base + REG_RTC_MATCH_VAL_H);
