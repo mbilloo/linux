@@ -195,8 +195,9 @@ static const struct mstar_gpio_data ssc8336_data = {
 
 struct msc313e_gpio {
 	void __iomem *base;
-	int irqs[ARRAY_SIZE(msc313_offsets)];
 	const struct mstar_gpio_data *gpio_data;
+	int *irqs;
+	u8 *saved;
 };
 
 static void mstar_gpio_set(struct gpio_chip *chip, unsigned offset, int value)
@@ -263,6 +264,16 @@ static int msc313e_gpio_probe(struct platform_device *pdev)
 
 	gpio->gpio_data = match_data;
 
+	gpio->irqs = devm_kzalloc(&pdev->dev,
+			gpio->gpio_data->num * sizeof(*gpio->irqs), GFP_KERNEL);
+	if (!gpio->irqs)
+		return -ENOMEM;
+
+	gpio->saved = devm_kzalloc(&pdev->dev,
+			gpio->gpio_data->num * sizeof(*gpio->saved), GFP_KERNEL);
+	if (!gpio->saved)
+		return -ENOMEM;
+
 	platform_set_drvdata(pdev, gpio);
 
 	res = platform_get_resource(pdev, IORESOURCE_MEM, 0);
@@ -307,10 +318,34 @@ static const struct of_device_id msc313e_gpio_of_match[] = {
 	{ }
 };
 
+static int __maybe_unused msc313e_gpio_suspend(struct device *dev)
+{
+	struct msc313e_gpio *gpio = dev_get_drvdata(dev);
+	int i;
+	for(i = 0; i < gpio->gpio_data->num; i++)
+		gpio->saved[i] = readb_relaxed(gpio->base +
+				gpio->gpio_data->offsets[i]) & (BIT(5) | BIT(4));
+	return 0;
+}
+
+static int __maybe_unused msc313e_gpio_resume(struct device *dev)
+{
+	struct msc313e_gpio *gpio = dev_get_drvdata(dev);
+	int i;
+	for(i = 0; i < gpio->gpio_data->num; i++)
+		writeb_relaxed(gpio->saved[i], gpio->base +
+				gpio->gpio_data->offsets[i]);
+	return 0;
+}
+
+static SIMPLE_DEV_PM_OPS(msc313e_gpio_ops, msc313e_gpio_suspend,
+			 msc313e_gpio_resume);
+
 static struct platform_driver msc313e_gpio_driver = {
 	.driver = {
 		.name = DRIVER_NAME,
 		.of_match_table = msc313e_gpio_of_match,
+		.pm = &msc313e_gpio_ops,
 	},
 	.probe = msc313e_gpio_probe,
 };
