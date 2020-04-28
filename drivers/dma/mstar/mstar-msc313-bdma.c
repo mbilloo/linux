@@ -118,11 +118,6 @@ static struct reg_field config_dst_width = REG_FIELD(REG_CONFIG, 12, 14);
 #define SLAVE_ID_MIU		0
 #define SLAVE_WIDTH_MIU		WIDTH_16
 
-struct msc313_bdma {
-	struct dma_device dma_device;
-	struct clk *clk;
-};
-
 struct msc313_bdma_chan {
 	struct dma_chan chan;
 	int irq;
@@ -148,6 +143,13 @@ struct msc313_bdma_chan {
 	struct regmap_field *dst_width;
 
 	struct msc313_bdma_desc* inflight;
+};
+
+struct msc313_bdma {
+	struct dma_device dma_device;
+	struct clk *clk;
+	unsigned numchans;
+	struct msc313_bdma_chan *chans;
 };
 
 #define to_chan(ch) container_of(ch, struct msc313_bdma_chan, chan);
@@ -398,6 +400,8 @@ static int msc313_bdma_probe(struct platform_device *pdev)
 	if (!bdma)
 		return -ENOMEM;
 
+	platform_set_drvdata(pdev, bdma);
+
 	res = platform_get_resource(pdev, IORESOURCE_MEM, 0);
 	base = devm_ioremap_resource(&pdev->dev, res);
 	if (IS_ERR(base)) {
@@ -424,11 +428,14 @@ static int msc313_bdma_probe(struct platform_device *pdev)
 
 	dma_cap_set(DMA_MEMCPY, bdma->dma_device.cap_mask);
 
-	for(i = 0; i < CHANNELS; i++){
-		chan = devm_kzalloc(&pdev->dev, sizeof(*chan), GFP_KERNEL);
-		if (!chan)
-			return -ENOMEM;
+	bdma->numchans = CHANNELS;
 
+	bdma->chans = devm_kzalloc(&pdev->dev, sizeof(*chan) * bdma->numchans, GFP_KERNEL);
+	if (!bdma->chans)
+		return -ENOMEM;
+
+	for(i = 0; i < bdma->numchans; i++){
+		chan = &bdma->chans[i];
 		snprintf(chan->name, sizeof(chan->name),"ch%d", i);
 		regmap_config.name = chan->name;
 
@@ -487,12 +494,34 @@ static int msc313_bdma_remove(struct platform_device *pdev)
 	return 0;
 }
 
+static int __maybe_unused msc313_bdma_suspend(struct device *dev)
+{
+	struct msc313_bdma *bdma = dev_get_drvdata(dev);
+	int i;
+	for(i = 0; i < bdma->numchans; i++)
+		regmap_field_write(bdma->chans[i].int_en, 0);
+	return 0;
+}
+
+static int __maybe_unused msc313_bdma_resume(struct device *dev)
+{
+	struct msc313_bdma *bdma = dev_get_drvdata(dev);
+	int i;
+	for(i = 0; i < bdma->numchans; i++)
+			regmap_field_write(bdma->chans[i].int_en, 1);
+	return 0;
+}
+
+static SIMPLE_DEV_PM_OPS(msc313_bdma_pm_ops, msc313_bdma_suspend,
+			 msc313_bdma_resume);
+
 static struct platform_driver msc313_bdma_driver = {
 	.probe = msc313_bdma_probe,
 	.remove = msc313_bdma_remove,
 	.driver = {
 		.name = DRIVER_NAME,
 		.of_match_table = msc313_bdma_of_match,
+		.pm = &msc313_bdma_pm_ops,
 	},
 };
 
