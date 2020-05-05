@@ -319,6 +319,13 @@ static const struct dmi_system_id ac_dmi_table[]  __initconst = {
 			DMI_MATCH(DMI_PRODUCT_NAME, "32597CG"),
 		},
 	},
+	{
+		/* Donki Nanote */
+		.callback = ac_do_not_check_pmic_quirk,
+		.matches = {
+			DMI_MATCH(DMI_PRODUCT_NAME, "UMPC-01"),
+		},
+	},
 	{},
 };
 
