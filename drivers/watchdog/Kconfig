@@ -1006,7 +1006,7 @@ config PM8916_WATCHDOG
 
 config MSC313E_WATCHDOG
 	tristate "MStar MSC313e watchdog"
-	depends on OF
+	depends on ARCH_MSTARV7 && OF
 	select WATCHDOG_CORE
 	help
 	  Say Y here to include support for the msc313e watchdog
